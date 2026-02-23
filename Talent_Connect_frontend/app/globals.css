@@ -1,0 +1,77 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: mytheme, mytheme-dark;
+}
+
+@plugin "daisyui/theme" {
+  name: "mytheme";
+  default: true;
+  color-scheme: light;
+  --color-primary: oklch(58% 0.233 277);
+  --color-primary-content: oklch(98% 0.01 277);
+  --color-secondary: oklch(60% 0.2 310);
+  --color-secondary-content: oklch(98% 0.01 310);
+  --color-accent: oklch(65% 0.2 200);
+  --color-accent-content: oklch(98% 0.01 200);
+  --color-neutral: oklch(35% 0.02 270);
+  --color-neutral-content: oklch(95% 0.01 270);
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(96% 0.005 270);
+  --color-base-300: oklch(92% 0.01 270);
+  --color-base-content: oklch(20% 0.02 270);
+  --color-info: oklch(65% 0.18 220);
+  --color-success: oklch(60% 0.18 150);
+  --color-warning: oklch(75% 0.18 75);
+  --color-error: oklch(58% 0.22 27);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1rem;
+  --border: 1px;
+}
+
+@plugin "daisyui/theme" {
+  name: "mytheme-dark";
+  color-scheme: dark;
+  --color-primary: oklch(65% 0.233 277);
+  --color-primary-content: oklch(98% 0.01 277);
+  --color-secondary: oklch(65% 0.2 310);
+  --color-secondary-content: oklch(98% 0.01 310);
+  --color-accent: oklch(68% 0.2 200);
+  --color-accent-content: oklch(98% 0.01 200);
+  --color-neutral: oklch(22% 0.02 270);
+  --color-neutral-content: oklch(85% 0.01 270);
+  --color-base-100: oklch(17% 0.015 270);
+  --color-base-200: oklch(20% 0.018 270);
+  --color-base-300: oklch(24% 0.02 270);
+  --color-base-content: oklch(90% 0.01 270);
+  --color-info: oklch(68% 0.18 220);
+  --color-success: oklch(65% 0.18 150);
+  --color-warning: oklch(78% 0.18 75);
+  --color-error: oklch(62% 0.22 27);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1rem;
+  --border: 1px;
+}
+
+:root {
+  --sidebar-width: 260px;
+}
+
+html {
+  color-scheme: light;
+}
+
+html[data-theme="mytheme-dark"] {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-base-100 text-base-content antialiased;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { @apply bg-base-200; }
+::-webkit-scrollbar-thumb { @apply bg-base-300 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-primary/40 rounded-full; }
