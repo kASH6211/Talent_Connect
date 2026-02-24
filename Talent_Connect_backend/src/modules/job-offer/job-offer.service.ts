@@ -13,6 +13,7 @@ export interface BulkOfferDto {
     salary_min?: number;
     salary_max?: number;
     last_date?: string;
+    number_of_posts?: number;
     industry_id: number;
 }
 
@@ -39,6 +40,7 @@ export class JobOfferService {
             salary_max: dto.salary_max,
             offer_date: now.substring(0, 10),
             last_date: dto.last_date,
+            number_of_posts: dto.number_of_posts,
             status: 'Pending',
             is_active: 'Y',
             created_date: now,

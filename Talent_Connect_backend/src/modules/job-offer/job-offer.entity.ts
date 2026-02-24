@@ -52,6 +52,9 @@ export class JobOffer extends BaseEntity {
     @Column({ type: 'varchar', length: 20, nullable: true })
     last_date: string;
 
+    @Column({ type: 'int', nullable: true })
+    number_of_posts: number;
+
     /** Pending | Accepted | Rejected | Withdrawn */
     @Column({ type: 'varchar', length: 20, default: 'Pending' })
     status: string;

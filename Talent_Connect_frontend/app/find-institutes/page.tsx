@@ -57,6 +57,7 @@ function OfferModal({
     const [salaryMin, setSalaryMin] = useState('');
     const [salaryMax, setSalaryMax] = useState('');
     const [lastDate, setLastDate] = useState('');
+    const [numberOfPosts, setNumberOfPosts] = useState('');
     const [qualIds, setQualIds] = useState<number[]>(filters.qualification_ids);
     const [programIds, setProgramIds] = useState<number[]>(filters.program_ids);
     const [streamIds, setStreamIds] = useState<number[]>(filters.stream_ids);
@@ -78,6 +79,7 @@ function OfferModal({
                 salary_min: salaryMin ? parseFloat(salaryMin) : undefined,
                 salary_max: salaryMax ? parseFloat(salaryMax) : undefined,
                 last_date: lastDate || undefined,
+                number_of_posts: numberOfPosts ? parseInt(numberOfPosts) : undefined,
             });
             onSent();
         } catch (e: any) {
@@ -125,7 +127,7 @@ function OfferModal({
                     />
                 </div>
 
-                {/* Salary Range */}
+                {/* Salary Range + Number of Posts */}
                 <div className="grid grid-cols-2 gap-4">
                     <CommonInputField
                         label="Salary Min (₹/yr)"
@@ -142,6 +144,15 @@ function OfferModal({
                         placeholder="e.g. 600000"
                     />
                 </div>
+
+                {/* Number of Posts */}
+                <CommonInputField
+                    label="Number of Posts"
+                    type="number"
+                    value={numberOfPosts}
+                    onChange={e => setNumberOfPosts(e.target.value)}
+                    placeholder="e.g. 5"
+                />
 
                 {/* Filter selections */}
                 <div className="grid grid-cols-1 gap-3">
