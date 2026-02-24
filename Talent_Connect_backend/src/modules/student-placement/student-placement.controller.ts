@@ -6,8 +6,9 @@ import { StudentPlacement } from './student-placement.entity';
 @ApiTags('student-placement')
 @Controller('student-placement')
 export class StudentPlacementController {
-  constructor(private readonly service: StudentPlacementService) {}
+  constructor(private readonly service: StudentPlacementService) { }
 
+  @Get('count') count() { return this.service.count(); }
   @Get() findAll() { return this.service.findAll(); }
   @Get(':id') findOne(@Param('id', ParseIntPipe) id: number) { return this.service.findOne(id); }
   @Post() create(@Body() dto: Partial<StudentPlacement>) { return this.service.create(dto); }

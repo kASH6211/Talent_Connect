@@ -8,6 +8,9 @@ import { Student } from './student.entity';
 export class StudentController {
   constructor(private readonly service: StudentService) { }
 
+  @Get('count')
+  count() { return this.service.count(); }
+
   @Get()
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })

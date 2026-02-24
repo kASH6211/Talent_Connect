@@ -8,9 +8,12 @@ export class IndustryRequestService {
   constructor(
     @InjectRepository(IndustryRequest)
     private readonly repo: Repository<IndustryRequest>,
-  ) {}
+  ) { }
 
   findAll() { return this.repo.find(); }
+
+  /** Fast COUNT */
+  count() { return this.repo.count(); }
 
   async findOne(id: number) {
     const item = await this.repo.findOne({ where: { industry_request_id: id } as any });

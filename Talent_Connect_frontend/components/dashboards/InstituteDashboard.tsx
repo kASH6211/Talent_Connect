@@ -50,24 +50,21 @@ export default function InstituteDashboard({ username, instituteName }: { userna
     const [loadingOffers, setLoadingOffers] = useState(true);
 
     useEffect(() => {
-        // Fetch stats in parallel
+        // Fast parallel fetches: use /count endpoints for stats, only fetch offers for preview
         Promise.all([
-            api.get('/student').catch(() => ({ data: [] })),
-            api.get('/student-placement').catch(() => ({ data: [] })),
-            api.get('/industry-request').catch(() => ({ data: [] })),
+            api.get('/student/count').catch(() => ({ data: 0 })),
+            api.get('/student-placement/count').catch(() => ({ data: 0 })),
+            api.get('/industry-request/count').catch(() => ({ data: 0 })),
             api.get('/job-offer/received').catch(() => ({ data: [] })),
         ]).then(([studRes, placRes, reqRes, offerRes]) => {
-            const students = Array.isArray(studRes.data) ? studRes.data.length
-                : (studRes.data?.total ?? studRes.data?.data?.length ?? 0);
-            const placements = Array.isArray(placRes.data) ? placRes.data.length : 0;
-            const allRequests = Array.isArray(reqRes.data) ? reqRes.data : [];
-            const pendingRequests = allRequests.filter((r: any) =>
-                r.status?.toLowerCase() === 'pending' || !r.status).length;
+            const students = typeof studRes.data === 'number' ? studRes.data : 0;
+            const placements = typeof placRes.data === 'number' ? placRes.data : 0;
+            const requests = typeof reqRes.data === 'number' ? reqRes.data : 0;
             const offers: Offer[] = Array.isArray(offerRes.data) ? offerRes.data : [];
             setStats({
                 students,
                 placements,
-                pendingRequests,
+                pendingRequests: requests,
                 receivedOffers: offers.length,
                 pendingOffers: offers.filter(o => o.status === 'Pending').length,
                 acceptedOffers: offers.filter(o => o.status === 'Accepted').length,

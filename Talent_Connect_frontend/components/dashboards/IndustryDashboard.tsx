@@ -61,27 +61,19 @@ export default function IndustryDashboard({ username, industryName }: { username
     useEffect(() => {
         Promise.all([
             api.get('/job-offer/sent').catch(() => ({ data: [] })),
-            api.get('/industry-request').catch(() => ({ data: [] })),
+            api.get('/industry-request/count').catch(() => ({ data: 0 })),
         ]).then(([sentRes, reqRes]) => {
             const offers: SentOffer[] = Array.isArray(sentRes.data) ? sentRes.data : [];
-            const requests: any[] = Array.isArray(reqRes.data) ? reqRes.data : [];
+            const openRequests = typeof reqRes.data === 'number' ? reqRes.data : 0;
 
             const accepted = offers.filter(o => o.status === 'Accepted').length;
             const pending = offers.filter(o => o.status === 'Pending').length;
             const rejected = offers.filter(o => o.status === 'Rejected').length;
-
             const uniqueInstitutes = new Set(offers.map(o => o.institute?.institute_name).filter(Boolean)).size;
 
-            setStats({
-                totalSent: offers.length,
-                accepted,
-                pending,
-                rejected,
-                openRequests: requests.length,
-                totalInstitutesReached: uniqueInstitutes,
-            });
+            setStats({ totalSent: offers.length, accepted, pending, rejected, openRequests, totalInstitutesReached: uniqueInstitutes });
 
-            // Show 5 most recent unique job titles
+            // 5 most recent unique job titles
             const seen = new Set<string>();
             const recent: SentOffer[] = [];
             for (const o of offers) {

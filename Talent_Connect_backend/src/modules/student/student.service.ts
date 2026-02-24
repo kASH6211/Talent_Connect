@@ -10,6 +10,9 @@ export class StudentService {
     private readonly repo: Repository<Student>,
   ) { }
 
+  /** Fast COUNT — no data transfer */
+  count() { return this.repo.count(); }
+
   async findAll(page?: number, limit?: number) {
     if (page && limit) {
       const take = limit || 10;

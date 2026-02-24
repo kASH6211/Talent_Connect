@@ -8,7 +8,10 @@ export class StudentPlacementService {
   constructor(
     @InjectRepository(StudentPlacement)
     private readonly repo: Repository<StudentPlacement>,
-  ) {}
+  ) { }
+
+  /** Fast COUNT */
+  count() { return this.repo.count(); }
 
   findAll() { return this.repo.find(); }
 
