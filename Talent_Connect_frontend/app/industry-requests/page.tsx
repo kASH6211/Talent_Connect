@@ -3,6 +3,7 @@ import { useState } from "react";
 import CrudTable from "@/components/CrudTable";
 import CrudModal from "@/components/CrudModal";
 import { Building2 } from "lucide-react";
+import JobDetailModal from "@/views/sent-offer/view/JobDetailModal";
 
 const COLUMNS = [
   { key: "industry_request_id", label: "ID" },
@@ -65,9 +66,41 @@ const FIELDS = [
   { key: "is_active", label: "Is Active?", type: "radio" },
 ];
 
+
+
+
+  const dummyJob = {
+    id: "101",
+    title: "React Developer",
+    company: "Nekasu Technologies",
+    description:
+      "We are hiring a React developer to build scalable web applications using Next.js and modern UI practices.",
+    salary: "₹8,00,000 - ₹12,00,000",
+    location: "Chandigarh (Hybrid)",
+    type: "Full-time",
+    department: "Engineering",
+    postedDate: "1 day ago",
+    applicants: 12,
+    requirements: [
+      "Strong React fundamentals",
+      "Experience with Next.js",
+      "Redux or Zustand knowledge",
+      "API integration experience",
+    ],
+    benefits: [
+      "Flexible work hours",
+      "Performance bonus",
+      "Learning budget",
+      "Remote flexibility",
+    ],
+  };
+
 export default function Page() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
+
+  //dummydata for modal 
+ const [open, setOpen] = useState(true);
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 pt-12 min-h-screen bg-gray-50">
@@ -105,6 +138,11 @@ export default function Page() {
           />
         </div>
       )}
+       {/* <JobDetailModal
+        open={true}
+        setOpen={setOpen}
+        job={dummyJob}
+      /> */}
     </div>
   );
 }
