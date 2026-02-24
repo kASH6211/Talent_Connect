@@ -1,22 +1,44 @@
-'use client';
+"use client";
+import { ReactNode, useState } from "react";
+import Sidebar from "./Sidebar";
+import { usePathname } from "next/navigation";
 
-import { usePathname } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
+export default function AppShell({
+  children,
+  showSidebar = true,
+}: {
+  children: ReactNode;
+  showSidebar?: boolean;
+}) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const pathname = usePathname();
+  const isLoginPage = pathname === "/login";
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
-    const pathname = usePathname();
-    const isLoginPage = pathname === '/login';
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
-    if (isLoginPage) {
-        return <>{children}</>;
-    }
+  return (
+    <div className="flex h-screen w-screen overflow-hidden">
+      {showSidebar && (
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          setCollapsed={setSidebarCollapsed}
+        />
+      )}
 
-    return (
-        <div className="flex min-h-screen bg-base-100">
-            <Sidebar />
-            <main className="flex-1 ml-[260px] min-h-screen bg-base-100">
-                <div className="p-6">{children}</div>
-            </main>
-        </div>
-    );
+      <main
+        className={`flex-1 transition-all duration-500 ease-in-out overflow-auto bg-gray-50`}
+        style={{
+          marginLeft: showSidebar
+            ? sidebarCollapsed
+              ? "88px"
+              : "260px"
+            : "0px",
+        }}
+      >
+        {children}
+      </main>
+    </div>
+  );
 }

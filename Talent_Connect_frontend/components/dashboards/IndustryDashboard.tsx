@@ -1,269 +1,246 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from "next/link";
 import {
-    Briefcase, ClipboardList, Factory, ArrowRight, CheckCircle2,
-    Send, Clock, XCircle, Building2, Search, TrendingUp, Inbox
-} from 'lucide-react';
-import api from '@/lib/api';
+  Briefcase,
+  ClipboardList,
+  Factory,
+  ArrowRight,
+  CheckCircle2,
+  Users,
+  GraduationCap,
+  TrendingUp,
+  Calendar,
+  Award,
+  Sparkles,
+  Clock,
+} from "lucide-react";
 
-interface SentOffer {
-    offer_id: number;
-    job_title: string;
-    offer_date?: string;
-    last_date?: string;
-    status: string;
-    salary_min?: number;
-    salary_max?: number;
-    institute?: { institute_name?: string };
-}
-
-const statusConfig: Record<string, { badge: string; icon: any }> = {
-    Pending: { badge: 'badge-warning', icon: Clock },
-    Accepted: { badge: 'badge-success', icon: CheckCircle2 },
-    Rejected: { badge: 'badge-error', icon: XCircle },
-    Withdrawn: { badge: 'badge-neutral', icon: XCircle },
-};
-
-const fmt = (n?: number) =>
-    n ? `₹${(n / 100000).toFixed(1)}L` : null;
-
-const salaryStr = (min?: number, max?: number) => {
-    const mn = fmt(min); const mx = fmt(max);
-    if (mn && mx) return `${mn} – ${mx}`;
-    if (mn) return `From ${mn}`; if (mx) return `Up to ${mx}`;
-    return null;
-};
-
-interface Stats {
-    totalSent: number;
-    accepted: number;
-    pending: number;
-    rejected: number;
-    openRequests: number;
-    totalInstitutesReached: number;
-}
-
-const actions = [
-    { icon: Search, label: 'Find Institutes', description: 'Search institutes and send job offers', href: '/find-institutes', color: 'from-primary to-primary/70' },
-    { icon: Send, label: 'Sent Offers', description: 'Track responses for all your sent offers', href: '/sent-offers', color: 'from-secondary to-secondary/70' },
-    { icon: ClipboardList, label: 'My Requests', description: 'View and manage your campus / internship requests', href: '/industry-requests', color: 'from-warning to-warning/70' },
-    { icon: CheckCircle2, label: 'Placements', description: 'See all placement records for your company', href: '/placements', color: 'from-success to-success/70' },
+const statsData = [
+  {
+    label: "Active Drives",
+    value: "12",
+    change: "+24%",
+    trend: "up" as const,
+    icon: Calendar,
+    gradient: "from-primary to-primary/70",
+  },
+  {
+    label: "Students Placed",
+    value: "247",
+    change: "+18%",
+    trend: "up" as const,
+    icon: CheckCircle2,
+    gradient: "from-success to-success/70",
+  },
+  {
+    label: "Pending Requests",
+    value: "8",
+    change: "-2",
+    trend: "down" as const,
+    icon: ClipboardList,
+    gradient: "from-warning to-warning/70",
+  },
+  {
+    label: "Conversion Rate",
+    value: "78.4%",
+    change: "+3.2%",
+    trend: "up" as const,
+    icon: TrendingUp,
+    gradient: "from-info to-info/70",
+  },
 ];
 
-export default function IndustryDashboard({ username, industryName }: { username: string; industryName?: string }) {
-    const [stats, setStats] = useState<Stats | null>(null);
-    const [recentOffers, setRecentOffers] = useState<SentOffer[]>([]);
-    const [loadingStats, setLoadingStats] = useState(true);
-    const [loadingOffers, setLoadingOffers] = useState(true);
+const quickActions = [
+  {
+    icon: Sparkles,
+    title: "New Placement Drive",
+    description: "Launch recruitment or internship drive",
+    href: "/industry-requests/new",
+    gradient: "from-success to-success/70",
+    badge: "Popular",
+  },
+  {
+    icon: Users,
+    title: "View Candidates",
+    description: "Browse student profiles",
+    href: "/placements/candidates",
+    gradient: "from-primary to-primary/70",
+  },
+  {
+    icon: Briefcase,
+    title: "Track Placements",
+    description: "Monitor status & analytics",
+    href: "/placements",
+    gradient: "from-secondary to-secondary/70",
+  },
+  {
+    icon: GraduationCap,
+    title: "Find Institutes",
+    description: "Search by location & courses",
+    href: "/find-institutes",
+    gradient: "from-accent to-accent/70",
+  },
+];
 
-    useEffect(() => {
-        Promise.all([
-            api.get('/job-offer/sent').catch(() => ({ data: [] })),
-            api.get('/industry-request/count').catch(() => ({ data: 0 })),
-        ]).then(([sentRes, reqRes]) => {
-            const offers: SentOffer[] = Array.isArray(sentRes.data) ? sentRes.data : [];
-            const openRequests = typeof reqRes.data === 'number' ? reqRes.data : 0;
+export default function IndustryDashboard({
+  username,
+  industryName = "Leading Tech Corp",
+}: {
+  username: string;
+  industryName?: string;
+}) {
+  return (
+    <div className="p-2 sm:p-3 lg:p-4">
+      <div className="w-full space-y-4">
+        {/* Hero Section - Compact */}
+        <div className="relative overflow-hidden p-4 rounded-xl bg-gradient-to-br from-primary/5 via-base-100 to-base-100 border border-primary/20 shadow-sm">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/3 rounded-full -translate-y-1/2 translate-x-1/2" />
 
-            const accepted = offers.filter(o => o.status === 'Accepted').length;
-            const pending = offers.filter(o => o.status === 'Pending').length;
-            const rejected = offers.filter(o => o.status === 'Rejected').length;
-            const uniqueInstitutes = new Set(offers.map(o => o.institute?.institute_name).filter(Boolean)).size;
-
-            setStats({ totalSent: offers.length, accepted, pending, rejected, openRequests, totalInstitutesReached: uniqueInstitutes });
-
-            // 5 most recent unique job titles
-            const seen = new Set<string>();
-            const recent: SentOffer[] = [];
-            for (const o of offers) {
-                if (!seen.has(o.job_title)) { seen.add(o.job_title); recent.push(o); }
-                if (recent.length >= 5) break;
-            }
-            setRecentOffers(recent);
-        }).finally(() => {
-            setLoadingStats(false);
-            setLoadingOffers(false);
-        });
-    }, []);
-
-    const statCards = [
-        {
-            label: 'Offers Sent', value: stats?.totalSent, icon: Send,
-            color: 'from-primary to-primary/70', note: 'total job offers', href: '/sent-offers',
-        },
-        {
-            label: 'Accepted', value: stats?.accepted, icon: CheckCircle2,
-            color: 'from-success to-success/70', note: 'institutes accepted', href: '/sent-offers',
-        },
-        {
-            label: 'Pending', value: stats?.pending, icon: Clock,
-            color: 'from-warning to-warning/70', note: 'awaiting response', href: '/sent-offers',
-        },
-        {
-            label: 'Institutes Reached', value: stats?.totalInstitutesReached, icon: Building2,
-            color: 'from-secondary to-secondary/70', note: 'unique institutes', href: '/find-institutes',
-        },
-    ];
-
-    return (
-        <div className="space-y-8">
-            {/* Hero */}
-            <div className="relative overflow-hidden p-7 rounded-2xl bg-gradient-to-br from-secondary/10 via-base-200 to-base-200 border border-secondary/20">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-                <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-secondary to-primary flex items-center justify-center shadow-xl">
-                        <Factory size={28} className="text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-base-content">Welcome, {username} 👋</h1>
-                        <p className="text-secondary/80 text-sm mt-0.5">
-                            Industry Portal · {industryName ?? 'Company Account'}
-                        </p>
-                    </div>
-                </div>
-                <p className="mt-4 text-base-content/60 text-sm leading-relaxed max-w-2xl">
-                    Post placement drives, manage internship requests, and track your hiring activity across institutes.
-                </p>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md">
+              <Factory size={24} className="text-white" />
             </div>
-
-            {/* Stats Cards */}
             <div>
-                <h2 className="text-xs font-semibold text-base-content/50 uppercase tracking-widest mb-4">Overview</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {statCards.map(c => (
-                        <Link key={c.label} href={c.href}
-                            className="p-5 rounded-xl border border-base-300 bg-base-200 hover:border-primary/30 hover:bg-base-300 transition-all group">
-                            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${c.color} flex items-center justify-center mb-3 shadow-lg`}>
-                                <c.icon size={20} className="text-white" />
-                            </div>
-                            {loadingStats ? (
-                                <div className="h-8 w-12 rounded-md bg-base-300 animate-pulse mb-1" />
-                            ) : (
-                                <div className="text-2xl font-bold text-base-content">
-                                    {c.value !== undefined ? c.value : '—'}
-                                </div>
-                            )}
-                            <div className="text-xs text-base-content/40 mt-0.5">{c.note}</div>
-                            <div className="text-sm font-medium text-base-content/70 mt-0.5 group-hover:text-primary transition-colors">{c.label}</div>
-                        </Link>
-                    ))}
-                </div>
+              <h1 className="text-xl sm:text-2xl font-bold text-base-content">
+                Welcome, {username} 👋
+              </h1>
+              <p className="text-primary text-xs sm:text-sm">
+                Industry Dashboard · {industryName}
+              </p>
             </div>
+          </div>
 
-            {/* Offer Acceptance Strip */}
-            {stats && stats.totalSent > 0 && (
-                <div className="flex flex-wrap gap-3">
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-success/10 border border-success/20 text-sm">
-                        <CheckCircle2 size={13} className="text-success" />
-                        <span className="font-semibold text-success">{stats.accepted}</span>
-                        <span className="text-base-content/50">accepted</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-warning/10 border border-warning/20 text-sm">
-                        <Clock size={13} className="text-warning" />
-                        <span className="font-semibold text-warning">{stats.pending}</span>
-                        <span className="text-base-content/50">pending</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-error/10 border border-error/20 text-sm">
-                        <XCircle size={13} className="text-error" />
-                        <span className="font-semibold text-error">{stats.rejected}</span>
-                        <span className="text-base-content/50">rejected</span>
-                    </div>
-                    {stats.openRequests > 0 && (
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-base-300 border border-base-300 text-sm">
-                            <ClipboardList size={13} className="text-base-content/60" />
-                            <span className="font-semibold text-base-content">{stats.openRequests}</span>
-                            <span className="text-base-content/50">open request{stats.openRequests !== 1 ? 's' : ''}</span>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Recent Sent Offers Preview */}
-            <div>
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xs font-semibold text-base-content/50 uppercase tracking-widest">Recent Sent Offers</h2>
-                    <Link href="/sent-offers" className="text-xs text-primary hover:underline flex items-center gap-1">
-                        View all <ArrowRight size={11} />
-                    </Link>
-                </div>
-
-                {loadingOffers ? (
-                    <div className="space-y-3">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="h-16 rounded-xl bg-base-200 border border-base-300 animate-pulse" />
-                        ))}
-                    </div>
-                ) : recentOffers.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 gap-3 text-base-content/40 rounded-xl border border-base-300 bg-base-200">
-                        <div className="w-12 h-12 rounded-2xl bg-base-300 flex items-center justify-center">
-                            <Send size={22} className="text-base-content/30" />
-                        </div>
-                        <p className="text-sm">No offers sent yet.</p>
-                        <Link href="/find-institutes" className="btn btn-primary btn-sm gap-2">
-                            <Search size={13} /> Find Institutes
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {recentOffers.map(offer => {
-                            const sc = statusConfig[offer.status] ?? statusConfig['Pending'];
-                            const StatusIcon = sc.icon;
-                            const salary = salaryStr(offer.salary_min, offer.salary_max);
-                            return (
-                                <div key={offer.offer_id}
-                                    className="flex items-center gap-4 p-4 rounded-xl bg-base-200 border border-base-300 hover:border-primary/20 transition-colors">
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="text-sm font-semibold text-base-content truncate">{offer.job_title}</span>
-                                            <span className={`badge ${sc.badge} badge-sm gap-1`}>
-                                                <StatusIcon size={9} />{offer.status}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 mt-0.5 text-xs text-base-content/50">
-                                            <Building2 size={11} />
-                                            <span>{offer.institute?.institute_name ?? 'Institute'}</span>
-                                            {offer.offer_date && <span className="text-base-content/30">· {offer.offer_date}</span>}
-                                        </div>
-                                    </div>
-                                    <div className="flex-shrink-0 text-right">
-                                        {salary && <div className="text-sm font-semibold text-success">{salary}</div>}
-                                        {offer.last_date && (
-                                            <div className="text-xs text-base-content/40">Due: <span className="text-warning">{offer.last_date}</span></div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
-
-            {/* Quick Actions */}
-            <div>
-                <h2 className="text-xs font-semibold text-base-content/50 uppercase tracking-widest mb-4">Quick Actions</h2>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {actions.map(a => (
-                        <Link key={a.href + a.label} href={a.href}
-                            className="p-5 rounded-xl border border-base-300 bg-base-200 hover:border-primary/30 hover:bg-base-300 hover:scale-[1.02] transition-all group">
-                            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${a.color} flex items-center justify-center mb-3 shadow-lg`}>
-                                <a.icon size={20} className="text-white" />
-                            </div>
-                            <div className="text-sm font-semibold text-base-content">{a.label}</div>
-                            <p className="text-xs text-base-content/50 mt-1 leading-relaxed">{a.description}</p>
-                            <div className="mt-3 flex items-center gap-1 text-xs text-base-content/30 group-hover:text-primary transition-colors">
-                                Open <ArrowRight size={12} />
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-            </div>
-
-            {/* Info box */}
-            <div className="p-4 rounded-xl bg-base-200 border border-base-300 text-sm text-base-content/50">
-                <span className="text-base-content/70 font-medium">Note:</span> You are viewing data scoped to your company.
-                Contact your administrator for any additional access.
-            </div>
+          <p className="mt-2 text-sm text-base-content/70 max-w-lg">
+            Manage drives, track placements, and collaborate with institutes
+          </p>
         </div>
-    );
+
+        {/* Stats Grid - Compact */}
+        <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {statsData.map((stat, idx) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={idx}
+                className="bg-base-100 rounded-lg p-3 shadow-sm hover:shadow-md transition-all border border-base-200/50 h-full flex flex-col justify-between"
+              >
+                <div
+                  className={`w-10 h-10 flex items-center justify-center rounded-lg bg-gradient-to-br ${stat.gradient} mb-2`}
+                >
+                  <Icon size={18} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-xs text-base-content/70 mb-1">
+                    {stat.label}
+                  </p>
+                  <p className="text-lg sm:text-xl font-bold">{stat.value}</p>
+                  <p
+                    className={`text-xs font-medium mt-0.5 ${
+                      stat.trend === "up" ? "text-success" : "text-error"
+                    }`}
+                  >
+                    {stat.change}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </section>
+
+        {/* Quick Actions - Compact */}
+        <section>
+          <h2 className="text-lg font-bold text-base-content mb-3 flex items-center gap-2">
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            {quickActions.map((action, idx) => {
+              const Icon = action.icon;
+              return (
+                <Link
+                  key={idx}
+                  href={action.href}
+                  className="group bg-base-100 rounded-lg p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all border border-base-200/50 h-full flex flex-col"
+                >
+                  <div
+                    className={`w-10 h-10 flex items-center justify-center mb-3 rounded-lg bg-gradient-to-br ${action.gradient} group-hover:scale-105 transition-transform`}
+                  >
+                    <Icon size={18} className="text-white" />
+                  </div>
+                  <h3 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">
+                    {action.title}
+                  </h3>
+                  <p className="text-xs text-base-content/70 mb-2 flex-1">
+                    {action.description}
+                  </p>
+                  {action.badge && (
+                    <span className="inline-block bg-success text-white text-xs px-2 py-0.5 rounded-full">
+                      {action.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Bottom Section - Compact */}
+        <section className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+          {/* Recent Activity - Compact */}
+          <div className="xl:col-span-2 bg-base-100 rounded-lg p-4 shadow-sm border border-base-200/50">
+            <h3 className="font-semibold text-base mb-3">Recent Activity</h3>
+            <div className="space-y-2">
+              {[
+                {
+                  title: "NIT Trichy - Campus Drive Approved",
+                  time: "2h ago",
+                  icon: CheckCircle2,
+                },
+                {
+                  title: "IIT Bombay - 50 Applications Received",
+                  time: "1 day ago",
+                  icon: Users,
+                },
+                {
+                  title: "VIT Vellore - Drive Scheduled",
+                  time: "3 days ago",
+                  icon: Calendar,
+                },
+              ].map((activity, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2.5 p-3 rounded-lg hover:bg-base-50 transition-all border border-base-200/30 group"
+                >
+                  <div className="w-9 h-9 flex items-center justify-center bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                    <activity.icon size={16} className="text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">
+                      {activity.title}
+                    </p>
+                    <p className="text-xs text-base-content/60 flex items-center gap-1 mt-0.5">
+                      <Clock size={10} /> {activity.time}
+                    </p>
+                  </div>
+                  <ArrowRight
+                    size={14}
+                    className="text-base-content/40 group-hover:translate-x-1 transition-transform"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Hiring Stat Card - Compact */}
+          <div className="bg-gradient-to-br from-warning/5 to-warning/3 rounded-lg p-4 shadow-sm border border-warning/20 flex flex-col items-center justify-center text-center">
+            <Award size={24} className="text-warning mb-2" />
+            <p className="text-2xl sm:text-3xl font-bold text-warning">94%</p>
+            <p className="text-xs sm:text-sm text-base-content/70 mt-1">
+              Drive Success Rate
+            </p>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }
