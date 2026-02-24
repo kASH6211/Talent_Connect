@@ -15,6 +15,8 @@ import {
   Banknote,
   BadgeCheck,
   MailOpen,
+  Users,
+  ArrowRight,
 } from "lucide-react";
 import api from "@/lib/api";
 
@@ -196,26 +198,53 @@ export default function ReceivedOffersPage() {
 
         {/* Compact Tabs */}
         {!loading && offers.length > 0 && (
-          <div className="flex gap-1.5 bg-base-50 p-1.5 rounded-lg mb-6">
-            {tabs.map((t) => (
-              <button
-                key={t}
-                onClick={() => setFilter(t)}
-                className={`px-3 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${
-                  filter === t
-                    ? "bg-primary text-primary-content shadow-sm"
-                    : "text-base-content/60 hover:bg-base-100 hover:text-base-content"
-                }`}
-              >
-                {t}
-                {counts[t] > 0 && (
-                  <span className="text-[10px] opacity-80 font-normal">
-                    {counts[t]}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
+          <section className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+            {tabs.map((t, idx) => {
+              const isActive = filter === t;
+              const count = counts[t] || 0;
+              const Icon =
+                t === "All"
+                  ? Users
+                  : t === "Pending"
+                    ? Clock
+                    : t === "Accepted"
+                      ? CheckCircle2
+                      : t === "Rejected"
+                        ? XCircle
+                        : ArrowRight;
+
+              return (
+                <button
+                  key={t}
+                  onClick={() => setFilter(t)}
+                  className="group bg-white/80 hover:bg-white data-[active=true]:bg-primary/90 data-[active=true]:text-white rounded-lg p-3 shadow-sm hover:shadow-md border border-gray-200/50 hover:border-primary/40 transition-all duration-200 h-full flex flex-col justify-center items-center gap-2"
+                  data-active={isActive}
+                >
+                  {/* Icon */}
+                  <div
+                    className={`w-10 h-10 bg-gradient-to-br ${isActive ? "from-primary to-primary/80 shadow-lg" : "from-gray-100 to-gray-200 group-hover:from-primary/10"} rounded-lg flex items-center justify-center transition-all mb-2`}
+                  >
+                    <Icon
+                      size={18}
+                      className={`${isActive ? "text-white drop-shadow-sm" : "text-gray-600 group-hover:text-primary"}`}
+                    />
+                  </div>
+
+                  {/* Label - Always visible, bold on hover */}
+                  <p
+                    className={`text-xs font-semibold transition-all ${isActive ? "text-white" : "text-gray-700 group-hover:text-primary font-bold"}`}
+                  >
+                    {t}
+                  </p>
+
+                  {/* Count */}
+                  <p className="text-lg font-bold text-gray-900 data-[active=true]:text-white">
+                    {count}
+                  </p>
+                </button>
+              );
+            })}
+          </section>
         )}
 
         {/* Content */}

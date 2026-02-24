@@ -26,7 +26,8 @@ import { clsx } from "clsx";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components2/ThemeToggle";
 
-// Navigation Definitions
+// ── Nav definitions per role ───────────────────────────────────────────────
+
 const adminNav = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   {
@@ -269,12 +270,12 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-semibold truncate">
-                  {user.username}
-                </span>
-                <span className={clsx("inline-block mt-1", badge.cls)}>
-                  {badge.label}
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold truncate">
+                    {user.username}
+                  </span>
+                  <span className={clsx("mt-1", badge.cls)}>{badge.label}</span>
+                </div>
               </div>
             )}
             {!collapsed && <ThemeToggle />}
