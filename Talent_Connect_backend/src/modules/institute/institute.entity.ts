@@ -4,6 +4,7 @@ import {
     Column,
     ManyToOne,
     JoinColumn,
+    Index,
 } from 'typeorm';
 import { BaseEntity } from '../../common/base.entity';
 import { Board } from '../board/board.entity';
@@ -31,6 +32,13 @@ export class Institute extends BaseEntity {
 
     @Column({ type: 'varchar', length: 500 })
     institute_name: string;
+
+    @Index({ unique: true })
+    @Column({ type: 'varchar', length: 100, nullable: true, unique: true })
+    institute_registration_id: string;
+
+    @Column({ type: 'int', nullable: true })
+    year_of_establishment: number;
 
     @Column({ type: 'varchar', length: 500, nullable: true })
     institute_abbreviation: string;
