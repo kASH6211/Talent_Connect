@@ -17,6 +17,7 @@ import {
   GraduationCap,
   Landmark,
   ChevronDown,
+  ArrowUpDown,
 } from "lucide-react";
 import api from "@/lib/api";
 import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
@@ -668,7 +669,7 @@ export default function FindInstitutesPage() {
                     <Square size={16} />
                   )}
                 </button>
-                <div>
+                {/* <div>
                   <h3 className="text-base sm:text-lg font-bold text-base-content">
                     {institutes.length} institute
                     {institutes.length !== 1 ? "s" : ""} found
@@ -676,6 +677,51 @@ export default function FindInstitutesPage() {
                   <p className="text-xs text-base-content/50">
                     Click cards to select
                   </p>
+                </div> */}
+                <div className="flex justify-between items-center gap-4 mb-6 flex-wrap">
+                  {/* Results Count */}
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-base-content">
+                      {institutes.length} institute
+                      {institutes.length !== 1 ? "s" : ""} found
+                    </h3>
+                    <p className="text-xs text-base-content/50">
+                      Click cards to select
+                    </p>
+                  </div>
+
+                  {/* Filters */}
+                  <div className="flex items-center justify-between gap-2">
+                    {/* Nearby */}
+                    <div className="flex items-center gap-1 px-3 py-1.5 bg-base-100 rounded-lg border text-xs shadow-sm hover:shadow-md transition-all">
+                      <MapPin size={13} />
+                      <select className="bg-transparent border-0 outline-none text-base-content/90 font-medium cursor-pointer text-xs ml-1">
+                        <option value="all">All Areas</option>
+                        <option value="nearby">Nearby</option>
+                        <option value="50km">50km</option>
+                        <option value="100km">100km</option>
+                      </select>
+                    </div>
+
+                    {/* Sort */}
+                    <div className="flex items-center gap-1 px-3 py-1.5 bg-base-100 rounded-lg border text-xs shadow-sm hover:shadow-md transition-all">
+                      <ArrowUpDown size={13} className="rotate-90" />
+                      <select className="bg-transparent border-0 outline-none text-base-content/90 font-medium cursor-pointer text-xs ml-1">
+                        <option value="name">A-Z</option>
+                        <option value="name-rev">Z-A</option>
+                        <option value="rating">Rating</option>
+                        <option value="students">Students</option>
+                      </select>
+                    </div>
+
+                    {/* Filter */}
+                    <div className="flex items-center gap-1 px-3 py-1.5 bg-base-100 rounded-lg border text-xs shadow-sm hover:shadow-md transition-all cursor-pointer">
+                      <Filter size={13} />
+                      <span className="text-base-content/90 font-medium text-xs ml-1">
+                        Filter
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
               {selected.size > 0 && (
