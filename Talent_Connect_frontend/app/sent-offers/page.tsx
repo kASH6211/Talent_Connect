@@ -15,6 +15,7 @@ interface OfferRecord {
     salary_max?: number;
     offer_date: string;
     last_date?: string;
+    number_of_posts?: number;
     status: 'Pending' | 'Accepted' | 'Rejected' | 'Withdrawn';
     institute: {
         institute_id: number;
@@ -33,6 +34,7 @@ interface OfferGroup {
     salary_max?: number;
     offer_date: string;
     last_date?: string;
+    number_of_posts?: number;
     rows: OfferRecord[];
     accepted: number;
     rejected: number;
@@ -81,6 +83,7 @@ function groupOffers(offers: OfferRecord[]): OfferGroup[] {
                 job_description: o.job_description,
                 salary_min: o.salary_min, salary_max: o.salary_max,
                 offer_date: o.offer_date, last_date: o.last_date,
+                number_of_posts: o.number_of_posts,
                 rows: [], accepted: 0, rejected: 0, pending: 0, withdrawn: 0,
             });
         }
@@ -146,6 +149,9 @@ function OfferGroupCard({ group, onWithdraw }: { group: OfferGroup; onWithdraw: 
                         {salary && (
                             <span className="badge badge-ghost badge-sm font-mono flex-shrink-0">{salary}</span>
                         )}
+                        {group.number_of_posts && (
+                            <span className="badge badge-outline badge-sm flex-shrink-0">{group.number_of_posts} post{group.number_of_posts !== 1 ? 's' : ''}</span>
+                        )}
                     </div>
                     <p className="text-xs text-base-content/40 mt-1">
                         Sent {group.offer_date}
@@ -153,7 +159,7 @@ function OfferGroupCard({ group, onWithdraw }: { group: OfferGroup; onWithdraw: 
                         {' '}· <span className="text-base-content/60">{group.rows.length} institute{group.rows.length !== 1 ? 's' : ''}</span>
                     </p>
                     {group.job_description && (
-                        <p className="text-xs text-base-content/40 mt-1 line-clamp-1">{group.job_description}</p>
+                        <p className="text-xs text-base-content/50 mt-1.5 leading-relaxed line-clamp-2">{group.job_description}</p>
                     )}
                 </div>
 
@@ -168,6 +174,35 @@ function OfferGroupCard({ group, onWithdraw }: { group: OfferGroup; onWithdraw: 
                         : <ChevronRight size={16} className="text-base-content/30 ml-1" />}
                 </div>
             </button>
+
+            {/* Job details strip — always visible */}
+            <div className="px-5 py-3 border-t border-base-300 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* No. of Posts */}
+                <div className="flex flex-col gap-0.5">
+                    <span className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider">No. of Posts</span>
+                    <span className="text-sm font-bold text-base-content">
+                        {group.number_of_posts
+                            ? `${group.number_of_posts} post${group.number_of_posts !== 1 ? 's' : ''}`
+                            : <span className="text-base-content/30 font-normal">—</span>}
+                    </span>
+                </div>
+
+                {/* Salary recap */}
+                <div className="flex flex-col gap-0.5">
+                    <span className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider">Salary</span>
+                    <span className="text-sm font-bold text-success">
+                        {salary ?? <span className="text-base-content/30 font-normal">—</span>}
+                    </span>
+                </div>
+
+                {/* Job Description — full width */}
+                <div className="sm:col-span-2 flex flex-col gap-1">
+                    <span className="text-[10px] font-semibold text-base-content/40 uppercase tracking-wider">Job Description</span>
+                    {group.job_description
+                        ? <p className="text-sm text-base-content/70 leading-relaxed whitespace-pre-wrap">{group.job_description}</p>
+                        : <p className="text-sm text-base-content/30 italic">No description provided.</p>}
+                </div>
+            </div>
 
             {/* Per-institute rows */}
             {open && (
