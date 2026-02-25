@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
 import { BaseEntity } from '../../common/base.entity';
 
 @Entity('master_state')
@@ -9,6 +9,7 @@ export class State extends BaseEntity {
     @Column({ type: 'varchar', length: 200 })
     statename: string;
 
-    @Column({ type: 'int' })
+    @Index({ unique: true })
+    @Column({ type: 'int', unique: true })
     lgdstateid: number;
 }
