@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import {
   Loader2,
   CheckCircle2,
@@ -13,12 +13,16 @@ import {
   FileText,
   Users2,
   Banknote,
-  BadgeCheck,
   MailOpen,
   Users,
   ArrowRight,
+  Eye,
 } from "lucide-react";
 import api from "@/lib/api";
+import JobDetailModal from "@/views/sent-offer/view/JobDetailModal";
+import OfferViewModal from "@/views/received-offers/view/OfferViewModal";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface Offer {
   offer_id: number;
@@ -41,28 +45,28 @@ const statusConfig: Record<
   { badge: string; icon: any; label: string; ring: string }
 > = {
   Pending: {
-    badge: "badge-warning",
+    badge: "bg-amber-100 text-amber-700",
     icon: Clock,
     label: "Pending",
-    ring: "border-warning/20",
+    ring: "border-amber-200",
   },
   Accepted: {
-    badge: "badge-success",
+    badge: "bg-green-100 text-green-700",
     icon: CheckCircle2,
     label: "Accepted",
-    ring: "border-success/20",
+    ring: "border-green-200",
   },
   Rejected: {
-    badge: "badge-error",
+    badge: "bg-red-100 text-red-700",
     icon: XCircle,
     label: "Rejected",
-    ring: "border-error/20",
+    ring: "border-red-200",
   },
   Withdrawn: {
-    badge: "badge-neutral",
+    badge: "bg-gray-100 text-gray-600",
     icon: XCircle,
     label: "Withdrawn",
-    ring: "border-base-300",
+    ring: "border-gray-200",
   },
 };
 
@@ -72,7 +76,21 @@ export default function ReceivedOffersPage() {
   const [updating, setUpdating] = useState<number | null>(null);
   const [filter, setFilter] = useState<string>("All");
 
-  // ─── ALL LOGIC UNCHANGED ───────────────────────────────────────────────────
+  const [currentOffer, setCurrentOffer] = useState<Offer | null>(null);
+  const [viewModal, setViewModal] = useState<boolean>(false);
+
+  const currnetOfferRedirect: any = useSelector(
+    (state: RootState) => state?.institutes?.offer,
+  );
+
+  console.log("currentOfferRedireec", currnetOfferRedirect);
+
+  useEffect(() => {
+    if (currnetOfferRedirect?.status) {
+      setFilter(currnetOfferRedirect?.status);
+    }
+  }, [currnetOfferRedirect]);
+
   const load = async () => {
     setLoading(true);
     try {
@@ -100,6 +118,7 @@ export default function ReceivedOffersPage() {
   };
 
   const fmt = (n?: number) => (n ? `₹${(n / 100000).toFixed(1)}L` : null);
+
   const salaryStr = (min?: number, max?: number) => {
     const mn = fmt(min);
     const mx = fmt(max);
@@ -123,6 +142,7 @@ export default function ReceivedOffersPage() {
   };
 
   const tabs = ["All", "Pending", "Accepted", "Rejected", "Withdrawn"];
+
   const counts = tabs.reduce(
     (acc, t) => ({
       ...acc,
@@ -137,264 +157,234 @@ export default function ReceivedOffersPage() {
   const filtered =
     filter === "All" ? offers : offers.filter((o) => o.status === filter);
 
-  // ─── COMPACT Detail Component ──────────────────────────────────────────────
-  function Detail({ icon: Icon, label, value, highlight, success }: any) {
+  function Detail({ icon: Icon, label, value }: any) {
     return (
-      <div className="flex flex-col gap-0.5">
-        <div className="flex items-center gap-1 text-xs text-base-content/50">
-          <Icon size={10} />
-          <span className="truncate">{label}</span>
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-1 text-xs text-gray-400">
+          <Icon size={12} />
+          {label}
         </div>
-        <div
-          className={`font-medium text-xs ${
-            success
-              ? "text-success"
-              : highlight
-                ? "text-warning"
-                : value
-                  ? "text-base-content"
-                  : "text-base-content/30 font-normal"
-          }`}
-        >
+        <div className="text-sm font-semibold text-gray-700">
           {value ?? "—"}
         </div>
       </div>
     );
   }
 
-  // ─── RENDER (ULTRA-MINIMAL SPACING) ────────────────────────────────────────
   return (
-    <div className="p-2 sm:p-3 lg:p-4">
-      <div className="w-full">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-base-content flex items-center gap-2 mb-1">
-                <MailOpen size={24} className="text-primary" />
-                Received Job Offers
-              </h1>
-              <p className="text-base-content/60 text-sm sm:text-base max-w-xl">
-                Job offers sent to your institute by industry partners
-              </p>
-            </div>
-            {!loading && offers.length > 0 && (
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {["Pending", "Accepted", "Rejected"].map(
-                  (s) =>
-                    counts[s] > 0 && (
-                      <span
-                        key={s}
-                        className="badge badge-outline badge-xs text-xs px-2"
-                      >
-                        {counts[s]} {s}
-                      </span>
-                    ),
-                )}
-              </div>
-            )}
-          </div>
+    <div className="p-4 sm:p-6">
+      {/* Header */}
+      <div className="mb-8 flex flex-col lg:flex-row justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <MailOpen size={28} className="text-primary" />
+            Received Job Offers
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Job offers sent to your institute by industry partners
+          </p>
         </div>
+      </div>
 
-        {/* Compact Tabs */}
-        {!loading && offers.length > 0 && (
-          <section className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-            {tabs.map((t, idx) => {
-              const isActive = filter === t;
-              const count = counts[t] || 0;
-              const Icon =
-                t === "All"
-                  ? Users
-                  : t === "Pending"
-                    ? Clock
-                    : t === "Accepted"
-                      ? CheckCircle2
-                      : t === "Rejected"
-                        ? XCircle
-                        : ArrowRight;
+      {/* Tabs */}
+      {!loading && offers.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-10">
+          {tabs.map((t) => {
+            const isActive = filter === t;
+            const count = counts[t] || 0;
 
-              return (
-                <button
-                  key={t}
-                  onClick={() => setFilter(t)}
-                  className="group bg-white/80 hover:bg-white data-[active=true]:bg-primary/90 data-[active=true]:text-white rounded-lg p-3 shadow-sm hover:shadow-md border border-gray-200/50 hover:border-primary/40 transition-all duration-200 h-full flex flex-col justify-center items-center gap-2"
-                  data-active={isActive}
+            const Icon =
+              t === "All"
+                ? Users
+                : t === "Pending"
+                  ? Clock
+                  : t === "Accepted"
+                    ? CheckCircle2
+                    : t === "Rejected"
+                      ? XCircle
+                      : ArrowRight;
+
+            return (
+              <button
+                key={t}
+                onClick={() => setFilter(t)}
+                className={`group relative rounded-2xl p-5 border transition-all duration-300 text-center overflow-hidden
+            ${
+              isActive
+                ? "bg-primary text-white border-primary shadow-lg scale-[1.02]"
+                : "bg-white border-gray-200 hover:border-primary/40 hover:shadow-md hover:-translate-y-1"
+            }`}
+              >
+                {/* Background Glow Effect */}
+                {!isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                )}
+
+                {/* Icon */}
+                <div
+                  className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center transition-all duration-300
+              ${
+                isActive
+                  ? "bg-white/20"
+                  : "bg-gray-100 group-hover:bg-primary/10"
+              }`}
                 >
-                  {/* Icon */}
-                  <div
-                    className={`w-10 h-10 bg-gradient-to-br ${isActive ? "from-primary to-primary/80 shadow-lg" : "from-gray-100 to-gray-200 group-hover:from-primary/10"} rounded-lg flex items-center justify-center transition-all mb-2`}
-                  >
-                    <Icon
-                      size={18}
-                      className={`${isActive ? "text-white drop-shadow-sm" : "text-gray-600 group-hover:text-primary"}`}
-                    />
+                  <Icon
+                    size={20}
+                    className={`transition-colors duration-300 ${
+                      isActive
+                        ? "text-white"
+                        : "text-gray-500 group-hover:text-primary"
+                    }`}
+                  />
+                </div>
+
+                {/* Label */}
+                <div
+                  className={`text-sm font-semibold transition-colors duration-300 ${
+                    isActive
+                      ? "text-white"
+                      : "text-gray-700 group-hover:text-primary"
+                  }`}
+                >
+                  {t}
+                </div>
+
+                {/* Count */}
+                <div
+                  className={`text-2xl font-bold mt-1 transition-all duration-300 ${
+                    isActive
+                      ? "text-white"
+                      : "text-gray-900 group-hover:text-primary"
+                  }`}
+                >
+                  {count}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Content */}
+      {loading ? (
+        <div className="text-center py-16">
+          <Loader2 className="animate-spin mx-auto" size={30} />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-16 text-gray-400">
+          <Send size={30} className="mx-auto mb-3" />
+          <p>No offers found</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {filtered.map((offer) => {
+            const sc = statusConfig[offer.status] ?? statusConfig["Pending"];
+            const StatusIcon = sc.icon;
+            const salary = salaryStr(offer.salary_min, offer.salary_max);
+            const isPending = offer.status === "Pending";
+
+            return (
+              <div
+                key={offer.offer_id}
+                className={`bg-white rounded-2xl border ${sc.ring} shadow-md hover:shadow-lg transition-all p-6`}
+              >
+                {/* Header */}
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h2 className="text-xl font-bold">{offer.job_title}</h2>
+                    <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                      <Building2 size={14} />
+                      {offer.industry?.industry_name ?? "Industry"}
+                    </div>
                   </div>
 
-                  {/* Label - Always visible, bold on hover */}
-                  <p
-                    className={`text-xs font-semibold transition-all ${isActive ? "text-white" : "text-gray-700 group-hover:text-primary font-bold"}`}
-                  >
-                    {t}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    {/* Eye Button */}
+                    <button
+                      className="p-2 rounded-lg border hover:bg-gray-100 transition"
+                      onClick={() => {
+                        setViewModal(true);
+                        setCurrentOffer(offer);
+                      }}
+                    >
+                      <Eye size={18} />
+                    </button>
 
-                  {/* Count */}
-                  <p className="text-lg font-bold text-gray-900 data-[active=true]:text-white">
-                    {count}
-                  </p>
-                </button>
-              );
-            })}
-          </section>
-        )}
-
-        {/* Content */}
-        {loading ? (
-          <div className="grid grid-cols-1 gap-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-32 rounded-xl bg-base-100 border border-base-200 animate-pulse"
-              />
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-base-content/40 text-center">
-            <div className="w-14 h-14 rounded-xl bg-base-100 border border-base-200 flex items-center justify-center">
-              <Send size={24} className="opacity-40" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold mb-1">
-                {filter === "All"
-                  ? "No job offers"
-                  : `No ${filter.toLowerCase()} offers`}
-              </h3>
-              <p className="text-sm">Check back later for new opportunities</p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filtered.map((offer) => {
-              const sc = statusConfig[offer.status] ?? statusConfig["Pending"];
-              const StatusIcon = sc.icon;
-              const salary = salaryStr(offer.salary_min, offer.salary_max);
-              const isPending = offer.status === "Pending";
-
-              return (
-                <div
-                  key={offer.offer_id}
-                  className={`rounded-xl bg-base-100 border-2 ${sc.ring} shadow-sm hover:shadow-md transition-all duration-200 p-4`}
-                >
-                  {/* Header - Compact */}
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className="text-lg font-bold text-base-content truncate">
-                          {offer.job_title}
-                        </h2>
-                        <span
-                          className={`badge ${sc.badge} badge-sm text-xs gap-1 px-2 py-0.5`}
-                        >
-                          <StatusIcon size={10} />
-                          {sc.label}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-1.5 text-xs text-base-content/60">
-                        <Building2 size={12} />
-                        <span className="font-medium truncate">
-                          {offer.industry?.industry_name ?? "Industry"}
-                        </span>
-                        {offer.industry?.email && (
-                          <span className="opacity-50 truncate max-w-32">
-                            · {offer.industry.email}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <span className="text-xs bg-base-50 px-2 py-0.5 rounded-full text-base-content/40 whitespace-nowrap">
-                      #{offer.offer_id}
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${sc.badge}`}
+                    >
+                      <StatusIcon size={12} />
+                      {sc.label}
                     </span>
                   </div>
-
-                  {/* Details Grid - Compact */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-                    <Detail
-                      icon={CalendarDays}
-                      label="Offer Date"
-                      value={formatDate(offer.offer_date)}
-                    />
-                    <Detail
-                      icon={CalendarClock}
-                      label="Apply By"
-                      value={formatDate(offer.last_date)}
-                      highlight
-                    />
-                    <Detail
-                      icon={Users2}
-                      label="Posts"
-                      value={offer.number_of_posts?.toString() ?? null}
-                    />
-                    <Detail
-                      icon={Banknote}
-                      label="Salary"
-                      value={salary}
-                      success
-                    />
-                  </div>
-
-                  {/* Description - Compact */}
-                  {offer.job_description && (
-                    <div className="pt-3 mt-3 border-t border-base-200">
-                      <div className="flex items-center gap-1.5 text-xs text-base-content/50 mb-1.5">
-                        <FileText size={10} />
-                        <span>Job Description</span>
-                      </div>
-                      <p className="text-sm text-base-content/70 leading-relaxed text-xs max-h-12 overflow-hidden line-clamp-3">
-                        {offer.job_description}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Action Buttons - Compact */}
-                  {isPending && (
-                    <div className="pt-3 mt-3 border-t border-base-200">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() =>
-                            updateStatus(offer.offer_id, "Accepted")
-                          }
-                          disabled={updating === offer.offer_id}
-                          className="btn btn-success text-xs gap-1 px-3 py-1.5 flex-1 h-auto"
-                        >
-                          {updating === offer.offer_id ? (
-                            <Loader2 size={12} className="animate-spin" />
-                          ) : (
-                            <CheckCircle2 size={12} />
-                          )}
-                          Accept
-                        </button>
-                        <button
-                          onClick={() =>
-                            updateStatus(offer.offer_id, "Rejected")
-                          }
-                          disabled={updating === offer.offer_id}
-                          className="btn btn-outline btn-error text-xs gap-1 px-3 py-1.5 flex-1 h-auto"
-                        >
-                          {updating === offer.offer_id ? (
-                            <Loader2 size={12} className="animate-spin" />
-                          ) : (
-                            <XCircle size={12} />
-                          )}
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+
+                {/* Details */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                  <Detail
+                    icon={CalendarDays}
+                    label="Offer Date"
+                    value={formatDate(offer.offer_date)}
+                  />
+                  <Detail
+                    icon={CalendarClock}
+                    label="Apply By"
+                    value={formatDate(offer.last_date)}
+                  />
+                  <Detail
+                    icon={Users2}
+                    label="Posts"
+                    value={offer.number_of_posts?.toString()}
+                  />
+                  <Detail icon={Banknote} label="Salary" value={salary} />
+                </div>
+
+                {offer.job_description && (
+                  <p className="text-sm text-gray-600 mb-4">
+                    {offer.job_description}
+                  </p>
+                )}
+
+                {/* Buttons */}
+                {isPending && (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => updateStatus(offer.offer_id, "Accepted")}
+                      disabled={updating === offer.offer_id}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition"
+                    >
+                      {updating === offer.offer_id ? (
+                        <Loader2 size={16} className="animate-spin mx-auto" />
+                      ) : (
+                        "Accept"
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => updateStatus(offer.offer_id, "Rejected")}
+                      disabled={updating === offer.offer_id}
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg transition"
+                    >
+                      {updating === offer.offer_id ? (
+                        <Loader2 size={16} className="animate-spin mx-auto" />
+                      ) : (
+                        "Reject"
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <OfferViewModal
+        open={viewModal}
+        setOpen={setViewModal}
+        offer={currentOffer}
+      />
     </div>
   );
 }

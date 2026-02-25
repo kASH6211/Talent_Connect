@@ -16,6 +16,11 @@ import {
   Inbox,
 } from "lucide-react";
 import api from "@/lib/api";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
+import { off } from "process";
+import { setCurrentOffer } from "@/store/institute";
+import { useRouter } from "next/navigation";
 
 interface Offer {
   offer_id: number;
@@ -68,6 +73,9 @@ export default function InstituteDashboard({
   const [recentOffers, setRecentOffers] = useState<Offer[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingOffers, setLoadingOffers] = useState(true);
+
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
 
   // ─── ALL LOGIC 100% UNCHANGED ──────────────────────────────────────────────
   useEffect(() => {
@@ -286,6 +294,10 @@ export default function InstituteDashboard({
                 const salary = salaryStr(offer.salary_min, offer.salary_max);
                 return (
                   <div
+                    onClick={() => {
+                      dispatch(setCurrentOffer(offer));
+                      router.push("/received-offers");
+                    }}
                     key={offer.offer_id}
                     className="group flex items-center gap-3 p-3 rounded-lg bg-base-100 border border-base-200/50 hover:border-primary/30 hover:bg-base-50 hover:shadow-sm transition-all"
                   >

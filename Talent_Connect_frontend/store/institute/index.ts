@@ -1,6 +1,7 @@
 import { apiConfig } from "@/lib/apiConfig";
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { any } from "zod";
 
 /* ===============================
    INITIAL STATE
@@ -103,6 +104,7 @@ export const deleteInstitute = createAsyncThunk(
 const initialState = {
   data: [],
   institute: null,
+  offer: {},
   ui: {
     addInstitute: { open: false },
     updateInstitute: { open: false },
@@ -124,6 +126,9 @@ const adminInstituteSlice = createSlice({
       action: PayloadAction<Partial<typeof state.ui>>,
     ) => {
       state.ui = { ...state.ui, ...action.payload };
+    },
+    setCurrentOffer: (state, action: PayloadAction<any>) => {
+      state.offer = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -204,6 +209,6 @@ const adminInstituteSlice = createSlice({
    EXPORTS
 ================================= */
 
-export const { clearSelectedInstitute, updateUiInstitute } =
+export const { clearSelectedInstitute, updateUiInstitute, setCurrentOffer } =
   adminInstituteSlice.actions;
 export default adminInstituteSlice.reducer;
