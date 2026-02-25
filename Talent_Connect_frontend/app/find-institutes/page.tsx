@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Search,
   Send,
-  SortAsc,
-  SortDesc,
   CheckSquare,
   Square,
   Loader2,
@@ -17,7 +15,11 @@ import {
   GraduationCap,
   Landmark,
   ChevronDown,
-  ArrowUpDown,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  Mail,
+  Phone,
 } from "lucide-react";
 import api from "@/lib/api";
 import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
@@ -25,7 +27,6 @@ import CommonModal from "@/components2/common/CommonModal";
 import { CommonInputField } from "@/components2/forms/CommonInputField";
 import { useAuth } from "@/hooks/useAuth";
 
-// ─── Types & Interfaces (UNCHANGED) ──────────────────────────────────────────
 interface InstituteRow {
   institute_id: number;
   institute_name: string;
@@ -57,7 +58,7 @@ const EMPTY_FILTERS: Filters = {
   stream_ids: [],
 };
 
-// ─── OfferModal (Compact Design) ─────────────────────────────────────────────
+// ─── OfferModal (Improved Design) ─────────────────────────────────────────────
 function OfferModal({
   isOpen,
   selectedIds,
@@ -123,38 +124,26 @@ function OfferModal({
   };
 
   return (
-    <CommonModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Send Job Offer"
-      size="lg"
-    >
-      <div className="space-y-4 p-2">
+    <CommonModal isOpen={isOpen} onClose={onClose} title="Send Job Offer" size="lg">
+      <div className="space-y-5 p-4">
         {/* Selected Institutes Preview */}
-        <div className="p-4 bg-base-50/50 rounded-xl border border-base-200">
-          <div className="flex items-center gap-2 mb-2 text-sm text-base-content/70">
-            <Send size={14} className="text-primary" />
-            <span>
-              Sending to{" "}
-              <span className="font-semibold text-primary">
-                {selectedIds.length}
-              </span>{" "}
-              institute{selectedIds.length !== 1 ? "s" : ""}
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-3 text-sm">
+            <Send size={16} className="text-blue-600 dark:text-blue-400" />
+            <span className="font-semibold text-slate-900 dark:text-white">
+              Sending to <span className="text-blue-600 dark:text-blue-400">{selectedIds.length}</span> institute{selectedIds.length !== 1 ? "s" : ""}
             </span>
           </div>
-          <div className="flex flex-wrap gap-1.5 max-h-16 overflow-y-auto p-1">
+          <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
             {selectedIds.map((id) => (
-              <span
-                key={id}
-                className="badge badge-primary badge-outline text-xs px-2 py-0.5 truncate max-w-28"
-              >
+              <span key={id} className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-medium px-3 py-1.5 rounded-lg">
                 {institutesMap.get(id)}
               </span>
             ))}
           </div>
         </div>
 
-        {/* Job Details */}
+        {/* Job Title */}
         <CommonInputField
           label="Job Title *"
           value={jobTitle}
@@ -162,16 +151,17 @@ function OfferModal({
           placeholder="e.g. Software Engineer"
         />
 
-        <div className="space-y-2">
-          <label className="label">
-            <span className="label-text font-medium">Job Description</span>
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+            Job Description
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             placeholder="Role overview, responsibilities..."
-            className="textarea textarea-bordered w-full rounded-xl resize-vertical text-sm"
+            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -201,8 +191,21 @@ function OfferModal({
           placeholder="5"
         />
 
+        {/* Last Date */}
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+            Application Deadline
+          </label>
+          <input
+            type="date"
+            value={lastDate}
+            onChange={(e) => setLastDate(e.target.value)}
+            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
         {/* Requirements */}
-        <div className="space-y-2">
+        <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-700">
           <MultiSelectDropdown
             label="Qualifications"
             options={qualOptions}
@@ -226,42 +229,27 @@ function OfferModal({
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="label">
-            <span className="label-text font-medium">Last Date</span>
-          </label>
-          <input
-            type="date"
-            value={lastDate}
-            onChange={(e) => setLastDate(e.target.value)}
-            className="input input-bordered w-full rounded-xl text-sm"
-          />
-        </div>
-
         {error && (
-          <div className="alert alert-error text-sm shadow-md">
-            <X size={14} />
-            <span>{error}</span>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-start gap-2 text-sm">
+            <X size={16} className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+            <span className="text-red-700 dark:text-red-300">{error}</span>
           </div>
         )}
 
-        <div className="flex items-center justify-end gap-2 pt-3 border-t border-base-200">
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
           <button
             onClick={onClose}
-            className="btn btn-ghost btn-sm px-4 text-sm"
+            className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg font-medium transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSend}
             disabled={sending}
-            className="btn btn-primary btn-sm gap-1.5 px-6 text-sm"
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
           >
-            {sending ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Send size={14} />
-            )}
+            {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
             {sending ? "Sending..." : `Send to ${selectedIds.length}`}
           </button>
         </div>
@@ -270,75 +258,89 @@ function OfferModal({
   );
 }
 
-// ─── Compact InstituteCard ───────────────────────────────────────────────────
-function InstituteCard({ institute, isSelected, onToggle }: any) {
+// ─── Institute Detail View Modal ──────────────────────────────────────────────
+function InstituteDetailModal({
+  isOpen,
+  institute,
+  onClose,
+}: {
+  isOpen: boolean;
+  institute: InstituteRow | null;
+  onClose: () => void;
+}) {
+  if (!institute) return null;
+
   return (
-    <div
-      onClick={() => onToggle(institute.institute_id)}
-      className={`group rounded-xl bg-base-100 border-2 p-4 hover:shadow-lg transition-all duration-200 cursor-pointer hover:scale-[1.02] ${
-        isSelected
-          ? "border-primary/40 bg-primary/3 shadow-md ring-1 ring-primary/20"
-          : "border-base-200 hover:border-primary/20"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-          <div
-            className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
-              isSelected
-                ? "bg-primary text-primary-content shadow-md"
-                : "bg-base-200 group-hover:bg-primary/10"
-            }`}
-          >
-            {isSelected ? (
-              <CheckSquare size={16} />
-            ) : (
-              <Square
-                size={16}
-                className="opacity-60 group-hover:opacity-100"
-              />
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-sm text-base-content group-hover:text-primary truncate">
-              {institute.institute_name}
-            </h3>
-            <p className="text-xs text-base-content/60 mt-0.5 flex items-center gap-1">
-              <MapPin size={12} />
-              {institute.district || "—"}
-            </p>
-          </div>
+    <CommonModal isOpen={isOpen} onClose={onClose} title="Institute Details" size="md">
+      <div className="space-y-4 p-4">
+        <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+            {institute.institute_name}
+          </h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
+            <GraduationCap size={14} />
+            ID: #{institute.institute_id}
+          </p>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-base-content/50">
-          <Users size={12} />
-          <span className="font-medium bg-base-100 px-1.5 py-0.5 rounded text-xs">
-            {institute.student_count.toLocaleString()}
-          </span>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-        <div className="flex items-center gap-1.5 text-base-content/60">
-          <Building2 size={11} />
-          <span className="truncate">{institute.type || "—"}</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-base-content/60">
-          <Landmark size={11} />
-          <span className="truncate">{institute.ownership || "—"}</span>
-        </div>
-      </div>
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1 block">
+              <MapPin size={12} className="inline mr-1" />
+              Location
+            </label>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">{institute.district || "—"}</p>
+          </div>
 
-      <div className="pt-2 mt-2 border-t border-base-200">
-        <div className="flex items-center gap-1.5 text-xs text-base-content/40">
-          <GraduationCap size={11} />
-          <span>ID: #{institute.institute_id}</span>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1 block">
+                <Building2 size={12} className="inline mr-1" />
+                Type
+              </label>
+              <p className="text-sm font-medium text-slate-900 dark:text-white">{institute.type || "—"}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1 block">
+                <Landmark size={12} className="inline mr-1" />
+                Ownership
+              </label>
+              <p className="text-sm font-medium text-slate-900 dark:text-white">{institute.ownership || "—"}</p>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1 block">
+              <Users size={12} className="inline mr-1" />
+              Student Count
+            </label>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">{institute.student_count.toLocaleString()}</p>
+          </div>
+
+          <hr className="border-slate-200 dark:border-slate-700" />
+
+          <div>
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1 block">
+              <Mail size={12} className="inline mr-1" />
+              Email
+            </label>
+            <p className="text-sm font-medium text-blue-600 dark:text-blue-400 break-all">{institute.email || "—"}</p>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-1 block">
+              <Phone size={12} className="inline mr-1" />
+              Phone
+            </label>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">{institute.mobileno || "—"}</p>
+          </div>
         </div>
       </div>
-    </div>
+    </CommonModal>
   );
 }
 
-// ─── Main Component (ULTRA-MINIMAL SPACING) ───────────────────────────────────
+// ─── Main Component ──────────────────────────────────────────────────────────
 export default function FindInstitutesPage() {
   const { user, isIndustry } = useAuth();
 
@@ -351,146 +353,24 @@ export default function FindInstitutesPage() {
   const [searched, setSearched] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
-  const [stateOpts, setStateOpts] = useState<Option[]>([]);
-  const [districtOpts, setDistrictOpts] = useState<Option[]>([]);
-  const [typeOpts, setTypeOpts] = useState<Option[]>([]);
-  const [ownershipOpts, setOwnershipOpts] = useState<Option[]>([]);
-  const [qualOpts, setQualOpts] = useState<Option[]>([]);
-  const [programOpts, setProgramOpts] = useState<Option[]>([]);
-  const [streamOpts, setStreamOpts] = useState<Option[]>([]);
-
-  const [showModal, setShowModal] = useState(false);
+  const [showOfferModal, setShowOfferModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedInstitute, setSelectedInstitute] = useState<InstituteRow | null>(null);
   const [sentSuccess, setSentSuccess] = useState(false);
 
-  // ─── ALL LOGIC UNCHANGED (useEffect hooks, handlers, etc.) ─────────────────
-  useEffect(() => {
-    const load = async () => {
-      const [states, types, own, qual] = await Promise.all([
-        api
-          .get("/state")
-          .then((r) =>
-            r.data
-              .map((s: any) => ({ value: s.lgdstateid, label: s.statename }))
-              .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
-          )
-          .catch(() => []),
-        api
-          .get("/institute-type")
-          .then((r) =>
-            r.data.map((t: any) => ({
-              value: t.institute_type_id,
-              label: t.institute_type,
-            })),
-          )
-          .catch(() => []),
-        api
-          .get("/institute-ownership-type")
-          .then((r) =>
-            r.data.map((o: any) => ({
-              value: o.institute_ownership_type_id,
-              label: o.institute_type,
-            })),
-          )
-          .catch(() => []),
-        api
-          .get("/qualification")
-          .then((r) =>
-            r.data.map((q: any) => ({
-              value: q.qualificationid,
-              label: q.qualification,
-            })),
-          )
-          .catch(() => []),
-      ]);
-      setStateOpts(states);
-      setTypeOpts(types);
-      setOwnershipOpts(own);
-      setQualOpts(qual);
-    };
-    load();
-  }, []);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  const totalPages = Math.ceil(institutes.length / pageSize);
+
+  const paginatedInstitutes = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return institutes.slice(start, start + pageSize);
+  }, [institutes, currentPage]);
 
   useEffect(() => {
-    const loadDistricts = async () => {
-      if (filters.state_ids.length === 0) {
-        const res = await api.get("/district");
-        setDistrictOpts(
-          res.data
-            .map((d: any) => ({ value: d.districtid, label: d.districtname }))
-            .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
-        );
-      } else {
-        const results = await Promise.all(
-          filters.state_ids.map((sId) =>
-            api.get(`/district?state_id=${sId}`).then((r) => r.data),
-          ),
-        );
-        const merged = results.flat();
-        const unique = Array.from(
-          new Map(merged.map((d: any) => [d.districtid, d])).values(),
-        );
-        setDistrictOpts(
-          unique
-            .map((d: any) => ({ value: d.districtid, label: d.districtname }))
-            .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
-        );
-        setFilters((f) => ({ ...f, district_ids: [] }));
-      }
-    };
-    loadDistricts();
-  }, [filters.state_ids]);
-
-  useEffect(() => {
-    const loadPrograms = async () => {
-      if (filters.qualification_ids.length > 0) {
-        const qId = filters.qualification_ids[0];
-        const res = await api.get(
-          `/program-qualification-mapping?qualification_id=${qId}`,
-        );
-        const progs = res.data.map((m: any) => ({
-          value: m.program.programId,
-          label: m.program.program_name,
-        }));
-        const unique = Array.from(
-          new Map(progs.map((p: any) => [p.value, p])).values(),
-        );
-        setProgramOpts(unique as Option[]);
-      } else {
-        const res = await api.get("/program");
-        setProgramOpts(
-          res.data.map((p: any) => ({
-            value: p.programId,
-            label: p.program_name,
-          })),
-        );
-      }
-    };
-    loadPrograms();
-  }, [filters.qualification_ids]);
-
-  useEffect(() => {
-    const loadStreams = async () => {
-      if (filters.program_ids.length > 0) {
-        const pId = filters.program_ids[0];
-        const res = await api.get(`/stream-branch?program_id=${pId}`);
-        setStreamOpts(
-          res.data.map((s: any) => ({
-            value: s.stream_branch_Id,
-            label: s.stream_branch_name,
-          })),
-        );
-      } else {
-        const res = await api.get("/stream-branch");
-        setStreamOpts(
-          res.data.map((s: any) => ({
-            value: s.stream_branch_Id,
-            label: s.stream_branch_name,
-          })),
-        );
-      }
-    };
-    loadStreams();
-  }, [filters.program_ids]);
+    setCurrentPage(1);
+  }, [institutes]);
 
   const setFilter = (key: keyof Filters) => (vals: number[]) =>
     setFilters((f) => ({ ...f, [key]: vals }));
@@ -499,6 +379,7 @@ export default function FindInstitutesPage() {
     setLoading(true);
     setSearched(true);
     setSelected(new Set());
+
     const params = new URLSearchParams();
     if (filters.district_ids.length)
       params.set("district_ids", filters.district_ids.join(","));
@@ -512,14 +393,17 @@ export default function FindInstitutesPage() {
       params.set("program_ids", filters.program_ids.join(","));
     if (filters.stream_ids.length)
       params.set("stream_ids", filters.stream_ids.join(","));
+
     params.set("sort", sort);
     params.set("order", order);
+
     try {
       const res = await api.get(`/institute/search?${params}`);
       setInstitutes(res.data);
     } catch {
       setInstitutes([]);
     }
+
     setLoading(false);
   }, [filters, sort, order]);
 
@@ -529,277 +413,277 @@ export default function FindInstitutesPage() {
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+
   const allSelected =
-    institutes.length > 0 &&
-    institutes.every((i) => selected.has(i.institute_id));
-  const toggleAll = () =>
-    setSelected(
-      allSelected ? new Set() : new Set(institutes.map((i) => i.institute_id)),
-    );
+    paginatedInstitutes.length > 0 &&
+    paginatedInstitutes.every((i: any) => selected.has(i.institute_id));
+
+  const toggleAll = () => {
+    if (allSelected) {
+      const newSet = new Set(selected);
+      paginatedInstitutes.forEach((i: any) => newSet.delete(i.institute_id));
+      setSelected(newSet);
+    } else {
+      const newSet = new Set(selected);
+      paginatedInstitutes.forEach((i: any) => newSet.add(i.institute_id));
+      setSelected(newSet);
+    }
+  };
 
   const institutesMap = new Map(
-    institutes.map((i) => [i.institute_id, i.institute_name]),
+    institutes.map((i) => [i.institute_id, i.institute_name])
   );
 
-  // ─── RENDER ─────────────────────────────────────────────────────────────────
   return (
-    <div className="p-2 sm:p-3 lg:p-4">
-      <div className="w-full">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-base-content flex items-center gap-2 mb-1">
-                <Filter size={24} className="text-primary" />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-blue-600 dark:bg-blue-500 flex items-center justify-center">
+                <Filter size={20} className="text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
                 Find Institutes
               </h1>
-              <p className="text-base-content/60 text-sm sm:text-base max-w-xl">
-                Discover institutes and send job offers directly to placement
-                cells
-              </p>
             </div>
-            {searched && (
-              <div className="stats bg-base-50 shadow-md stats-horizontal">
-                <div className="stat place-items-center">
-                  <div className="stat-title text-xs">Total Found</div>
-                  <div className="stat-value text-primary text-sm">
-                    {institutes.length}
-                  </div>
-                </div>
-                {selected.size > 0 && (
-                  <div className="stat place-items-center">
-                    <div className="stat-title text-xs">Selected</div>
-                    <div className="stat-value text-success text-sm">
-                      {selected.size}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+            <p className="text-slate-600 dark:text-slate-400 ml-13">
+              Search and send bulk job offers to institutes
+            </p>
           </div>
+
+          {selected.size > 0 && (
+            <button
+              onClick={() => setShowOfferModal(true)}
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors shadow-md hover:shadow-lg"
+            >
+              <Send size={16} />
+              Send to {selected.size}
+            </button>
+          )}
         </div>
 
-        {/* Filters Card */}
-        <div className="rounded-xl bg-gradient-to-br from-base-100 to-base-200 border border-base-300 shadow-lg p-4 mb-6">
-          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-base-200">
-            <Filter size={20} className="text-primary" />
-            <h2 className="text-lg font-bold text-base-content">Filters</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mb-4">
-            <MultiSelectDropdown
-              label="State"
-              options={stateOpts}
-              selected={filters.state_ids}
-              onChange={setFilter("state_ids")}
-            />
-            <MultiSelectDropdown
-              label="District"
-              options={districtOpts}
-              selected={filters.district_ids}
-              onChange={setFilter("district_ids")}
-            />
-            <MultiSelectDropdown
-              label="Institute Type"
-              options={typeOpts}
-              selected={filters.type_ids}
-              onChange={setFilter("type_ids")}
-            />
-            <MultiSelectDropdown
-              label="Ownership"
-              options={ownershipOpts}
-              selected={filters.ownership_ids}
-              onChange={setFilter("ownership_ids")}
-            />
-            <MultiSelectDropdown
-              label="Qualification"
-              options={qualOpts}
-              selected={filters.qualification_ids}
-              onChange={setFilter("qualification_ids")}
-            />
-            <MultiSelectDropdown
-              label="Program"
-              options={programOpts}
-              selected={filters.program_ids}
-              onChange={setFilter("program_ids")}
-            />
-            <MultiSelectDropdown
-              label="Stream"
-              options={streamOpts}
-              selected={filters.stream_ids}
-              onChange={setFilter("stream_ids")}
-            />
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-base-200">
-            <button
-              onClick={handleSearch}
-              disabled={loading}
-              className="btn btn-primary flex-1 gap-2 text-sm shadow-md hover:shadow-lg"
-            >
-              {loading ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Search size={16} />
-              )}
-              {loading ? "Searching..." : "Search"}
-            </button>
-            <button
-              onClick={() => setFilters(EMPTY_FILTERS)}
-              disabled={loading}
-              className="btn btn-outline px-4 text-sm shadow-md hover:shadow-lg"
-            >
-              Reset
-            </button>
-          </div>
-        </div>
-
-        {/* Results */}
-        {searched && (
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={toggleAll}
-                  className="btn btn-circle btn-outline btn-sm p-2"
-                >
-                  {allSelected ? (
-                    <CheckSquare size={16} className="text-primary" />
-                  ) : (
-                    <Square size={16} />
-                  )}
-                </button>
-                {/* <div>
-                  <h3 className="text-base sm:text-lg font-bold text-base-content">
-                    {institutes.length} institute
-                    {institutes.length !== 1 ? "s" : ""} found
-                  </h3>
-                  <p className="text-xs text-base-content/50">
-                    Click cards to select
-                  </p>
-                </div> */}
-                <div className="flex justify-between items-center gap-4 mb-6 flex-wrap">
-                  {/* Results Count */}
-                  <div>
-                    <h3 className="text-base sm:text-lg font-bold text-base-content">
-                      {institutes.length} institute
-                      {institutes.length !== 1 ? "s" : ""} found
-                    </h3>
-                    <p className="text-xs text-base-content/50">
-                      Click cards to select
-                    </p>
-                  </div>
-
-                  {/* Filters */}
-                  <div className="flex items-center justify-between gap-2">
-                    {/* Nearby */}
-                    <div className="flex items-center gap-1 px-3 py-1.5 bg-base-100 rounded-lg border text-xs shadow-sm hover:shadow-md transition-all">
-                      <MapPin size={13} />
-                      <select className="bg-transparent border-0 outline-none text-base-content/90 font-medium cursor-pointer text-xs ml-1">
-                        <option value="all">All Areas</option>
-                        <option value="nearby">Nearby</option>
-                        <option value="50km">50km</option>
-                        <option value="100km">100km</option>
-                      </select>
-                    </div>
-
-                    {/* Sort */}
-                    <div className="flex items-center gap-1 px-3 py-1.5 bg-base-100 rounded-lg border text-xs shadow-sm hover:shadow-md transition-all">
-                      <ArrowUpDown size={13} className="rotate-90" />
-                      <select className="bg-transparent border-0 outline-none text-base-content/90 font-medium cursor-pointer text-xs ml-1">
-                        <option value="name">A-Z</option>
-                        <option value="name-rev">Z-A</option>
-                        <option value="rating">Rating</option>
-                        <option value="students">Students</option>
-                      </select>
-                    </div>
-
-                    {/* Filter */}
-                    <div className="flex items-center gap-1 px-3 py-1.5 bg-base-100 rounded-lg border text-xs shadow-sm hover:shadow-md transition-all cursor-pointer">
-                      <Filter size={13} />
-                      <span className="text-base-content/90 font-medium text-xs ml-1">
-                        Filter
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {selected.size > 0 && (
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="btn btn-primary gap-2 text-sm shadow-md hover:shadow-lg"
-                >
-                  <Send size={16} />
-                  Send to {selected.size}
-                </button>
-              )}
-            </div>
-
+        {/* Search Button */}
+        <div className="mb-6">
+          <button
+            onClick={handleSearch}
+            disabled={loading}
+            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors disabled:opacity-50 shadow-md"
+          >
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3 text-base-content/40">
-                <div className="w-14 h-14 rounded-lg bg-base-200 flex items-center justify-center animate-pulse">
-                  <Search size={24} className="opacity-50" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-semibold">
-                    Searching institutes...
-                  </p>
-                </div>
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Search size={16} />
+            )}
+            {loading ? "Searching..." : "Search Institutes"}
+          </button>
+        </div>
+
+        {/* Results Section */}
+        {searched && (
+          <>
+            {loading ? (
+              <div className="flex justify-center py-20">
+                <Loader2 size={40} className="animate-spin text-blue-600" />
               </div>
             ) : institutes.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3 text-base-content/40 text-center rounded-lg border-2 border-dashed border-base-200 bg-base-50">
-                <div className="w-16 h-16 rounded-lg bg-base-200 flex items-center justify-center">
-                  <Search size={28} className="opacity-40" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold mb-1">
-                    No institutes found
-                  </h3>
-                  <p className="text-sm">Try adjusting your filters</p>
-                </div>
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-12 text-center">
+                <Building2 size={48} className="text-slate-400 dark:text-slate-600 mx-auto mb-3 opacity-50" />
+                <p className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
+                  No institutes found
+                </p>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Try adjusting your filters and search again
+                </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                {institutes.map((inst) => {
-                  const isSelected = selected.has(inst.institute_id);
-                  return (
-                    <InstituteCard
-                      key={inst.institute_id}
-                      institute={inst}
-                      isSelected={isSelected}
-                      onToggle={toggleSelect}
-                    />
-                  );
-                })}
-              </div>
+              <>
+                {/* Table */}
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-slate-100 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
+                        <tr>
+                          <th className="px-6 py-4 text-left">
+                            <button
+                              onClick={toggleAll}
+                              className="text-slate-700 dark:text-slate-300 hover:text-blue-600 transition-colors"
+                              title={allSelected ? "Deselect all" : "Select all"}
+                            >
+                              {allSelected ? (
+                                <CheckSquare size={18} />
+                              ) : (
+                                <Square size={18} />
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Institute Name
+                          </th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            District
+                          </th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Type
+                          </th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Ownership
+                          </th>
+                          <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900 dark:text-white">
+                            Students
+                          </th>
+                          <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900 dark:text-white">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                        {paginatedInstitutes.map((inst: any) => {
+                          const isSelected = selected.has(inst.institute_id);
+
+                          return (
+                            <tr
+                              key={inst.institute_id}
+                              className={`transition-colors ${
+                                isSelected
+                                  ? "bg-blue-50 dark:bg-blue-900/20"
+                                  : "hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                              }`}
+                            >
+                              <td className="px-6 py-4">
+                                <button
+                                  onClick={() => toggleSelect(inst.institute_id)}
+                                  className="text-slate-700 dark:text-slate-300 hover:text-blue-600 transition-colors"
+                                >
+                                  {isSelected ? (
+                                    <CheckSquare size={18} className="text-blue-600" />
+                                  ) : (
+                                    <Square size={18} />
+                                  )}
+                                </button>
+                              </td>
+
+                              <td className="px-6 py-4">
+                                <p className="font-semibold text-slate-900 dark:text-white">
+                                  {inst.institute_name}
+                                </p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                  ID: {inst.institute_id}
+                                </p>
+                              </td>
+
+                              <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">
+                                {inst.district || "—"}
+                              </td>
+
+                              <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">
+                                {inst.type || "—"}
+                              </td>
+
+                              <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">
+                                {inst.ownership || "—"}
+                              </td>
+
+                              <td className="px-6 py-4 text-sm font-semibold text-slate-900 dark:text-white">
+                                {inst.student_count.toLocaleString()}
+                              </td>
+
+                              <td className="px-6 py-4 text-center">
+                                <button
+                                  onClick={() => {
+                                    setSelectedInstitute(inst);
+                                    setShowDetailModal(true);
+                                  }}
+                                  className="p-2 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors inline-flex"
+                                  title="View details"
+                                >
+                                  <Eye size={18} />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Pagination */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-6">
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Showing <span className="font-semibold">{(currentPage - 1) * pageSize + 1}</span> to{" "}
+                    <span className="font-semibold">
+                      {Math.min(currentPage * pageSize, institutes.length)}
+                    </span>{" "}
+                    of <span className="font-semibold">{institutes.length}</span> institutes
+                  </p>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage((p) => p - 1)}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-lg border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Previous page"
+                    >
+                      <ChevronLeft size={18} className="text-slate-600 dark:text-slate-400" />
+                    </button>
+
+                    <span className="px-3 py-1 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                      Page {currentPage} of {totalPages}
+                    </span>
+
+                    <button
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-lg border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Next page"
+                    >
+                      <ChevronRight size={18} className="text-slate-600 dark:text-slate-400" />
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
-          </div>
+          </>
         )}
 
         {/* Success Toast */}
         {sentSuccess && (
-          <div className="fixed bottom-4 right-4 z-50">
-            <div className="alert alert-success shadow-lg max-w-sm border-none bg-gradient-to-r from-success/90 to-success text-success-content text-sm">
-              <Send size={16} />
-              <span>Job offers sent successfully!</span>
-            </div>
+          <div className="fixed bottom-6 right-6 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4">
+            <CheckSquare size={18} />
+            <span className="font-medium">Job offers sent successfully!</span>
+            <button
+              onClick={() => setSentSuccess(false)}
+              className="ml-2 hover:opacity-80"
+            >
+              <X size={16} />
+            </button>
           </div>
         )}
 
+        {/* Modals */}
         <OfferModal
-          isOpen={showModal}
+          isOpen={showOfferModal}
           selectedIds={Array.from(selected)}
           institutesMap={institutesMap}
           filters={filters}
-          qualOptions={qualOpts}
-          programOptions={programOpts}
-          streamOptions={streamOpts}
-          onClose={() => setShowModal(false)}
+          qualOptions={[]}
+          programOptions={[]}
+          streamOptions={[]}
+          onClose={() => setShowOfferModal(false)}
           onSent={() => {
-            setShowModal(false);
+            setShowOfferModal(false);
             setSentSuccess(true);
             setSelected(new Set());
           }}
+        />
+
+        <InstituteDetailModal
+          isOpen={showDetailModal}
+          institute={selectedInstitute}
+          onClose={() => setShowDetailModal(false)}
         />
       </div>
     </div>

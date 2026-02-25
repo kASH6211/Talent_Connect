@@ -30,12 +30,32 @@ interface Offer {
 
 const statusConfig: Record<
   string,
-  { badge: string; icon: any; label: string }
+  { bgColor: string; textColor: string; icon: any; label: string }
 > = {
-  Pending: { badge: "badge-warning", icon: Clock, label: "Pending" },
-  Accepted: { badge: "badge-success", icon: CheckCircle2, label: "Accepted" },
-  Rejected: { badge: "badge-error", icon: XCircle, label: "Rejected" },
-  Withdrawn: { badge: "badge-neutral", icon: XCircle, label: "Withdrawn" },
+  Pending: {
+    bgColor: "bg-amber-50 dark:bg-amber-900/20",
+    textColor: "text-amber-700 dark:text-amber-300",
+    icon: Clock,
+    label: "Pending",
+  },
+  Accepted: {
+    bgColor: "bg-green-50 dark:bg-green-900/20",
+    textColor: "text-green-700 dark:text-green-300",
+    icon: CheckCircle2,
+    label: "Accepted",
+  },
+  Rejected: {
+    bgColor: "bg-red-50 dark:bg-red-900/20",
+    textColor: "text-red-700 dark:text-red-300",
+    icon: XCircle,
+    label: "Rejected",
+  },
+  Withdrawn: {
+    bgColor: "bg-slate-50 dark:bg-slate-900/20",
+    textColor: "text-slate-700 dark:text-slate-300",
+    icon: XCircle,
+    label: "Withdrawn",
+  },
 };
 
 const fmt = (n?: number) => (n ? `₹${(n / 100000).toFixed(1)}L` : null);
@@ -69,7 +89,6 @@ export default function InstituteDashboard({
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingOffers, setLoadingOffers] = useState(true);
 
-  // ─── ALL LOGIC 100% UNCHANGED ──────────────────────────────────────────────
   useEffect(() => {
     Promise.all([
       api.get("/student/count").catch(() => ({ data: 0 })),
@@ -102,35 +121,39 @@ export default function InstituteDashboard({
 
   const statCards = [
     {
-      label: "My Students",
+      label: "Students",
       value: stats?.students,
       icon: Users,
-      color: "from-success to-success/70",
-      note: "enrolled students",
+      bgColor: "bg-green-50 dark:bg-green-900/20",
+      iconColor: "text-green-600 dark:text-green-400",
+      borderColor: "border-green-200 dark:border-green-800",
       href: "/students",
     },
     {
       label: "Placements",
       value: stats?.placements,
       icon: TrendingUp,
-      color: "from-primary to-primary/70",
-      note: "placed students",
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      iconColor: "text-blue-600 dark:text-blue-400",
+      borderColor: "border-blue-200 dark:border-blue-800",
       href: "/placements",
     },
     {
       label: "Industry Requests",
       value: stats?.pendingRequests,
       icon: ClipboardList,
-      color: "from-warning to-warning/70",
-      note: "pending requests",
+      bgColor: "bg-amber-50 dark:bg-amber-900/20",
+      iconColor: "text-amber-600 dark:text-amber-400",
+      borderColor: "border-amber-200 dark:border-amber-800",
       href: "/industry-requests",
     },
     {
-      label: "Received Offers",
+      label: "Job Offers",
       value: stats?.receivedOffers,
       icon: Inbox,
-      color: "from-secondary to-secondary/70",
-      note: "job offers received",
+      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      iconColor: "text-purple-600 dark:text-purple-400",
+      borderColor: "border-purple-200 dark:border-purple-800",
       href: "/received-offers",
     },
   ];
@@ -138,190 +161,203 @@ export default function InstituteDashboard({
   const actions = [
     {
       icon: Users,
-      label: "View My Students",
-      description: "Browse students enrolled at your institute",
+      label: "My Students",
+      description: "Browse and manage enrolled students",
       href: "/students",
-      color: "from-success to-success/70",
+      color: "text-green-600 dark:text-green-400",
+      bgHover: "hover:bg-green-50 dark:hover:bg-green-900/10",
     },
     {
       icon: Briefcase,
-      label: "View Placements",
-      description: "Track placement records for your students",
+      label: "Placements",
+      description: "Track placement records and statistics",
       href: "/placements",
-      color: "from-primary to-primary/70",
+      color: "text-blue-600 dark:text-blue-400",
+      bgHover: "hover:bg-blue-50 dark:hover:bg-blue-900/10",
     },
     {
       icon: ClipboardList,
       label: "Industry Requests",
-      description: "Manage campus placement & internship requests",
+      description: "Manage recruitment and internship requests",
       href: "/industry-requests",
-      color: "from-warning to-warning/70",
+      color: "text-amber-600 dark:text-amber-400",
+      bgHover: "hover:bg-amber-50 dark:hover:bg-amber-900/10",
     },
     {
       icon: Send,
-      label: "Received Offers",
-      description: "Accept or reject job offers from industries",
+      label: "Job Offers",
+      description: "Accept or reject job offers from companies",
       href: "/received-offers",
-      color: "from-secondary to-secondary/70",
+      color: "text-purple-600 dark:text-purple-400",
+      bgHover: "hover:bg-purple-50 dark:hover:bg-purple-900/10",
     },
   ];
 
-  // ─── COMPACT RENDER (ULTRA-MINIMAL SPACING) ────────────────────────────────
   return (
-    <div className="p-2 sm:p-3 lg:p-4">
-      <div className="w-full space-y-4">
-        {/* Hero Section - Compact */}
-        <div className="relative overflow-hidden p-4 rounded-xl bg-gradient-to-br from-success/5 via-base-100 to-base-100 border border-success/20 shadow-sm">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-success/3 rounded-full -translate-y-1/2 translate-x-1/2" />
-
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-success to-success/70 flex items-center justify-center shadow-md">
-              <Building2 size={24} className="text-white" />
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Hero Section */}
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div className="relative p-8">
+            {/* Decorative background */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-green-200 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-base-content">
-                Welcome, {username} 👋
-              </h1>
-              <p className="text-success text-xs sm:text-sm">
-                Institute Portal · {instituteName ?? "Institute Account"}
-              </p>
+
+            <div className="relative flex items-center gap-6">
+              <div className="w-16 h-16 rounded-xl bg-green-600 dark:bg-green-500 flex items-center justify-center shadow-lg">
+                <Building2 size={28} className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">
+                  Welcome, {username} 👋
+                </h1>
+                <p className="text-slate-600 dark:text-slate-400">
+                  {instituteName ?? "Institute Account"} • Manage students, track placements, handle requests
+                </p>
+              </div>
             </div>
           </div>
-
-          <p className="mt-2 text-sm text-base-content/70 max-w-lg">
-            Manage students, track placements, handle industry requests
-          </p>
         </div>
 
-        {/* Stats Cards - Compact */}
+        {/* Stats Cards */}
         <section>
-          <h2 className="text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-3">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
             Overview
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {statCards.map((c, idx) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {statCards.map((card, idx) => (
               <Link
                 key={idx}
-                href={c.href}
-                className="group bg-base-100 rounded-lg p-3 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all border border-base-200/50 h-full flex flex-col justify-between"
+                href={card.href}
+                className={`bg-white dark:bg-slate-800 rounded-xl border ${card.borderColor} shadow-sm hover:shadow-md transition-all duration-200 p-6 group`}
               >
-                <div
-                  className={`w-9 h-9 rounded-lg bg-gradient-to-br ${c.color} flex items-center justify-center mb-2 shadow-md`}
-                >
-                  <c.icon size={16} className="text-white" />
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`w-12 h-12 rounded-lg ${card.bgColor} flex items-center justify-center`}>
+                    <card.icon size={20} className={card.iconColor} />
+                  </div>
                 </div>
                 {loadingStats ? (
-                  <div className="h-6 w-12 rounded bg-base-200 animate-pulse mb-1" />
+                  <div className="h-8 w-16 rounded-lg bg-slate-200 dark:bg-slate-700 animate-pulse mb-2" />
                 ) : (
-                  <div className="text-lg font-bold text-base-content">
-                    {c.value !== undefined ? c.value : "—"}
+                  <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">
+                    {card.value !== undefined ? card.value : "—"}
                   </div>
                 )}
-                <div className="text-xs text-base-content/60 mb-1">
-                  {c.note}
-                </div>
-                <div className="text-xs font-semibold text-base-content/80 group-hover:text-primary transition-colors">
-                  {c.label}
-                </div>
+                <p className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                  {card.label}
+                </p>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* Offer Status Badges - Compact */}
+        {/* Offer Status Summary */}
         {stats && stats.receivedOffers > 0 && (
-          <div className="flex gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-warning/5 border border-warning/20 text-xs">
-              <Clock size={12} className="text-warning" />
-              <span className="font-semibold text-warning">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Clock size={18} className="text-amber-600 dark:text-amber-400" />
+                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Pending Offers</span>
+              </div>
+              <div className="text-3xl font-bold text-slate-900 dark:text-white">
                 {stats.pendingOffers}
-              </span>
-              <span className="text-base-content/60">pending</span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                Action required from your side
+              </p>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-success/5 border border-success/20 text-xs">
-              <CheckCircle2 size={12} className="text-success" />
-              <span className="font-semibold text-success">
+
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <CheckCircle2 size={18} className="text-green-600 dark:text-green-400" />
+                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Accepted Offers</span>
+              </div>
+              <div className="text-3xl font-bold text-slate-900 dark:text-white">
                 {stats.acceptedOffers}
-              </span>
-              <span className="text-base-content/60">accepted</span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                Successfully confirmed offers
+              </p>
             </div>
           </div>
         )}
 
-        {/* Recent Offers - Compact */}
+        {/* Recent Offers Section */}
         <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold text-base-content/60 uppercase tracking-wider">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
               Recent Offers
             </h2>
             <Link
               href="/received-offers"
-              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-all"
+              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1 transition-colors"
             >
-              View all <ArrowRight size={10} />
+              View all
+              <ArrowRight size={14} />
             </Link>
           </div>
+
           {loadingOffers ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-12 rounded-lg bg-base-100 border border-base-200/50 animate-pulse shadow-sm"
+                  className="h-20 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-pulse"
                 />
               ))}
             </div>
           ) : recentOffers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-2 text-base-content/40 text-center rounded-lg border-2 border-dashed border-base-200 bg-base-50">
-              <div className="w-10 h-10 rounded-lg bg-base-100 border border-base-200 flex items-center justify-center">
-                <Send size={20} className="opacity-40" />
-              </div>
-              <p className="text-sm">No job offers received yet</p>
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 border-dashed p-12 text-center">
+              <Send size={32} className="text-slate-400 dark:text-slate-600 mx-auto mb-3 opacity-50" />
+              <p className="text-slate-600 dark:text-slate-400 font-medium">
+                No job offers received yet
+              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Check back later for new opportunities
+              </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {recentOffers.map((offer) => {
-                const sc =
-                  statusConfig[offer.status] ?? statusConfig["Pending"];
+                const sc = statusConfig[offer.status] ?? statusConfig["Pending"];
                 const StatusIcon = sc.icon;
                 const salary = salaryStr(offer.salary_min, offer.salary_max);
+
                 return (
                   <div
                     key={offer.offer_id}
-                    className="group flex items-center gap-3 p-3 rounded-lg bg-base-100 border border-base-200/50 hover:border-primary/30 hover:bg-base-50 hover:shadow-sm transition-all"
+                    className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all p-5 group"
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-sm font-semibold text-base-content truncate max-w-[180px]">
-                          {offer.job_title}
-                        </span>
-                        <span
-                          className={`badge ${sc.badge} badge-xs text-xs px-2 py-0.5 gap-0.5`}
-                        >
-                          <StatusIcon size={9} />
-                          {sc.label}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 mt-1 text-xs text-base-content/60">
-                        <Building2 size={10} />
-                        <span className="truncate max-w-[120px]">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-bold text-slate-900 dark:text-white truncate">
+                            {offer.job_title}
+                          </h3>
+                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${sc.bgColor} ${sc.textColor} flex-shrink-0`}>
+                            <StatusIcon size={12} />
+                            {sc.label}
+                          </div>
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                          <Building2 size={14} />
                           {offer.industry?.industry_name ?? "Industry"}
-                        </span>
+                        </p>
                       </div>
-                    </div>
-                    <div className="flex-shrink-0 text-right min-w-[100px]">
-                      {salary && (
-                        <div className="text-xs font-bold text-success">
-                          {salary}
-                        </div>
-                      )}
-                      {offer.last_date && (
-                        <div className="text-xs text-base-content/50 mt-0.5">
-                          Due:{" "}
-                          <span className="text-warning font-medium">
-                            {offer.last_date}
-                          </span>
-                        </div>
-                      )}
+
+                      <div className="flex flex-col sm:text-right">
+                        {salary && (
+                          <div className="font-bold text-slate-900 dark:text-white">
+                            {salary}
+                          </div>
+                        )}
+                        {offer.last_date && (
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            Due: <span className="font-semibold">{offer.last_date}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -330,45 +366,39 @@ export default function InstituteDashboard({
           )}
         </section>
 
-        {/* Quick Actions - Compact */}
+        {/* Quick Actions */}
         <section>
-          <h2 className="text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-3">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
             Quick Actions
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {actions.map((a, idx) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {actions.map((action, idx) => (
               <Link
                 key={idx}
-                href={a.href}
-                className="group bg-base-100 rounded-lg p-3 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all border border-base-200/50 h-full flex flex-col"
+                href={action.href}
+                className={`bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all p-6 group ${action.bgHover}`}
               >
-                <div
-                  className={`w-9 h-9 rounded-lg bg-gradient-to-br ${a.color} flex items-center justify-center mb-2 shadow-md group-hover:scale-105 transition-transform`}
-                >
-                  <a.icon size={16} className="text-white" />
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-slate-100 dark:bg-slate-700 group-hover:scale-110 transition-transform`}>
+                  <action.icon size={20} className={action.color} />
                 </div>
-                <h3 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">
-                  {a.label}
+                <h3 className="font-bold text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {action.label}
                 </h3>
-                <p className="text-xs text-base-content/70 flex-1">
-                  {a.description}
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                  {action.description}
                 </p>
-                <div className="mt-2 flex items-center gap-1 text-xs text-base-content/40 group-hover:text-primary transition-all">
-                  Open{" "}
-                  <ArrowRight
-                    size={10}
-                    className="group-hover:translate-x-1 transition-transform"
-                  />
+                <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">
+                  View
+                  <ArrowRight size={12} />
                 </div>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* Info Box - Compact */}
-        <div className="p-3 rounded-lg bg-base-50 border border-base-200/50 text-xs text-base-content/70">
-          <span className="font-semibold">Note:</span> Data scoped to your
-          institute. Contact admin for other modules.
+        {/* Footer Note */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-sm text-blue-900 dark:text-blue-300">
+          <span className="font-semibold">📌 Note:</span> All data is scoped to your institute. Contact the admin for access to other modules.
         </div>
       </div>
     </div>

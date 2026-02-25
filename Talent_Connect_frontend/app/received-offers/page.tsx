@@ -13,10 +13,10 @@ import {
   FileText,
   Users2,
   Banknote,
-  BadgeCheck,
   MailOpen,
   Users,
-  ArrowRight,
+  Check,
+  X,
 } from "lucide-react";
 import api from "@/lib/api";
 
@@ -38,31 +38,31 @@ interface Offer {
 
 const statusConfig: Record<
   string,
-  { badge: string; icon: any; label: string; ring: string }
+  { color: string; icon: any; label: string; bgColor: string }
 > = {
   Pending: {
-    badge: "badge-warning",
+    color: "text-amber-600 dark:text-amber-400",
+    bgColor: "bg-amber-50 dark:bg-amber-900/20",
     icon: Clock,
     label: "Pending",
-    ring: "border-warning/20",
   },
   Accepted: {
-    badge: "badge-success",
+    color: "text-green-600 dark:text-green-400",
+    bgColor: "bg-green-50 dark:bg-green-900/20",
     icon: CheckCircle2,
     label: "Accepted",
-    ring: "border-success/20",
   },
   Rejected: {
-    badge: "badge-error",
+    color: "text-red-600 dark:text-red-400",
+    bgColor: "bg-red-50 dark:bg-red-900/20",
     icon: XCircle,
     label: "Rejected",
-    ring: "border-error/20",
   },
   Withdrawn: {
-    badge: "badge-neutral",
+    color: "text-slate-600 dark:text-slate-400",
+    bgColor: "bg-slate-50 dark:bg-slate-900/20",
     icon: XCircle,
     label: "Withdrawn",
-    ring: "border-base-300",
   },
 };
 
@@ -72,7 +72,6 @@ export default function ReceivedOffersPage() {
   const [updating, setUpdating] = useState<number | null>(null);
   const [filter, setFilter] = useState<string>("All");
 
-  // ─── ALL LOGIC UNCHANGED ───────────────────────────────────────────────────
   const load = async () => {
     setLoading(true);
     try {
@@ -103,9 +102,9 @@ export default function ReceivedOffersPage() {
   const salaryStr = (min?: number, max?: number) => {
     const mn = fmt(min);
     const mx = fmt(max);
-    if (mn && mx) return `${mn} – ${mx} per annum`;
-    if (mn) return `From ${mn} per annum`;
-    if (mx) return `Up to ${mx} per annum`;
+    if (mn && mx) return `${mn} – ${mx}`;
+    if (mn) return `From ${mn}`;
+    if (mx) return `Up to ${mx}`;
     return null;
   };
 
@@ -137,133 +136,81 @@ export default function ReceivedOffersPage() {
   const filtered =
     filter === "All" ? offers : offers.filter((o) => o.status === filter);
 
-  // ─── COMPACT Detail Component ──────────────────────────────────────────────
-  function Detail({ icon: Icon, label, value, highlight, success }: any) {
+  function Detail({ icon: Icon, label, value }: any) {
     return (
-      <div className="flex flex-col gap-0.5">
-        <div className="flex items-center gap-1 text-xs text-base-content/50">
-          <Icon size={10} />
-          <span className="truncate">{label}</span>
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <Icon size={14} className="flex-shrink-0" />
+          <span>{label}</span>
         </div>
-        <div
-          className={`font-medium text-xs ${
-            success
-              ? "text-success"
-              : highlight
-                ? "text-warning"
-                : value
-                  ? "text-base-content"
-                  : "text-base-content/30 font-normal"
-          }`}
-        >
+        <div className="text-sm font-semibold text-slate-900 dark:text-white">
           {value ?? "—"}
         </div>
       </div>
     );
   }
 
-  // ─── RENDER (ULTRA-MINIMAL SPACING) ────────────────────────────────────────
   return (
-    <div className="p-2 sm:p-3 lg:p-4">
-      <div className="w-full">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-base-content flex items-center gap-2 mb-1">
-                <MailOpen size={24} className="text-primary" />
-                Received Job Offers
-              </h1>
-              <p className="text-base-content/60 text-sm sm:text-base max-w-xl">
-                Job offers sent to your institute by industry partners
-              </p>
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-blue-600 dark:bg-blue-500 flex items-center justify-center">
+              <MailOpen size={20} className="text-white" />
             </div>
-            {!loading && offers.length > 0 && (
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {["Pending", "Accepted", "Rejected"].map(
-                  (s) =>
-                    counts[s] > 0 && (
-                      <span
-                        key={s}
-                        className="badge badge-outline badge-xs text-xs px-2"
-                      >
-                        {counts[s]} {s}
-                      </span>
-                    ),
-                )}
-              </div>
-            )}
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+              Received Job Offers
+            </h1>
           </div>
+          <p className="text-slate-600 dark:text-slate-400 ml-13">
+            Job offers sent to your institute by industry partners
+          </p>
         </div>
 
-        {/* Compact Tabs */}
+        {/* Tab Filter */}
         {!loading && offers.length > 0 && (
-          <section className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-            {tabs.map((t, idx) => {
-              const isActive = filter === t;
-              const count = counts[t] || 0;
-              const Icon =
-                t === "All"
-                  ? Users
-                  : t === "Pending"
-                    ? Clock
-                    : t === "Accepted"
-                      ? CheckCircle2
-                      : t === "Rejected"
-                        ? XCircle
-                        : ArrowRight;
+          <div className="mb-6 overflow-x-auto">
+            <div className="flex gap-2 pb-2">
+              {tabs.map((t) => {
+                const isActive = filter === t;
+                const count = counts[t] || 0;
 
-              return (
-                <button
-                  key={t}
-                  onClick={() => setFilter(t)}
-                  className="group bg-white/80 hover:bg-white data-[active=true]:bg-primary/90 data-[active=true]:text-white rounded-lg p-3 shadow-sm hover:shadow-md border border-gray-200/50 hover:border-primary/40 transition-all duration-200 h-full flex flex-col justify-center items-center gap-2"
-                  data-active={isActive}
-                >
-                  {/* Icon */}
-                  <div
-                    className={`w-10 h-10 bg-gradient-to-br ${isActive ? "from-primary to-primary/80 shadow-lg" : "from-gray-100 to-gray-200 group-hover:from-primary/10"} rounded-lg flex items-center justify-center transition-all mb-2`}
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setFilter(t)}
+                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap ${
+                      isActive
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-400"
+                    }`}
                   >
-                    <Icon
-                      size={18}
-                      className={`${isActive ? "text-white drop-shadow-sm" : "text-gray-600 group-hover:text-primary"}`}
-                    />
-                  </div>
-
-                  {/* Label - Always visible, bold on hover */}
-                  <p
-                    className={`text-xs font-semibold transition-all ${isActive ? "text-white" : "text-gray-700 group-hover:text-primary font-bold"}`}
-                  >
-                    {t}
-                  </p>
-
-                  {/* Count */}
-                  <p className="text-lg font-bold text-gray-900 data-[active=true]:text-white">
-                    {count}
-                  </p>
-                </button>
-              );
-            })}
-          </section>
+                    {t} <span className="ml-1.5 font-bold">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         )}
 
         {/* Content */}
         {loading ? (
-          <div className="grid grid-cols-1 gap-3">
+          <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-32 rounded-xl bg-base-100 border border-base-200 animate-pulse"
+                className="h-40 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-pulse"
               />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-base-content/40 text-center">
-            <div className="w-14 h-14 rounded-xl bg-base-100 border border-base-200 flex items-center justify-center">
-              <Send size={24} className="opacity-40" />
+          <div className="flex flex-col items-center justify-center py-24 gap-4 text-slate-500 dark:text-slate-400 text-center">
+            <div className="w-16 h-16 rounded-xl bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+              <Send size={28} className="text-slate-400 dark:text-slate-500" />
             </div>
             <div>
-              <h3 className="text-lg font-bold mb-1">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
                 {filter === "All"
                   ? "No job offers"
                   : `No ${filter.toLowerCase()} offers`}
@@ -272,7 +219,7 @@ export default function ReceivedOffersPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {filtered.map((offer) => {
               const sc = statusConfig[offer.status] ?? statusConfig["Pending"];
               const StatusIcon = sc.icon;
@@ -282,93 +229,89 @@ export default function ReceivedOffersPage() {
               return (
                 <div
                   key={offer.offer_id}
-                  className={`rounded-xl bg-base-100 border-2 ${sc.ring} shadow-sm hover:shadow-md transition-all duration-200 p-4`}
+                  className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all overflow-hidden"
                 >
-                  {/* Header - Compact */}
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className="text-lg font-bold text-base-content truncate">
-                          {offer.job_title}
-                        </h2>
-                        <span
-                          className={`badge ${sc.badge} badge-sm text-xs gap-1 px-2 py-0.5`}
-                        >
-                          <StatusIcon size={10} />
-                          {sc.label}
-                        </span>
+                  {/* Status Bar */}
+                  <div className={`h-1 ${sc.bgColor}`} />
+
+                  <div className="p-6">
+                    {/* Top Section */}
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start gap-3 mb-2">
+                          <div className="flex-1">
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+                              {offer.job_title}
+                            </h2>
+                            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                              <Building2 size={14} />
+                              <span className="font-medium">
+                                {offer.industry?.industry_name ?? "Industry"}
+                              </span>
+                            </div>
+                          </div>
+                          <div
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${sc.bgColor} flex-shrink-0`}
+                          >
+                            <StatusIcon size={14} className={sc.color} />
+                            <span className={`text-xs font-semibold ${sc.color}`}>
+                              {sc.label}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5 mt-1.5 text-xs text-base-content/60">
-                        <Building2 size={12} />
-                        <span className="font-medium truncate">
-                          {offer.industry?.industry_name ?? "Industry"}
-                        </span>
-                        {offer.industry?.email && (
-                          <span className="opacity-50 truncate max-w-32">
-                            · {offer.industry.email}
-                          </span>
-                        )}
+                      <div className="text-xs text-slate-500 dark:text-slate-400 font-medium px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg whitespace-nowrap">
+                        ID: {offer.offer_id}
                       </div>
                     </div>
-                    <span className="text-xs bg-base-50 px-2 py-0.5 rounded-full text-base-content/40 whitespace-nowrap">
-                      #{offer.offer_id}
-                    </span>
-                  </div>
 
-                  {/* Details Grid - Compact */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-                    <Detail
-                      icon={CalendarDays}
-                      label="Offer Date"
-                      value={formatDate(offer.offer_date)}
-                    />
-                    <Detail
-                      icon={CalendarClock}
-                      label="Apply By"
-                      value={formatDate(offer.last_date)}
-                      highlight
-                    />
-                    <Detail
-                      icon={Users2}
-                      label="Posts"
-                      value={offer.number_of_posts?.toString() ?? null}
-                    />
-                    <Detail
-                      icon={Banknote}
-                      label="Salary"
-                      value={salary}
-                      success
-                    />
-                  </div>
-
-                  {/* Description - Compact */}
-                  {offer.job_description && (
-                    <div className="pt-3 mt-3 border-t border-base-200">
-                      <div className="flex items-center gap-1.5 text-xs text-base-content/50 mb-1.5">
-                        <FileText size={10} />
-                        <span>Job Description</span>
-                      </div>
-                      <p className="text-sm text-base-content/70 leading-relaxed text-xs max-h-12 overflow-hidden line-clamp-3">
-                        {offer.job_description}
-                      </p>
+                    {/* Details Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 pb-6 border-b border-slate-200 dark:border-slate-700">
+                      <Detail
+                        icon={CalendarDays}
+                        label="Offer Date"
+                        value={formatDate(offer.offer_date)}
+                      />
+                      <Detail
+                        icon={CalendarClock}
+                        label="Apply By"
+                        value={formatDate(offer.last_date)}
+                      />
+                      <Detail
+                        icon={Users2}
+                        label="Openings"
+                        value={offer.number_of_posts?.toString()}
+                      />
+                      <Detail
+                        icon={Banknote}
+                        label="Salary (p.a.)"
+                        value={salary}
+                      />
                     </div>
-                  )}
 
-                  {/* Action Buttons - Compact */}
-                  {isPending && (
-                    <div className="pt-3 mt-3 border-t border-base-200">
+                    {/* Description */}
+                    {offer.job_description && (
+                      <div className="mb-6">
+                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-2">
+                          {offer.job_description}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Action Buttons - Compact */}
+                    {isPending && (
                       <div className="flex gap-2">
                         <button
                           onClick={() =>
                             updateStatus(offer.offer_id, "Accepted")
                           }
                           disabled={updating === offer.offer_id}
-                          className="btn btn-success text-xs gap-1 px-3 py-1.5 flex-1 h-auto"
+                          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {updating === offer.offer_id ? (
-                            <Loader2 size={12} className="animate-spin" />
+                            <Loader2 size={14} className="animate-spin" />
                           ) : (
-                            <CheckCircle2 size={12} />
+                            <Check size={14} />
                           )}
                           Accept
                         </button>
@@ -377,18 +320,18 @@ export default function ReceivedOffersPage() {
                             updateStatus(offer.offer_id, "Rejected")
                           }
                           disabled={updating === offer.offer_id}
-                          className="btn btn-outline btn-error text-xs gap-1 px-3 py-1.5 flex-1 h-auto"
+                          className="flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {updating === offer.offer_id ? (
-                            <Loader2 size={12} className="animate-spin" />
+                            <Loader2 size={14} className="animate-spin" />
                           ) : (
-                            <XCircle size={12} />
+                            <X size={14} />
                           )}
                           Reject
                         </button>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               );
             })}

@@ -17,7 +17,6 @@ import {
   Search,
   Inbox,
   Send,
-  Menu,
   ChevronRight,
   ChevronLeft,
 } from "lucide-react";
@@ -102,10 +101,10 @@ const industryNav = [
   },
 ];
 
-const roleBadge: Record<string, { label: string; cls: string }> = {
-  admin: { label: "Admin", cls: "badge badge-primary badge-xs" },
-  institute: { label: "Institute", cls: "badge badge-success badge-xs" },
-  industry: { label: "Industry", cls: "badge badge-secondary badge-xs" },
+const roleBadge: Record<string, { label: string; color: string }> = {
+  admin: { label: "Admin", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" },
+  institute: { label: "Institute", color: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" },
+  industry: { label: "Industry", color: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300" },
 };
 
 // Individual Link
@@ -117,26 +116,26 @@ function NavLink({ href, label, icon: Icon, collapsed }: any) {
     <Link
       href={href}
       className={clsx(
-        "group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 relative",
+        "group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative",
         active
-          ? "bg-gradient-to-r from-primary/80 to-secondary/80 shadow-lg text-primary-content font-semibold"
-          : "text-base-content/70 hover:bg-base-200 hover:shadow-md",
-        collapsed ? "justify-center p-3" : "justify-start",
+          ? "bg-blue-600 text-white font-medium shadow-md"
+          : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700",
+        collapsed ? "justify-center p-2.5" : "justify-start",
       )}
       title={collapsed ? label : undefined}
     >
       {Icon && (
         <Icon
-          size={collapsed ? 22 : 20}
+          size={collapsed ? 20 : 18}
           className={clsx(
-            "flex-shrink-0 transition-transform duration-300",
-            active && "drop-shadow-lg group-hover:scale-110",
+            "flex-shrink-0 transition-transform duration-200",
+            active && "group-hover:scale-105",
           )}
         />
       )}
-      {!collapsed && <span className="flex-1 text-sm">{label}</span>}
+      {!collapsed && <span className="flex-1 text-sm font-medium">{label}</span>}
       {active && !collapsed && (
-        <div className="absolute left-0 top-0 h-full w-1 rounded-r-full bg-gradient-to-b from-primary to-secondary" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-white opacity-60" />
       )}
     </Link>
   );
@@ -154,18 +153,18 @@ function NavGroup({ item, collapsed }: any) {
       <button
         onClick={() => setOpen(!open)}
         className={clsx(
-          "group flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-300 relative",
+          "group flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 relative",
           open
-            ? "bg-base-200 shadow-md text-base-content font-medium"
-            : "text-base-content/70 hover:bg-base-200 hover:shadow-md",
-          collapsed ? "justify-center p-3" : "justify-start",
+            ? "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-medium"
+            : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700",
+          collapsed ? "justify-center p-2.5" : "justify-start",
         )}
         title={collapsed ? item.label : undefined}
       >
-        {Icon && <Icon size={collapsed ? 22 : 20} className="flex-shrink-0" />}
+        {Icon && <Icon size={collapsed ? 20 : 18} className="flex-shrink-0" />}
         {!collapsed && (
           <>
-            <span className="flex-1 text-sm">{item.label}</span>
+            <span className="flex-1 text-sm font-medium">{item.label}</span>
             <ChevronDown
               size={16}
               className={clsx(
@@ -180,7 +179,7 @@ function NavGroup({ item, collapsed }: any) {
       {!collapsed && (
         <div
           className={clsx(
-            "ml-6 mt-1 flex flex-col gap-1 overflow-hidden transition-all duration-500",
+            "ml-4 mt-1 flex flex-col gap-1 overflow-hidden transition-all duration-300",
             open ? "max-h-96 opacity-100" : "max-h-0 opacity-0",
           )}
         >
@@ -222,59 +221,47 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
 
       <aside
         className={clsx(
-          "fixed top-0 left-0 h-screen flex flex-col bg-gradient-to-b from-base-100/95 via-base-200/90 to-base-300/80 border-r border-base-300/60 shadow-2xl z-50 transition-all duration-500",
+          "fixed top-0 left-0 h-screen flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-lg z-50 transition-all duration-300",
           collapsed ? "w-20" : "w-72 lg:w-64",
         )}
       >
-        {/* Logo & Collapse Toggle */}
-        <div className="flex items-center justify-between p-4 border-b border-base-300/40 relative">
+        {/* Logo Section */}
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center shadow-lg border border-primary/30 group">
-              <GraduationCap
-                size={22}
-                className="text-primary-content drop-shadow-lg"
-              />
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md">
+              <GraduationCap size={20} className="text-white" />
             </div>
             {!collapsed && (
               <div className="flex flex-col">
-                <span className="text-lg font-bold bg-gradient-to-r from-base-content via-primary to-secondary bg-clip-text text-transparent">
+                <span className="text-base font-bold text-slate-900 dark:text-white">
                   Talent Connect
                 </span>
-                <span className="text-xs text-base-content/60">
-                  Placement Portal
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Portal
                 </span>
               </div>
             )}
           </div>
-          {/* <button
-            onClick={() => setCollapsed(!collapsed)}
-            className={clsx(
-              "p-2.5 rounded-xl shadow-md hover:scale-105 transition-transform bg-base-200/80",
-              collapsed && "absolute right-2 top-1/2 -translate-y-1/2",
-            )}
-          >
-            <Menu size={20} />
-          </button> */}
         </div>
 
         {/* User Profile */}
         {!loading && user && (
           <div
             className={clsx(
-              "flex items-center gap-3 p-3 border-b border-base-300/30 bg-base-100/80 backdrop-blur-sm transition-transform hover:scale-[1.02]",
+              "flex items-center gap-3 p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 transition-all",
               collapsed ? "justify-center" : "",
             )}
           >
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-primary/40 flex items-center justify-center shadow-lg">
-              <UserCircle size={20} className="text-primary" />
+            <div className="w-9 h-9 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+              <UserCircle size={18} className="text-slate-600 dark:text-slate-400" />
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold truncate">
-                    {user.username}
-                  </span>
-                  <span className={clsx("mt-1", badge.cls)}>{badge.label}</span>
+                <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                  {user.username}
+                </div>
+                <div className={clsx("text-xs font-medium px-2 py-1 rounded mt-1 w-fit", badge.color)}>
+                  {badge.label}
                 </div>
               </div>
             )}
@@ -283,7 +270,7 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
         )}
 
         {/* Navigation */}
-        <nav className="flex-1 px-2 py-6 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-base-300/50 scrollbar-track-base-200/50">
+        <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
           {navItems.map((item: any) =>
             item.children ? (
               <NavGroup key={item.label} item={item} collapsed={collapsed} />
@@ -300,49 +287,32 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
         </nav>
 
         {/* Bottom Controls */}
-        <div
-          className={`p-2 border-t border-base-300/40 dark:border-base-200/40 bg-base-100/80 dark:bg-base-200/80 backdrop-blur-sm   ${collapsed ? "overflow-hidden " : ""} `}
-        >
+        <div className="p-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 space-y-2">
           <button
             onClick={() => setCollapsed(!collapsed)}
             title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-            className="group w-full h-12 rounded-xl flex items-center justify-center transition-all duration-300 
-               bg-base-200/70 dark:bg-base-100/70 
-               hover:bg-primary/10 dark:hover:bg-primary/20
-               border border-base-300/40 dark:border-base-200/40
-               hover:border-primary/40"
+            className="group w-full h-10 rounded-lg flex items-center justify-center transition-all duration-200 
+               bg-slate-200 dark:bg-slate-700 
+               hover:bg-slate-300 dark:hover:bg-slate-600
+               border border-slate-300 dark:border-slate-600"
           >
-            <div className="relative flex items-center justify-center">
-              {/* Background Circle */}
-              <div className="absolute w-9 h-9 rounded-full bg-primary/15 group-hover:bg-primary/25 transition-all duration-300" />
-
-              {/* Arrow Icon */}
-              {collapsed ? (
-                <ChevronRight
-                  size={26}
-                  strokeWidth={3}
-                  className="relative text-primary transition-transform duration-300 group-hover:translate-x-1"
-                />
-              ) : (
-                <ChevronLeft
-                  size={26}
-                  strokeWidth={3}
-                  className="relative text-primary transition-transform duration-300 group-hover:-translate-x-1"
-                />
-              )}
-            </div>
+            {collapsed ? (
+              <ChevronRight size={20} className="text-slate-700 dark:text-slate-300" />
+            ) : (
+              <ChevronLeft size={20} className="text-slate-700 dark:text-slate-300" />
+            )}
           </button>
-          {/* </div> */}
 
           <button
             onClick={logout}
-            className="group w-full flex items-center justify-center lg:justify-start gap-3 p-3 rounded-xl text-base-content/70 hover:bg-gradient-to-r hover:from-error/10 hover:to-error/20 hover:text-error transition-all duration-300 overflow-hidden"
+            className="group w-full flex items-center justify-center lg:justify-start gap-3 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 transition-all duration-200 font-medium"
           >
             {collapsed ? (
-              <LogOut size={20} />
+              <LogOut size={18} />
             ) : (
               <>
-                <LogOut size={18} /> <span>Sign Out</span>
+                <LogOut size={18} />
+                <span className="text-sm">Sign Out</span>
               </>
             )}
           </button>
