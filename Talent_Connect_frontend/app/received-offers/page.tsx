@@ -204,30 +204,23 @@ export default function ReceivedOffersPage() {
                       ? XCircle
                       : ArrowRight;
 
+            const gradientBg = isActive
+              ? "bg-gradient-to-br from-primary/80 to-primary/60 text-white shadow-lg"
+              : "bg-white border border-gray-200 hover:shadow-lg hover:border-primary/40";
+
             return (
               <button
                 key={t}
                 onClick={() => setFilter(t)}
-                className={`group relative rounded-2xl p-5 border transition-all duration-300 text-center overflow-hidden
-            ${
-              isActive
-                ? "bg-primary text-white border-primary shadow-lg scale-[1.02]"
-                : "bg-white border-gray-200 hover:border-primary/40 hover:shadow-md hover:-translate-y-1"
-            }`}
+                className={`group relative rounded-2xl p-5 text-center overflow-hidden transition-all duration-300 flex flex-col items-center justify-center ${gradientBg}`}
               >
-                {/* Background Glow Effect */}
-                {!isActive && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                )}
-
-                {/* Icon */}
+                {/* Icon Background */}
                 <div
-                  className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center transition-all duration-300
-              ${
-                isActive
-                  ? "bg-white/20"
-                  : "bg-gray-100 group-hover:bg-primary/10"
-              }`}
+                  className={`w-12 h-12 mb-3 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                    isActive
+                      ? "bg-white/20"
+                      : "bg-gray-100 group-hover:bg-primary/10"
+                  }`}
                 >
                   <Icon
                     size={20}

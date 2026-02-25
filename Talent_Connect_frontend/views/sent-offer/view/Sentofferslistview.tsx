@@ -15,6 +15,7 @@ import {
   Eye,
   TrendingUp,
   MailCheck,
+  XCircle,
 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -416,7 +417,8 @@ function formatDate(d: string) {
 }
 
 function salaryStr(min?: number, max?: number) {
-  const mn = fmt(min), mx = fmt(max);
+  const mn = fmt(min),
+    mx = fmt(max);
   if (mn && mx) return `${mn} – ${mx}`;
   if (mn) return `From ${mn}`;
   if (mx) return `Up to ${mx}`;
@@ -438,7 +440,10 @@ function groupOffers(offers: OfferRecord[]): OfferGroup[] {
         last_date: o.last_date,
         number_of_posts: o.number_of_posts,
         rows: [],
-        accepted: 0, rejected: 0, pending: 0, withdrawn: 0,
+        accepted: 0,
+        rejected: 0,
+        pending: 0,
+        withdrawn: 0,
       });
     }
     const g = map.get(key)!;
@@ -454,9 +459,9 @@ function groupOffers(offers: OfferRecord[]): OfferGroup[] {
 /* ─── StatusBadge ────────────────────────────────────────────────────────── */
 function StatusBadge({ status }: { status: string }) {
   const cfg: Record<string, { cls: string; Icon: any }> = {
-    Accepted:  { cls: "sol-status-accepted",  Icon: CheckCircle2 },
-    Pending:   { cls: "sol-status-pending",   Icon: Clock },
-    Rejected:  { cls: "sol-status-rejected",  Icon: Ban },
+    Accepted: { cls: "sol-status-accepted", Icon: CheckCircle2 },
+    Pending: { cls: "sol-status-pending", Icon: Clock },
+    Rejected: { cls: "sol-status-rejected", Icon: Ban },
     Withdrawn: { cls: "sol-status-withdrawn", Icon: X },
   };
   const { cls, Icon } = cfg[status] ?? cfg["Pending"];
@@ -470,10 +475,23 @@ function StatusBadge({ status }: { status: string }) {
 
 /* ─── StatCard ───────────────────────────────────────────────────────────── */
 function StatCard({
-  label, count, onClick, active, icon: Icon, iconBg, countColor, activeClass,
+  label,
+  count,
+  onClick,
+  active,
+  icon: Icon,
+  iconBg,
+  countColor,
+  activeClass,
 }: {
-  label: string; count: number; onClick: () => void; active: boolean;
-  icon: any; iconBg: string; countColor: string; activeClass: string;
+  label: string;
+  count: number;
+  onClick: () => void;
+  active: boolean;
+  icon: any;
+  iconBg: string;
+  countColor: string;
+  activeClass: string;
 }) {
   return (
     <button
@@ -483,7 +501,10 @@ function StatCard({
       <div className="sol-stat-icon" style={{ background: iconBg }}>
         <Icon size={19} color="#fff" />
       </div>
-      <div className="sol-stat-count" style={{ color: active ? countColor : "#0f0e1a" }}>
+      <div
+        className="sol-stat-count"
+        style={{ color: active ? countColor : "#0f0e1a" }}
+      >
         {count}
       </div>
       <div className="sol-stat-label">{label}</div>
@@ -534,11 +555,21 @@ function OfferGroupCard({
             </div>
 
             {/* Pills */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "10px" }}>
-              {salary && <span className="sol-pill sol-pill-salary">{salary}</span>}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "6px",
+                marginBottom: "10px",
+              }}
+            >
+              {salary && (
+                <span className="sol-pill sol-pill-salary">{salary}</span>
+              )}
               {group.number_of_posts && (
                 <span className="sol-pill sol-pill-posts">
-                  {group.number_of_posts} post{group.number_of_posts !== 1 ? "s" : ""}
+                  {group.number_of_posts} post
+                  {group.number_of_posts !== 1 ? "s" : ""}
                 </span>
               )}
               {group.last_date && (
@@ -557,18 +588,62 @@ function OfferGroupCard({
               </div>
               <div className="sol-meta-item">
                 <Building2 size={12} />
-                {group.rows.length} institute{group.rows.length !== 1 ? "s" : ""}
+                {group.rows.length} institute
+                {group.rows.length !== 1 ? "s" : ""}
               </div>
             </div>
           </div>
 
           {/* Right side: mini badges + chevron */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px", flexShrink: 0 }}>
-            <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", justifyContent: "flex-end" }}>
-              {group.accepted  > 0 && <span className="sol-mini-badge" style={{ background:"#dcfce7",color:"#16a34a" }}>{group.accepted}</span>}
-              {group.pending   > 0 && <span className="sol-mini-badge" style={{ background:"#fef9c3",color:"#ca8a04" }}>{group.pending}</span>}
-              {group.rejected  > 0 && <span className="sol-mini-badge" style={{ background:"#fee2e2",color:"#dc2626" }}>{group.rejected}</span>}
-              {group.withdrawn > 0 && <span className="sol-mini-badge" style={{ background:"#f1f5f9",color:"#64748b" }}>{group.withdrawn}</span>}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: "10px",
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                gap: "4px",
+                flexWrap: "wrap",
+                justifyContent: "flex-end",
+              }}
+            >
+              {group.accepted > 0 && (
+                <span
+                  className="sol-mini-badge"
+                  style={{ background: "#dcfce7", color: "#16a34a" }}
+                >
+                  {group.accepted}
+                </span>
+              )}
+              {group.pending > 0 && (
+                <span
+                  className="sol-mini-badge"
+                  style={{ background: "#fef9c3", color: "#ca8a04" }}
+                >
+                  {group.pending}
+                </span>
+              )}
+              {group.rejected > 0 && (
+                <span
+                  className="sol-mini-badge"
+                  style={{ background: "#fee2e2", color: "#dc2626" }}
+                >
+                  {group.rejected}
+                </span>
+              )}
+              {group.withdrawn > 0 && (
+                <span
+                  className="sol-mini-badge"
+                  style={{ background: "#f1f5f9", color: "#64748b" }}
+                >
+                  {group.withdrawn}
+                </span>
+              )}
             </div>
             <div className={`sol-chevron ${open ? "open" : ""}`}>
               <ChevronDown size={15} />
@@ -594,15 +669,29 @@ function OfferGroupCard({
                 <tr key={row.offer_id}>
                   <td>
                     <div className="sol-inst-name">
-                      {row.institute?.institute_name ?? `Institute #${row.offer_id}`}
+                      {row.institute?.institute_name ??
+                        `Institute #${row.offer_id}`}
                     </div>
                   </td>
                   <td>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "3px",
+                      }}
+                    >
                       {row.institute?.emailId && (
                         <div className="sol-contact-line">
                           <div className="sol-contact-dot" />
-                          <span style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <span
+                            style={{
+                              maxWidth: "150px",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
                             {row.institute.emailId}
                           </span>
                         </div>
@@ -614,7 +703,9 @@ function OfferGroupCard({
                         </div>
                       )}
                       {!row.institute?.emailId && !row.institute?.mobileno && (
-                        <span style={{ fontSize: "12px", color: "#cbd5e1" }}>No contact</span>
+                        <span style={{ fontSize: "12px", color: "#cbd5e1" }}>
+                          No contact
+                        </span>
                       )}
                     </div>
                   </td>
@@ -622,15 +713,22 @@ function OfferGroupCard({
                     <StatusBadge status={row.status} />
                   </td>
                   <td>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "flex-end",
+                        gap: "8px",
+                      }}
+                    >
                       {/* Eye button — opens modal */}
-                      <button
+                      {/* <button
                         className="sol-btn-eye"
                         title="View offer details"
                         onClick={() => onEyeClick(row)}
                       >
                         <Eye size={15} />
-                      </button>
+                      </button> */}
 
                       {/* Withdraw */}
                       {row.status === "Pending" && (
@@ -640,7 +738,10 @@ function OfferGroupCard({
                           disabled={withdrawing === row.offer_id}
                         >
                           {withdrawing === row.offer_id ? (
-                            <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} />
+                            <Loader2
+                              size={12}
+                              style={{ animation: "spin 1s linear infinite" }}
+                            />
                           ) : (
                             <X size={12} />
                           )}
@@ -662,14 +763,16 @@ function OfferGroupCard({
 /* ─── Main Component ─────────────────────────────────────────────────────── */
 export default function SentOffersListView() {
   const { isIndustry } = useAuth();
-  const [offers, setOffers]   = useState<OfferRecord[]>([]);
+  const [offers, setOffers] = useState<OfferRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState("");
-  const [filter, setFilter]   = useState<"All" | "Accepted" | "Pending" | "Rejected">("All");
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState<
+    "All" | "Accepted" | "Pending" | "Rejected" | "Withdrawn"
+  >("All");
 
   // For the detail modal — pass selectedOffer to your <JobDetailModal>
   const [selectedOffer, setSelectedOffer] = useState<OfferRecord | null>(null);
-  const [modalOpen, setModalOpen]         = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const fetchOffers = useCallback(async () => {
     setLoading(true);
@@ -683,23 +786,32 @@ export default function SentOffersListView() {
     }
   }, []);
 
-  useEffect(() => { fetchOffers(); }, [fetchOffers]);
+  useEffect(() => {
+    fetchOffers();
+  }, [fetchOffers]);
 
   const handleWithdraw = (offerId: number) =>
-    setOffers((prev) => prev.map((o) => o.offer_id === offerId ? { ...o, status: "Withdrawn" } : o));
+    setOffers((prev) =>
+      prev.map((o) =>
+        o.offer_id === offerId ? { ...o, status: "Withdrawn" } : o,
+      ),
+    );
 
   const handleEyeClick = (row: OfferRecord) => {
     setSelectedOffer(row);
     setModalOpen(true);
   };
 
-  const total    = offers.length;
+  const total = offers.length;
   const accepted = offers.filter((o) => o.status === "Accepted").length;
-  const pending  = offers.filter((o) => o.status === "Pending").length;
+  const pending = offers.filter((o) => o.status === "Pending").length;
   const rejected = offers.filter((o) => o.status === "Rejected").length;
+  const withdrawn = offers.filter((o) => o.status === "Withdrawn").length;
 
-  const filteredOffers = offers.filter((o) => filter === "All" || o.status === filter);
-  const groups         = groupOffers(filteredOffers);
+  const filteredOffers = offers.filter(
+    (o) => filter === "All" || o.status === filter,
+  );
+  const groups = groupOffers(filteredOffers);
 
   return (
     <>
@@ -708,8 +820,14 @@ export default function SentOffersListView() {
       {/* ── Place your <JobDetailModal open={modalOpen} setOpen={setModalOpen} job={selectedOffer} /> here ── */}
       {/* Example: <JobDetailModal open={modalOpen} setOpen={setModalOpen} job={selectedOffer} /> */}
 
-      <div className="sol-root" style={{ padding: "20px 20px 40px", maxWidth: "1100px", margin: "0 auto" }}>
-
+      <div
+        className="sol-root"
+        style={{
+          padding: "40px 18px 5px",
+          maxWidth: "auto",
+          margin: "0 auto",
+        }}
+      >
         {/* Page Header */}
         <div className="sol-page-header sol-fade-up">
           <div>
@@ -719,28 +837,48 @@ export default function SentOffersListView() {
               </div>
               Sent Offers
             </h1>
-            <p className="sol-page-sub">Track every offer you've sent and monitor institute responses.</p>
+            <p className="sol-page-sub">
+              Track every offer you've sent and monitor institute responses.
+            </p>
           </div>
         </div>
 
         {/* Loading Skeleton */}
         {loading && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "14px" }}>
-            {[1,2,3,4].map((i) => (
-              <div key={i} className="sol-skeleton" style={{ height: "130px" }} />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4,1fr)",
+              gap: "14px",
+            }}
+          >
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="sol-skeleton"
+                style={{ height: "130px" }}
+              />
             ))}
           </div>
         )}
 
         {/* Error */}
         {!loading && error && (
-          <div style={{
-            display: "flex", alignItems: "center", gap: "10px",
-            background: "#fef2f2", border: "1.5px solid #fecaca",
-            borderRadius: "12px", padding: "16px 20px",
-            color: "#dc2626", fontWeight: 500, fontSize: "14px",
-            maxWidth: "400px",
-          }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              background: "#fef2f2",
+              border: "1.5px solid #fecaca",
+              borderRadius: "12px",
+              padding: "16px 20px",
+              color: "#dc2626",
+              fontWeight: 500,
+              fontSize: "14px",
+              maxWidth: "400px",
+            }}
+          >
             <AlertCircle size={18} />
             {error}
           </div>
@@ -753,12 +891,27 @@ export default function SentOffersListView() {
               <Send size={28} color="#6366f1" />
             </div>
             <div>
-              <div style={{ fontFamily:"'Outfit',sans-serif", fontSize:"18px", fontWeight:700, color:"#0f0e1a", marginBottom:"6px" }}>
+              <div
+                style={{
+                  fontFamily: "'Outfit',sans-serif",
+                  fontSize: "18px",
+                  fontWeight: 700,
+                  color: "#0f0e1a",
+                  marginBottom: "6px",
+                }}
+              >
                 No offers sent yet
               </div>
-              <div style={{ fontSize:"13px", color:"#94a3b8" }}>
+              <div style={{ fontSize: "13px", color: "#94a3b8" }}>
                 Visit{" "}
-                <a href="/find-institutes" style={{ color:"#6366f1", fontWeight:600, textDecoration:"none" }}>
+                <a
+                  href="/find-institutes"
+                  style={{
+                    color: "#6366f1",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                  }}
+                >
                   Find Institutes
                 </a>{" "}
                 to start sending offers.
@@ -773,42 +926,89 @@ export default function SentOffersListView() {
             {/* Stat Cards */}
             <div
               className="sol-fade-up sol-delay-1"
-              style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"14px", marginBottom:"28px" }}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(5,1fr)",
+                gap: "14px",
+                marginBottom: "28px",
+              }}
             >
               <StatCard
-                label="Total Sent" count={total}
-                onClick={() => setFilter("All")} active={filter === "All"}
-                icon={TrendingUp} iconBg="linear-gradient(135deg,#6366f1,#8b5cf6)"
-                countColor="#6366f1" activeClass="active-all"
+                label="Total Sent"
+                count={total}
+                onClick={() => setFilter("All")}
+                active={filter === "All"}
+                icon={TrendingUp}
+                iconBg="linear-gradient(135deg,#6366f1,#8b5cf6)"
+                countColor="#6366f1"
+                activeClass="active-all"
               />
               <StatCard
-                label="Accepted" count={accepted}
-                onClick={() => setFilter("Accepted")} active={filter === "Accepted"}
-                icon={CheckCircle2} iconBg="linear-gradient(135deg,#10b981,#34d399)"
-                countColor="#10b981" activeClass="active-accepted"
+                label="Accepted"
+                count={accepted}
+                onClick={() => setFilter("Accepted")}
+                active={filter === "Accepted"}
+                icon={CheckCircle2}
+                iconBg="linear-gradient(135deg,#10b981,#34d399)"
+                countColor="#10b981"
+                activeClass="active-accepted"
               />
               <StatCard
-                label="Pending" count={pending}
-                onClick={() => setFilter("Pending")} active={filter === "Pending"}
-                icon={Clock} iconBg="linear-gradient(135deg,#f59e0b,#fbbf24)"
-                countColor="#f59e0b" activeClass="active-pending"
+                label="Pending"
+                count={pending}
+                onClick={() => setFilter("Pending")}
+                active={filter === "Pending"}
+                icon={Clock}
+                iconBg="linear-gradient(135deg,#f59e0b,#fbbf24)"
+                countColor="#f59e0b"
+                activeClass="active-pending"
               />
               <StatCard
-                label="Not Interested" count={rejected}
-                onClick={() => setFilter("Rejected")} active={filter === "Rejected"}
-                icon={Ban} iconBg="linear-gradient(135deg,#ef4444,#f87171)"
-                countColor="#ef4444" activeClass="active-rejected"
+                label="Not Interested"
+                count={rejected}
+                onClick={() => setFilter("Rejected")}
+                active={filter === "Rejected"}
+                icon={Ban}
+                iconBg="linear-gradient(135deg,#ef4444,#f87171)"
+                countColor="#ef4444"
+                activeClass="active-rejected"
+              />
+              <StatCard
+                label="Withdraw"
+                count={withdrawn}
+                onClick={() => setFilter("Withdrawn")}
+                active={filter === "Withdrawn"}
+                icon={XCircle}
+                iconBg="linear-gradient(135deg,#8b5cf6,#a78bfa)"
+                countColor="#8b5cf6"
+                activeClass="active-withdrawn"
               />
             </div>
 
             {/* Filter label */}
             {filter !== "All" && (
               <div className="sol-filter-label sol-fade-up sol-delay-2">
-                <span style={{ width:"6px",height:"6px",borderRadius:"50%",background:"#6366f1",display:"inline-block" }}/>
+                <span
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    background: "#6366f1",
+                    display: "inline-block",
+                  }}
+                />
                 Showing: {filter} offers
                 <button
                   onClick={() => setFilter("All")}
-                  style={{ marginLeft:"8px",background:"none",border:"none",cursor:"pointer",color:"#94a3b8",fontSize:"12px",padding:0 }}
+                  style={{
+                    marginLeft: "8px",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#94a3b8",
+                    fontSize: "12px",
+                    padding: 0,
+                  }}
                 >
                   ✕ Clear
                 </button>
@@ -816,22 +1016,37 @@ export default function SentOffersListView() {
             )}
 
             {/* Offer Group Cards */}
-            <div style={{ display:"flex", flexDirection:"column", gap:"14px" }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "14px" }}
+            >
               {groups.length === 0 ? (
                 <div className="sol-empty">
                   <div className="sol-empty-icon">
                     <Send size={26} color="#6366f1" />
                   </div>
                   <div>
-                    <div style={{ fontFamily:"'Outfit',sans-serif",fontSize:"16px",fontWeight:700,color:"#0f0e1a",marginBottom:"4px" }}>
+                    <div
+                      style={{
+                        fontFamily: "'Outfit',sans-serif",
+                        fontSize: "16px",
+                        fontWeight: 700,
+                        color: "#0f0e1a",
+                        marginBottom: "4px",
+                      }}
+                    >
                       No {filter.toLowerCase()} offers
                     </div>
-                    <div style={{ fontSize:"13px",color:"#94a3b8" }}>Try selecting a different filter above.</div>
+                    <div style={{ fontSize: "13px", color: "#94a3b8" }}>
+                      Try selecting a different filter above.
+                    </div>
                   </div>
                 </div>
               ) : (
                 groups.map((g, i) => (
-                  <div key={g.key} style={{ animationDelay: `${0.1 + i * 0.05}s` }}>
+                  <div
+                    key={g.key}
+                    style={{ animationDelay: `${0.1 + i * 0.05}s` }}
+                  >
                     <OfferGroupCard
                       group={g}
                       onWithdraw={handleWithdraw}
