@@ -16,6 +16,7 @@ import {
   TrendingUp,
   MailCheck,
   XCircle,
+  Search,
 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -770,6 +771,8 @@ export default function SentOffersListView() {
     "All" | "Accepted" | "Pending" | "Rejected" | "Withdrawn"
   >("All");
 
+  const [searchTerm, setSearchTerm] = useState("");
+
   // For the detail modal — pass selectedOffer to your <JobDetailModal>
   const [selectedOffer, setSelectedOffer] = useState<OfferRecord | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -808,10 +811,26 @@ export default function SentOffersListView() {
   const rejected = offers.filter((o) => o.status === "Rejected").length;
   const withdrawn = offers.filter((o) => o.status === "Withdrawn").length;
 
-  const filteredOffers = offers.filter(
-    (o) => filter === "All" || o.status === filter,
-  );
+  // const filteredOffers = offers.filter(
+  //   (o) => filter === "All" || o.status === filter,
+  // );
+
+  // ── Search + Filter ──
+  const filteredOffers = offers.filter((o) => {
+    const matchesFilter = filter === "All" || o.status === filter;
+    const matchesSearch =
+      o.job_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      o.institute.institute_name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
   const groups = groupOffers(filteredOffers);
+
+  const handleSearch = () => {
+    // console.log("Search for:", searchTerm);
+  };
 
   return (
     <>
@@ -829,9 +848,10 @@ export default function SentOffersListView() {
         }}
       >
         {/* Page Header */}
-        <div className="sol-page-header sol-fade-up">
+        {/* Page Header */}
+        <div className="sol-page-header sol-fade-up flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="sol-page-title">
+            <h1 className="sol-page-title flex items-center gap-2">
               <div className="sol-page-title-icon">
                 <MailCheck size={20} color="#fff" />
               </div>
@@ -840,6 +860,23 @@ export default function SentOffersListView() {
             <p className="sol-page-sub">
               Track every offer you've sent and monitor institute responses.
             </p>
+          </div>
+
+          {/* Search Field */}
+          <div className="relative w-full sm:w-64">
+            <input
+              type="text"
+              placeholder="Search offers..."
+              className="input input-bordered w-full pr-10 text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button
+              onClick={handleSearch}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 btn btn-primary btn-sm px-3"
+            >
+              <Search size={16} />
+            </button>
           </div>
         </div>
 
