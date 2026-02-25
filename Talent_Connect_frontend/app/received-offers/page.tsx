@@ -76,7 +76,7 @@ export default function ReceivedOffersPage() {
   const [updating, setUpdating] = useState<number | null>(null);
   const [filter, setFilter] = useState<string>("All");
 
-  const [currentOffer, setCurrentOffer] = useState<Offer | null>(null);
+  const [currentOffer, setCurrentOffer] = useState<Offer | null | any>(null);
   const [viewModal, setViewModal] = useState<boolean>(false);
 
   const currnetOfferRedirect: any = useSelector(
@@ -384,6 +384,16 @@ export default function ReceivedOffersPage() {
         open={viewModal}
         setOpen={setViewModal}
         offer={currentOffer}
+        onAccept={() => {
+          updateStatus(currentOffer.offer_id, "Accepted").then(() => {
+            setViewModal(false);
+          });
+        }}
+        onReject={() =>
+          updateStatus(currentOffer.offer_id, "Rejected").then(() =>
+            setViewModal(false),
+          )
+        }
       />
     </div>
   );

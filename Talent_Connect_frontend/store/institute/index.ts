@@ -109,6 +109,7 @@ const initialState = {
     addInstitute: { open: false },
     updateInstitute: { open: false },
     viewInstitute: { open: false },
+    bulkOffer: { open: false },
   },
   loading: false,
   error: null,
