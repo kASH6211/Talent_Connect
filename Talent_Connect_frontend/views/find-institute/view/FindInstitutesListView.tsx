@@ -18,6 +18,7 @@ import {
   Landmark,
   ChevronDown,
   ArrowUpDown,
+  CalendarClock,
 } from "lucide-react";
 import api from "@/lib/api";
 import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
@@ -28,6 +29,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { updateUiInstitute } from "@/store/institute";
 import App from "next/app";
+import { OfferModalV2 } from "./OfferModalView";
 
 // ─── Types & Interfaces (UNCHANGED) ──────────────────────────────────────────
 interface InstituteRow {
@@ -62,6 +64,7 @@ const EMPTY_FILTERS: Filters = {
 };
 
 // ─── OfferModal (Compact Design) ─────────────────────────────────────────────
+
 function OfferModal({
   isOpen,
   selectedIds,
@@ -153,150 +156,537 @@ function OfferModal({
   };
 
   return (
-    <CommonModal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title="Send Job Offer"
-      size="lg"
-    >
-      <div className="space-y-4 p-2">
-        {/* Selected Institutes Preview */}
-        <div className="p-4 bg-base-50/50 rounded-xl border border-base-200">
-          <div className="flex items-center gap-2 mb-2 text-sm text-base-content/70">
-            <Send size={14} className="text-primary" />
-            <span>
-              Sending to{" "}
-              <span className="font-semibold text-primary">
-                {selectedIds.length}
-              </span>{" "}
-              institute{selectedIds.length !== 1 ? "s" : ""}
-            </span>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
+        .om-root * { box-sizing: border-box; }
+        .om-root { font-family: 'DM Sans', sans-serif; }
+
+        @keyframes om-panel-in {
+          from { opacity: 0; transform: translateY(24px) scale(0.975); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Outer wrapper – fills CommonModal's content area */
+        .om-shell {
+          position: relative;
+          background: #0c0a1d;
+          border-radius: 20px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          max-height: 90vh;
+          animation: om-panel-in 0.35s cubic-bezier(0.16,1,0.3,1) both;
+        }
+
+        /* Ambient orbs */
+        .om-orb {
+          position: absolute;
+          border-radius: 50%;
+          pointer-events: none;
+          filter: blur(70px);
+        }
+        .om-orb-1 { width: 260px; height: 260px; top: -100px; right: -80px; background: rgba(124,58,237,0.22); }
+        .om-orb-2 { width: 180px; height: 180px; bottom: 0; left: -60px; background: rgba(79,70,229,0.18); }
+
+        /* Top accent line */
+        .om-accent-bar {
+          height: 2px;
+          background: linear-gradient(90deg,transparent,#8b5cf6 30%,#a78bfa 55%,#8b5cf6 75%,transparent);
+          flex-shrink: 0;
+        }
+
+        /* ─── Header ─────────────────────────────────────────── */
+        .om-header {
+          padding: 26px 30px 22px;
+          border-bottom: 1px solid rgba(255,255,255,0.055);
+          flex-shrink: 0;
+          position: relative;
+          z-index: 1;
+        }
+        .om-header-row {
+          display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+          margin-bottom: 18px;
+        }
+        .om-hd-left { display: flex; align-items: center; gap: 14px; }
+        .om-icon-box {
+          width: 46px; height: 46px;
+          border-radius: 13px;
+          background: linear-gradient(140deg,#7c3aed 0%,#4f46e5 100%);
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+          box-shadow: 0 6px 22px rgba(124,58,237,0.45);
+        }
+        .om-title {
+          font-family: 'Syne', sans-serif;
+          font-size: 19px;
+          font-weight: 700;
+          color: #ede9fe;
+          letter-spacing: -0.25px;
+          margin: 0 0 2px;
+          line-height: 1.2;
+        }
+        .om-subtitle {
+          font-size: 12.5px;
+          color: rgba(255,255,255,0.32);
+          margin: 0;
+        }
+        .om-x-btn {
+          width: 34px; height: 34px;
+          border-radius: 9px;
+          border: 1px solid rgba(255,255,255,0.09);
+          background: rgba(255,255,255,0.03);
+          color: rgba(255,255,255,0.38);
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          transition: all 0.17s;
+          flex-shrink: 0;
+        }
+        .om-x-btn:hover {
+          background: rgba(239,68,68,0.12);
+          border-color: rgba(239,68,68,0.28);
+          color: #f87171;
+        }
+
+        /* Institute chips */
+        .om-chips-heading {
+          font-size: 10px; font-weight: 700; letter-spacing: 1.1px;
+          text-transform: uppercase; color: rgba(255,255,255,0.25);
+          margin-bottom: 9px;
+        }
+        .om-chips-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .om-badge-count {
+          display: inline-flex; align-items: center; gap: 7px;
+          padding: 4px 11px 4px 5px;
+          border-radius: 20px;
+          background: rgba(139,92,246,0.12);
+          border: 1px solid rgba(139,92,246,0.22);
+          color: #c4b5fd;
+          font-size: 12px; font-weight: 600;
+        }
+        .om-badge-count-num {
+          width: 22px; height: 22px;
+          border-radius: 6px;
+          background: linear-gradient(135deg,#7c3aed,#6366f1);
+          color: #fff; font-size: 11px; font-weight: 800;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .om-chip {
+          display: inline-flex; align-items: center; gap: 5px;
+          padding: 4px 10px;
+          border-radius: 7px;
+          background: rgba(139,92,246,0.08);
+          border: 1px solid rgba(139,92,246,0.18);
+          font-size: 11.5px; font-weight: 500; color: #a78bfa;
+        }
+        .om-chip-dot { width: 4px; height: 4px; border-radius: 50%; background: #8b5cf6; flex-shrink: 0; }
+        .om-chip-more {
+          background: rgba(255,255,255,0.04);
+          border-color: rgba(255,255,255,0.08);
+          color: rgba(255,255,255,0.28);
+        }
+
+        /* ─── Body ───────────────────────────────────────────── */
+        .om-body {
+          flex: 1; overflow-y: auto; padding: 26px 30px;
+          position: relative; z-index: 1;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(139,92,246,0.28) transparent;
+        }
+        .om-body::-webkit-scrollbar { width: 4px; }
+        .om-body::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.28); border-radius: 4px; }
+
+        /* Section */
+        .om-sec { margin-bottom: 26px; }
+        .om-sec-label {
+          font-size: 10px; font-weight: 700; letter-spacing: 1.1px;
+          text-transform: uppercase; color: rgba(255,255,255,0.22);
+          margin-bottom: 14px;
+          display: flex; align-items: center; gap: 10px;
+        }
+        .om-sec-label::after {
+          content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.055);
+        }
+
+        /* Fields */
+        .om-field { margin-bottom: 16px; }
+        .om-lbl {
+          display: block;
+          font-size: 11.5px; font-weight: 500;
+          color: rgba(255,255,255,0.42);
+          margin-bottom: 7px; letter-spacing: 0.15px;
+        }
+        .om-lbl-req { color: #f87171; margin-left: 2px; }
+
+        .om-inp, .om-ta {
+          width: 100%;
+          background: rgba(255,255,255,0.035);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 11px;
+          padding: 11px 15px;
+          font-size: 13.5px;
+          font-family: 'DM Sans', sans-serif;
+          color: #f5f3ff;
+          outline: none;
+          transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+        }
+        .om-inp::placeholder, .om-ta::placeholder { color: rgba(255,255,255,0.18); }
+        .om-inp:focus, .om-ta:focus {
+          border-color: rgba(139,92,246,0.5);
+          background: rgba(139,92,246,0.07);
+          box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+        }
+        .om-inp:hover:not(:focus), .om-ta:hover:not(:focus) {
+          border-color: rgba(255,255,255,0.13);
+        }
+        .om-ta { resize: vertical; min-height: 88px; line-height: 1.6; }
+
+        .om-inp[type="number"]::-webkit-inner-spin-button,
+        .om-inp[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+        .om-inp[type="number"] { -moz-appearance: textfield; }
+
+        .om-inp[type="date"]::-webkit-calendar-picker-indicator {
+          filter: invert(0.6) sepia(1) saturate(4) hue-rotate(220deg);
+          cursor: pointer; opacity: 0.5;
+        }
+
+        /* Prefix wrapper */
+        .om-inp-wrap { position: relative; }
+        .om-inp-pfx {
+          position: absolute; left: 13px; top: 50%;
+          transform: translateY(-50%);
+          font-size: 13px; font-weight: 600;
+          color: rgba(255,255,255,0.22); pointer-events: none;
+        }
+        .om-inp-wrap .om-inp { padding-left: 26px; }
+
+        /* 3-col grid */
+        .om-g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 13px; }
+        @media (max-width: 520px) {
+          .om-g3 { grid-template-columns: 1fr 1fr; }
+          .om-g3 .om-field:last-child { grid-column: span 2; }
+          .om-header { padding: 20px 18px 16px; }
+          .om-body { padding: 20px 18px; }
+          .om-footer { padding: 15px 18px; }
+        }
+
+        /* Date row */
+        .om-date-wrap { position: relative; }
+        .om-date-icon {
+          position: absolute; right: 13px; top: 50%;
+          transform: translateY(-50%);
+          color: rgba(255,255,255,0.2); pointer-events: none;
+        }
+
+        /* Error */
+        .om-err {
+          display: flex; align-items: center; gap: 10px;
+          padding: 11px 15px;
+          border-radius: 10px;
+          background: rgba(239,68,68,0.09);
+          border: 1px solid rgba(239,68,68,0.2);
+          color: #fca5a5; font-size: 13px;
+          margin-bottom: 18px;
+        }
+        .om-err-ic {
+          width: 20px; height: 20px; border-radius: 50%;
+          background: rgba(239,68,68,0.18);
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+        }
+
+        /* ─── Footer ─────────────────────────────────────────── */
+        .om-footer {
+          padding: 18px 30px;
+          border-top: 1px solid rgba(255,255,255,0.055);
+          display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          flex-shrink: 0;
+          background: rgba(0,0,0,0.18);
+          position: relative; z-index: 1;
+          flex-wrap: wrap;
+        }
+        .om-footer-note {
+          font-size: 11.5px; color: rgba(255,255,255,0.2);
+          display: flex; align-items: center; gap: 6px;
+        }
+        .om-footer-actions { display: flex; align-items: center; gap: 10px; }
+
+        .om-cancel {
+          padding: 10px 20px;
+          border-radius: 10px;
+          border: 1px solid rgba(255,255,255,0.09);
+          background: transparent;
+          color: rgba(255,255,255,0.4);
+          font-size: 13.5px; font-weight: 500;
+          font-family: 'DM Sans', sans-serif;
+          cursor: pointer; transition: all 0.17s;
+        }
+        .om-cancel:hover:not(:disabled) {
+          background: rgba(255,255,255,0.05);
+          border-color: rgba(255,255,255,0.16);
+          color: rgba(255,255,255,0.65);
+        }
+        .om-cancel:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .om-send {
+          display: flex; align-items: center; gap: 8px;
+          padding: 11px 22px;
+          border-radius: 11px; border: none;
+          background: linear-gradient(135deg,#7c3aed 0%,#5b48e8 100%);
+          color: #fff;
+          font-size: 13.5px; font-weight: 600;
+          font-family: 'DM Sans', sans-serif;
+          cursor: pointer; transition: all 0.2s;
+          box-shadow: 0 5px 18px rgba(124,58,237,0.42);
+          position: relative; overflow: hidden;
+        }
+        .om-send::after {
+          content: '';
+          position: absolute; inset: 0;
+          background: linear-gradient(135deg,rgba(255,255,255,0.13),transparent);
+          opacity: 0; transition: opacity 0.17s;
+        }
+        .om-send:hover:not(:disabled)::after { opacity: 1; }
+        .om-send:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 9px 26px rgba(124,58,237,0.52); }
+        .om-send:active:not(:disabled) { transform: translateY(0); }
+        .om-send:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        @keyframes om-spin { to { transform: rotate(360deg); } }
+        .om-spin { animation: om-spin 0.75s linear infinite; }
+      `}</style>
+
+      <CommonModal isOpen={isOpen} onClose={handleClose} title="" size="lg">
+        <div className="om-root">
+          <div className="om-shell">
+            <div className="om-accent-bar" />
+            <div className="om-orb om-orb-1" />
+            <div className="om-orb om-orb-2" />
+
+            {/* ── Header ── */}
+            <div className="om-header">
+              <div className="om-header-row">
+                <div className="om-hd-left">
+                  <div className="om-icon-box">
+                    <Send size={19} color="#fff" />
+                  </div>
+                  <div>
+                    <h2 className="om-title">Send Bulk Job Offer</h2>
+                    <p className="om-subtitle">
+                      Dispatch to all selected institutes at once
+                    </p>
+                  </div>
+                </div>
+                <button
+                  className="om-x-btn"
+                  onClick={handleClose}
+                  aria-label="Close"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+
+              {/* Institute chips */}
+              <div className="om-chips-heading">Recipients</div>
+              <div className="om-chips-row">
+                <span className="om-badge-count">
+                  <span className="om-badge-count-num">
+                    {selectedIds.length}
+                  </span>
+                  institute{selectedIds.length !== 1 ? "s" : ""}
+                </span>
+                {selectedIds.slice(0, 5).map((id) => (
+                  <span key={id} className="om-chip">
+                    <span className="om-chip-dot" />
+                    {institutesMap.get(id) || `Institute #${id}`}
+                  </span>
+                ))}
+                {selectedIds.length > 5 && (
+                  <span className={`om-chip om-chip-more`}>
+                    +{selectedIds.length - 5} more
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* ── Body ── */}
+            <div className="om-body">
+              {/* Job Details */}
+              <div className="om-sec">
+                <div className="om-sec-label">Job Details</div>
+
+                <div className="om-field">
+                  <label className="om-lbl">
+                    Job Title<span className="om-lbl-req">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="om-inp"
+                    value={jobTitle}
+                    onChange={(e) => setJobTitle(e.target.value)}
+                    placeholder="e.g. Software Engineer, Marketing Lead"
+                  />
+                </div>
+
+                <div className="om-field">
+                  <label className="om-lbl">Description</label>
+                  <textarea
+                    className="om-ta"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Role overview, responsibilities, skills required..."
+                  />
+                </div>
+              </div>
+
+              {/* Compensation */}
+              <div className="om-sec">
+                <div className="om-sec-label">Compensation &amp; Openings</div>
+                <div className="om-g3">
+                  <div className="om-field">
+                    <label className="om-lbl">Min Salary</label>
+                    <div className="om-inp-wrap">
+                      <span className="om-inp-pfx">₹</span>
+                      <input
+                        type="number"
+                        className="om-inp"
+                        value={salaryMin}
+                        onChange={(e) => setSalaryMin(e.target.value)}
+                        placeholder="300000"
+                      />
+                    </div>
+                  </div>
+                  <div className="om-field">
+                    <label className="om-lbl">Max Salary</label>
+                    <div className="om-inp-wrap">
+                      <span className="om-inp-pfx">₹</span>
+                      <input
+                        type="number"
+                        className="om-inp"
+                        value={salaryMax}
+                        onChange={(e) => setSalaryMax(e.target.value)}
+                        placeholder="600000"
+                      />
+                    </div>
+                  </div>
+                  <div className="om-field">
+                    <label className="om-lbl">No. of Posts</label>
+                    <input
+                      type="number"
+                      className="om-inp"
+                      value={numberOfPosts}
+                      onChange={(e) => setNumberOfPosts(e.target.value)}
+                      placeholder="5"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Requirements */}
+              <div className="om-sec">
+                <div className="om-sec-label">Candidate Requirements</div>
+
+                <div className="om-field">
+                  <label className="om-lbl">Qualifications</label>
+                  <MultiSelectDropdown
+                    label="Qualification"
+                    options={qualOptions}
+                    selected={qualIds}
+                    onChange={setQualIds}
+                    placeholder="Any qualification"
+                  />
+                </div>
+
+                <div className="om-field">
+                  <label className="om-lbl">Programs</label>
+                  <MultiSelectDropdown
+                    label="Program"
+                    options={programOptions}
+                    selected={programIds}
+                    onChange={setProgramIds}
+                    placeholder="Any program"
+                  />
+                </div>
+
+                <div className="om-field">
+                  <label className="om-lbl">Streams / Branches</label>
+                  <MultiSelectDropdown
+                    label="Stream"
+                    options={streamOptions}
+                    selected={streamIds}
+                    onChange={setStreamIds}
+                    placeholder="Any stream"
+                  />
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div className="om-sec">
+                <div className="om-sec-label">Timeline</div>
+                <div className="om-field" style={{ maxWidth: "260px" }}>
+                  <label className="om-lbl">Last Date to Apply</label>
+                  <div className="om-date-wrap">
+                    <input
+                      type="date"
+                      className="om-inp"
+                      value={lastDate}
+                      onChange={(e) => setLastDate(e.target.value)}
+                      style={{ paddingRight: "42px" }}
+                    />
+                    <CalendarClock size={15} className="om-date-icon" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="om-err">
+                  <div className="om-err-ic">
+                    <X size={11} color="#f87171" />
+                  </div>
+                  {error}
+                </div>
+              )}
+            </div>
+
+            {/* ── Footer ── */}
+            <div className="om-footer">
+              <div className="om-footer-note">
+                <Send size={11} />
+                Delivered instantly to all institutes
+              </div>
+              <div className="om-footer-actions">
+                <button
+                  className="om-cancel"
+                  onClick={handleClose}
+                  disabled={sending}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="om-send"
+                  onClick={handleSend}
+                  disabled={sending}
+                >
+                  {sending ? (
+                    <>
+                      <Loader2 size={14} className="om-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send size={14} />
+                      Send to {selectedIds.length} institute
+                      {selectedIds.length !== 1 ? "s" : ""}
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-1.5 max-h-16 overflow-y-auto p-1">
-            {selectedIds.map((id) => (
-              <span
-                key={id}
-                className="badge badge-primary badge-outline text-xs px-2 py-0.5 truncate max-w-28"
-              >
-                {institutesMap.get(id)}
-              </span>
-            ))}
-          </div>
         </div>
-
-        {/* Job Details */}
-        <CommonInputField
-          label="Job Title *"
-          value={jobTitle}
-          onChange={(e) => setJobTitle(e.target.value)}
-          placeholder="e.g. Software Engineer"
-        />
-
-        <div className="space-y-2">
-          <label className="label">
-            <span className="label-text font-medium">Job Description</span>
-          </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            placeholder="Role overview, responsibilities..."
-            className="textarea textarea-bordered w-full rounded-xl resize-vertical text-sm"
-          />
-        </div>
-
-        {/* Salary Range */}
-        <div className="grid grid-cols-2 gap-3">
-          <CommonInputField
-            label="Min Salary (₹)"
-            type="number"
-            value={salaryMin}
-            onChange={(e) => setSalaryMin(e.target.value)}
-            placeholder="3L"
-          />
-          <CommonInputField
-            label="Max Salary (₹)"
-            type="number"
-            value={salaryMax}
-            onChange={(e) => setSalaryMax(e.target.value)}
-            placeholder="6L"
-          />
-        </div>
-
-        <CommonInputField
-          label="Number of Posts"
-          type="number"
-          value={numberOfPosts}
-          onChange={(e) => setNumberOfPosts(e.target.value)}
-          placeholder="5"
-        />
-
-        {/* Requirements */}
-        <div className="space-y-2">
-          <MultiSelectDropdown
-            label="Qualifications"
-            options={qualOptions}
-            selected={qualIds}
-            onChange={setQualIds}
-            placeholder="Any qualification"
-          />
-          <MultiSelectDropdown
-            label="Programs"
-            options={programOptions}
-            selected={programIds}
-            onChange={setProgramIds}
-            placeholder="Any program"
-          />
-          <MultiSelectDropdown
-            label="Streams/Branches"
-            options={streamOptions}
-            selected={streamIds}
-            onChange={setStreamIds}
-            placeholder="Any stream"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="label">
-            <span className="label-text font-medium">Last Date</span>
-          </label>
-          <input
-            type="date"
-            value={lastDate}
-            onChange={(e) => setLastDate(e.target.value)}
-            className="input input-bordered w-full rounded-xl text-sm"
-          />
-        </div>
-
-        {error && (
-          <div className="alert alert-error text-sm shadow-md">
-            <X size={14} />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <div className="flex items-center justify-end gap-2 pt-3 border-t border-base-200">
-          <button
-            onClick={handleClose}
-            className="btn btn-ghost btn-sm px-4 text-sm"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSend}
-            disabled={sending}
-            className="btn btn-primary btn-sm gap-1.5 px-6 text-sm"
-          >
-            {sending ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Send size={14} />
-            )}
-            {sending ? "Sending..." : `Send to ${selectedIds.length}`}
-          </button>
-        </div>
-      </div>
-    </CommonModal>
+      </CommonModal>
+    </>
   );
 }
 
@@ -824,7 +1214,8 @@ export default function FindInstitutesPage() {
           </div>
         )}
 
-        <OfferModal
+        <OfferModalV2
+          onClose={() => console.log("close")}
           isOpen={findInstituteUi?.bulkOffer?.open}
           selectedIds={Array.from(selected)}
           institutesMap={institutesMap}
