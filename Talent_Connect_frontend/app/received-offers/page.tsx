@@ -22,7 +22,7 @@ import OfferViewModal from "@/views/received-offers/view/OfferViewModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 
-/* ─── Global Styles (same beautiful design language as Sent Offers) ─────── */
+/* ─── Updated Global Styles ──────────────────────────────────────────────── */
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -40,103 +40,103 @@ const styles = `
     position: relative;
     overflow: hidden;
     border-radius: 16px;
-    padding: 20px 24px;
+    padding: 24px;
     border: 1.5px solid rgba(0,0,0,0.06);
     background: #fff;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+    transition: all 0.28s cubic-bezier(0.16,1,0.3,1);
     text-align: center;
   }
   .sol-stat:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 14px 36px rgba(0,0,0,0.12);
+    transform: translateY(-5px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.14);
   }
-  .sol-stat.active-all      { border-color: #6366f1; background: linear-gradient(135deg,#eef2ff,#e0e7ff); box-shadow: 0 10px 28px rgba(99,102,241,0.22); }
-  .sol-stat.active-pending  { border-color: #f59e0b; background: linear-gradient(135deg,#fffbeb,#fef3c7); box-shadow: 0 10px 28px rgba(245,158,11,0.22); }
-  .sol-stat.active-accepted { border-color: #10b981; background: linear-gradient(135deg,#ecfdf5,#d1fae5); box-shadow: 0 10px 28px rgba(16,185,129,0.22); }
-  .sol-stat.active-rejected { border-color: #ef4444; background: linear-gradient(135deg,#fef2f2,#fee2e2); box-shadow: 0 10px 28px rgba(239,68,68,0.22); }
+  .sol-stat.active-all      { border-color: #6366f1; background: linear-gradient(135deg,#eef2ff,#e0e7ff); box-shadow: 0 12px 32px rgba(99,102,241,0.25); }
+  .sol-stat.active-pending  { border-color: #f59e0b; background: linear-gradient(135deg,#fffbeb,#fef3c7); box-shadow: 0 12px 32px rgba(245,158,11,0.25); }
+  .sol-stat.active-accepted { border-color: #10b981; background: linear-gradient(135deg,#ecfdf5,#d1fae5); box-shadow: 0 12px 32px rgba(16,185,129,0.25); }
+  .sol-stat.active-rejected { border-color: #ef4444; background: linear-gradient(135deg,#fef2f2,#fee2e2); box-shadow: 0 12px 32px rgba(239,68,68,0.25); }
 
   .sol-stat-icon {
-    width: 48px; height: 48px;
+    width: 52px; height: 52px;
     border-radius: 14px;
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 12px;
-    transition: transform 0.25s;
+    margin: 0 auto 14px;
+    transition: transform 0.28s;
   }
-  .sol-stat:hover .sol-stat-icon { transform: scale(1.1) rotate(4deg); }
+  .sol-stat:hover .sol-stat-icon { transform: scale(1.12) rotate(6deg); }
 
   .sol-stat-count {
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 800;
     line-height: 1;
-    margin-bottom: 4px;
-    letter-spacing: -0.6px;
+    margin-bottom: 6px;
+    letter-spacing: -0.8px;
   }
   .sol-stat-label {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
-    letter-spacing: 0.9px;
+    letter-spacing: 1px;
     text-transform: uppercase;
-    opacity: 0.65;
+    opacity: 0.7;
   }
 
   .sol-stat-glow {
     position: absolute;
-    bottom: -30px; right: -30px;
-    width: 100px; height: 100px;
+    bottom: -40px; right: -40px;
+    width: 120px; height: 120px;
     border-radius: 50%;
-    opacity: 0.09;
+    opacity: 0.12;
     pointer-events: none;
   }
 
   .sol-card {
-    border-radius: 16px;
+    border-radius: 18px;
     border: 1.5px solid rgba(0,0,0,0.07);
     background: #fff;
     overflow: hidden;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-    transition: all 0.24s cubic-bezier(0.16,1,0.3,1);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    transition: all 0.28s cubic-bezier(0.16,1,0.3,1);
   }
   .sol-card:hover {
-    box-shadow: 0 10px 32px rgba(99,102,241,0.12);
-    transform: translateY(-2px);
+    box-shadow: 0 12px 36px rgba(99,102,241,0.14);
+    transform: translateY(-3px);
   }
 
   .sol-card-header {
-    padding: 20px 24px;
-    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    padding: 24px;
+    background: linear-gradient(135deg, #f9fafb, #f3f4f6);
   }
 
   .sol-job-title {
-    font-size: 17px;
+    font-size: 20px;
     font-weight: 700;
-    color: #0f0e1a;
+    color: #111827;
     line-height: 1.3;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
 
   .sol-pill {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.1px;
   }
   .sol-pill-salary  { background: #ecfdf5; color: #059669; }
-  .sol-pill-posts   { background: #f1f5f9; color: #64748b; }
+  .sol-pill-posts   { background: #f3f4f6; color: #4b5563; }
   .sol-pill-date    { background: #fff7ed; color: #c2410c; }
 
   .sol-meta {
-    display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px;
-    font-size: 13px; color: #64748b;
+    display: flex; flex-wrap: wrap; gap: 18px; margin-top: 10px;
+    font-size: 14px; color: #4b5563;
   }
 
   .sol-status {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 5px 12px;
+    padding: 6px 14px;
     border-radius: 999px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
   }
   .sol-status-pending   { background: #fffbeb; color: #d97706; }
@@ -144,40 +144,48 @@ const styles = `
   .sol-status-rejected  { background: #fef2f2; color: #dc2626; }
 
   .sol-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 16px;
-    border-radius: 10px;
-    font-size: 13px;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 14px;
     font-weight: 600;
-    transition: all 0.2s;
+    transition: all 0.24s;
   }
   .sol-btn-accept  { background: #10b981; color: white; }
-  .sol-btn-accept:hover  { background: #059669; }
+  .sol-btn-accept:hover  { background: #059669; transform: translateY(-1px); }
   .sol-btn-reject  { background: #ef4444; color: white; }
-  .sol-btn-reject:hover  { background: #dc2626; }
+  .sol-btn-reject:hover  { background: #dc2626; transform: translateY(-1px); }
 
   .sol-btn-eye {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    border: 1.5px solid rgba(99,102,241,0.2);
-    background: rgba(99,102,241,0.04);
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(99,102,241,0.25);
+    background: rgba(99,102,241,0.06);
     color: #6366f1;
     display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s;
+    transition: all 0.24s;
   }
   .sol-btn-eye:hover {
     background: #6366f1;
     color: white;
     border-color: #6366f1;
-    transform: scale(1.08);
+    transform: scale(1.1);
   }
 
   .sol-empty {
-    padding: 80px 24px;
+    padding: 100px 24px;
     text-align: center;
-    border: 2px dashed rgba(99,102,241,0.18);
+    border: 2px dashed rgba(99,102,241,0.2);
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.03), rgba(139,92,246,0.03));
+  }
+  .sol-empty-icon {
+    width: 64px; height: 64px;
+    margin: 0 auto 20px;
     border-radius: 16px;
-    background: linear-gradient(135deg, rgba(99,102,241,0.02), rgba(139,92,246,0.02));
+    background: rgba(99,102,241,0.08);
+    display: flex; align-items: center; justify-content: center;
   }
 `;
 
@@ -248,11 +256,11 @@ function StatCard({
       className={`sol-stat ${active ? activeClass : ""} sol-fade-up sol-delay-1`}
     >
       <div className="sol-stat-icon" style={{ background: iconBg }}>
-        <Icon size={22} color="#fff" />
+        <Icon size={24} color="#fff" />
       </div>
       <div
         className="sol-stat-count"
-        style={{ color: active ? countColor : "#0f0e1a" }}
+        style={{ color: active ? countColor : "#111827" }}
       >
         {count}
       </div>
@@ -327,31 +335,32 @@ export default function ReceivedOffersPage() {
     <>
       <style>{styles}</style>
 
-      <div className="sol-root px-[18px] pt-10 pb-5 mx-auto w-full max-w-7xl lg:max-w-screen-2xl">
+      <div className="sol-root px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-10 pb-12 w-full">
         {/* Header */}
-        <div className="sol-page-header sol-fade-up flex flex-col sm:flex-row items-center justify-between gap-6 mb-10 lg:mb-12">
-          <div className="flex items-center gap-4">
+        <div className="sol-page-header sol-fade-up flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-12">
+          <div className="flex items-center gap-5">
             <div
               className="
-        w-12 h-12 rounded-xl 
-        bg-gradient-to-br from-indigo-600 to-purple-600 
-        flex items-center justify-center 
-        shadow-md ring-1 ring-indigo-400/30
-      "
+                w-14 h-14 sm:w-16 sm:h-16 rounded-2xl 
+                bg-gradient-to-br from-indigo-600 to-purple-600 
+                flex items-center justify-center 
+                shadow-lg ring-1 ring-indigo-400/40
+              "
             >
-              <MailOpen size={24} className="text-white" strokeWidth={2} />
+              <MailOpen size={28} className="text-white" strokeWidth={2.2} />
             </div>
 
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-gray-900">
                 Received Offers
               </h1>
-              <p className="mt-1 text-gray-600 dark:text-gray-400">
+              <p className="mt-2 text-base sm:text-lg text-gray-600">
                 Manage incoming job offers from industry partners
               </p>
             </div>
           </div>
         </div>
+
         {/* Stat Cards */}
         {!loading && offers.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 lg:gap-6 mb-12">
@@ -400,20 +409,22 @@ export default function ReceivedOffersPage() {
 
         {/* Loading / Empty / Content */}
         {loading ? (
-          <div className="text-center py-20">
-            <Loader2 className="animate-spin mx-auto" size={36} />
-            <p className="mt-4 text-gray-500">Loading received offers...</p>
+          <div className="text-center py-24">
+            <Loader2 className="animate-spin mx-auto" size={40} />
+            <p className="mt-6 text-lg text-gray-600">
+              Loading received offers...
+            </p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="sol-empty sol-fade-up">
             <div className="sol-empty-icon">
-              <Send size={32} color="#6366f1" />
+              <Send size={40} color="#6366f1" />
             </div>
-            <div className="mt-5">
-              <div className="text-xl font-semibold text-gray-800">
+            <div className="mt-6">
+              <div className="text-2xl font-semibold text-gray-800">
                 No offers found
               </div>
-              <p className="mt-2 text-gray-500">
+              <p className="mt-3 text-base text-gray-600">
                 {filter === "All"
                   ? "No job offers have been received yet."
                   : `No ${filter.toLowerCase()} offers at the moment.`}
@@ -433,28 +444,29 @@ export default function ReceivedOffersPage() {
                   style={{ animationDelay: `${index * 0.06}s` }}
                 >
                   <div className="sol-card-header">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                      <div className="flex-1 min-w-0">
                         <h2 className="sol-job-title">{offer.job_title}</h2>
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mt-1.5">
-                          <Building2 size={15} />
-                          {offer.industry?.industry_name || "Industry Partner"}
-                        </div>
 
-                        <div className="sol-meta">
-                          <div className="flex items-center gap-1.5">
-                            <CalendarDays size={14} />
+                        <div className="sol-meta mt-3">
+                          <div className="flex items-center gap-2">
+                            <Building2 size={16} />
+                            {offer.industry?.industry_name ||
+                              "Industry Partner"}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CalendarDays size={16} />
                             Sent: {formatDate(offer.offer_date)}
                           </div>
                           {offer.last_date && (
-                            <div className="flex items-center gap-1.5">
-                              <CalendarClock size={14} />
+                            <div className="flex items-center gap-2">
+                              <CalendarClock size={16} />
                               Apply by: {formatDate(offer.last_date)}
                             </div>
                           )}
                           {offer.number_of_posts && (
-                            <div className="flex items-center gap-1.5">
-                              <Users2 size={14} />
+                            <div className="flex items-center gap-2">
+                              <Users2 size={16} />
                               {offer.number_of_posts} post
                               {offer.number_of_posts !== 1 ? "s" : ""}
                             </div>
@@ -462,15 +474,15 @@ export default function ReceivedOffersPage() {
                         </div>
 
                         {salary && (
-                          <div className="mt-3">
-                            <span className="sol-pill sol-pill-salary">
+                          <div className="mt-4">
+                            <span className="sol-pill sol-pill-salary text-base">
                               {salary}
                             </span>
                           </div>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-3 self-start sm:self-center">
+                      <div className="flex items-center gap-4 self-start lg:self-center">
                         <button
                           className="sol-btn-eye"
                           onClick={() => {
@@ -478,17 +490,17 @@ export default function ReceivedOffersPage() {
                             setViewModal(true);
                           }}
                         >
-                          <Eye size={18} />
+                          <Eye size={20} />
                         </button>
 
                         <span
-                          className={`sol-status sol-status-${offer.status.toLowerCase()}`}
+                          className={`sol-status sol-status-${offer.status.toLowerCase()} text-base`}
                         >
-                          {offer.status === "Pending" && <Clock size={13} />}
+                          {offer.status === "Pending" && <Clock size={14} />}
                           {offer.status === "Accepted" && (
-                            <CheckCircle2 size={13} />
+                            <CheckCircle2 size={14} />
                           )}
-                          {offer.status === "Rejected" && <XCircle size={13} />}
+                          {offer.status === "Rejected" && <XCircle size={14} />}
                           {offer.status}
                         </span>
                       </div>
@@ -496,32 +508,32 @@ export default function ReceivedOffersPage() {
                   </div>
 
                   {offer.job_description && (
-                    <div className="px-6 pb-5 pt-3 text-sm text-gray-600 border-t">
+                    <div className="px-6 lg:px-8 pb-6 pt-4 text-base leading-relaxed text-gray-700 border-t">
                       {offer.job_description}
                     </div>
                   )}
 
                   {isPending && (
-                    <div className="px-6 pb-6 flex gap-4">
+                    <div className="px-6 lg:px-8 pb-6 flex flex-col sm:flex-row gap-4">
                       <button
-                        className="sol-btn sol-btn-accept flex-1"
+                        className="sol-btn sol-btn-accept flex-1 text-base"
                         onClick={() => updateStatus(offer.offer_id, "Accepted")}
                         disabled={updating === offer.offer_id}
                       >
                         {updating === offer.offer_id ? (
-                          <Loader2 size={18} className="animate-spin" />
+                          <Loader2 size={20} className="animate-spin" />
                         ) : (
                           "Accept Offer"
                         )}
                       </button>
 
                       <button
-                        className="sol-btn sol-btn-reject flex-1"
+                        className="sol-btn sol-btn-reject flex-1 text-base"
                         onClick={() => updateStatus(offer.offer_id, "Rejected")}
                         disabled={updating === offer.offer_id}
                       >
                         {updating === offer.offer_id ? (
-                          <Loader2 size={18} className="animate-spin" />
+                          <Loader2 size={20} className="animate-spin" />
                         ) : (
                           "Reject"
                         )}

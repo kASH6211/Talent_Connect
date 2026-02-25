@@ -38,137 +38,165 @@ const styles = `
   .sol-delay-3 { animation-delay: 0.15s; }
   .sol-delay-4 { animation-delay: 0.2s; }
 
-  /* Stat Cards */
+  /* Stat Cards - Icon on RIGHT, text on LEFT */
   .sol-stat {
     position: relative;
     overflow: hidden;
     border-radius: 16px;
-    padding: 20px;
+    padding: 24px 28px;
     border: 1.5px solid rgba(0,0,0,0.06);
     background: #fff;
     cursor: pointer;
-    transition: all 0.22s cubic-bezier(0.16,1,0.3,1);
+    transition: all 0.26s cubic-bezier(0.16,1,0.3,1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .sol-stat:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.12); }
+  .sol-stat.active-all     { border-color: #6366f1; background: linear-gradient(135deg,#eef2ff,#e0e7ff); box-shadow: 0 10px 32px rgba(99,102,241,0.22); }
+  .sol-stat.active-accepted{ border-color: #10b981; background: linear-gradient(135deg,#ecfdf5,#d1fae5); box-shadow: 0 10px 32px rgba(16,185,129,0.22); }
+  .sol-stat.active-pending { border-color: #f59e0b; background: linear-gradient(135deg,#fffbeb,#fef3c7); box-shadow: 0 10px 32px rgba(245,158,11,0.22); }
+  .sol-stat.active-rejected{ border-color: #ef4444; background: linear-gradient(135deg,#fef2f2,#fee2e2); box-shadow: 0 10px 32px rgba(239,68,68,0.22); }
+
+  .sol-stat-content {
+    flex: 1;
     text-align: left;
   }
-  .sol-stat:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
-  .sol-stat.active-all     { border-color: #6366f1; background: linear-gradient(135deg,#eef2ff,#e0e7ff); box-shadow: 0 8px 24px rgba(99,102,241,0.18); }
-  .sol-stat.active-accepted{ border-color: #10b981; background: linear-gradient(135deg,#ecfdf5,#d1fae5); box-shadow: 0 8px 24px rgba(16,185,129,0.18); }
-  .sol-stat.active-pending { border-color: #f59e0b; background: linear-gradient(135deg,#fffbeb,#fef3c7); box-shadow: 0 8px 24px rgba(245,158,11,0.18); }
-  .sol-stat.active-rejected{ border-color: #ef4444; background: linear-gradient(135deg,#fef2f2,#fee2e2); box-shadow: 0 8px 24px rgba(239,68,68,0.18); }
-
-  .sol-stat-icon {
-    width: 42px; height: 42px;
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 14px;
-    transition: transform 0.22s;
-  }
-  .sol-stat:hover .sol-stat-icon { transform: scale(1.08) rotate(-4deg); }
 
   .sol-stat-count {
     font-family: 'Outfit', sans-serif;
-    font-size: 28px;
+    font-size: 36px;
     font-weight: 800;
     line-height: 1;
     margin-bottom: 4px;
-    letter-spacing: -0.5px;
+    letter-spacing: -1px;
   }
   .sol-stat-label {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.9px;
     text-transform: uppercase;
-    opacity: 0.6;
+    opacity: 0.75;
   }
+
+  .sol-stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.26s;
+  }
+  .sol-stat:hover .sol-stat-icon { transform: scale(1.12) rotate(6deg); }
 
   .sol-stat-glow {
     position: absolute;
-    bottom: -20px; right: -20px;
-    width: 80px; height: 80px;
+    bottom: -30px;
+    right: -30px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
-    opacity: 0.08;
+    opacity: 0.1;
     pointer-events: none;
   }
 
-  /* Group cards */
+  /* Accordion cards - Made bigger and more spacious */
   .sol-card {
-    border-radius: 16px;
+    border-radius: 20px;
     border: 1.5px solid rgba(0,0,0,0.07);
     background: #fff;
     overflow: hidden;
-    transition: all 0.22s cubic-bezier(0.16,1,0.3,1);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: all 0.26s cubic-bezier(0.16,1,0.3,1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   }
   .sol-card:hover {
-    border-color: rgba(99,102,241,0.25);
-    box-shadow: 0 8px 28px rgba(99,102,241,0.1);
-    transform: translateY(-2px);
+    border-color: rgba(99,102,241,0.3);
+    box-shadow: 0 12px 36px rgba(99,102,241,0.12);
+    transform: translateY(-3px);
   }
 
   .sol-card-header {
-    padding: 20px 22px;
+    padding: 28px 32px;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background 0.2s;
     user-select: none;
   }
-  .sol-card-header:hover { background: rgba(99,102,241,0.02); }
+  .sol-card-header:hover { background: rgba(99,102,241,0.04); }
 
   .sol-job-icon {
-    width: 44px; height: 44px;
-    border-radius: 12px;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+    box-shadow: 0 6px 16px rgba(99,102,241,0.35);
   }
 
   .sol-job-title {
     font-family: 'Outfit', sans-serif;
-    font-size: 15px;
+    font-size: 18px;
     font-weight: 700;
     color: #0f0e1a;
-    letter-spacing: -0.2px;
+    letter-spacing: -0.3px;
     line-height: 1.3;
+    margin-bottom: 12px;
   }
 
   .sol-pill {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.1px;
   }
   .sol-pill-salary { background: #ecfdf5; color: #059669; font-family: 'JetBrains Mono', monospace; }
   .sol-pill-posts  { background: #f1f5f9; color: #64748b; }
   .sol-pill-date   { background: #fff7ed; color: #c2410c; }
 
   .sol-meta-item {
-    display: flex; align-items: center; gap: 5px;
-    font-size: 12px; color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #64748b;
   }
 
   .sol-chevron {
-    width: 30px; height: 30px;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: #f8fafc;
     color: #94a3b8;
-    transition: all 0.22s;
+    transition: all 0.24s;
     flex-shrink: 0;
   }
   .sol-chevron.open { background: #eef2ff; color: #6366f1; transform: rotate(180deg); }
 
-  /* Mini count badges in card header */
+  /* Mini badges - bigger */
   .sol-mini-badge {
-    width: 20px; height: 20px;
-    border-radius: 6px;
-    font-size: 10px;
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    font-size: 11px;
     font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  /* Table */
+  /* Table - bigger rows and padding */
   .sol-table-wrap {
     border-top: 1.5px solid rgba(0,0,0,0.05);
     overflow-x: auto;
@@ -177,7 +205,7 @@ const styles = `
   .sol-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .sol-table thead tr {
@@ -185,10 +213,10 @@ const styles = `
   }
 
   .sol-table th {
-    padding: 12px 18px;
-    font-size: 10.5px;
+    padding: 16px 24px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.7px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
     color: #94a3b8;
     text-align: left;
@@ -199,44 +227,49 @@ const styles = `
   .sol-table th.right  { text-align: right; }
 
   .sol-table td {
-    padding: 13px 18px;
+    padding: 18px 24px;
     vertical-align: middle;
     border-bottom: 1px solid rgba(0,0,0,0.04);
     color: #334155;
   }
   .sol-table tbody tr:last-child td { border-bottom: none; }
-  .sol-table tbody tr { transition: background 0.13s; }
+  .sol-table tbody tr { transition: background 0.14s; }
   .sol-table tbody tr:hover { background: #fafbff; }
 
   .sol-inst-name {
     font-weight: 600;
     color: #1e293b;
-    font-size: 13px;
-    max-width: 200px;
+    font-size: 15px;
+    max-width: 240px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .sol-contact-line {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 11.5px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
     color: #64748b;
     font-family: 'JetBrains Mono', monospace;
   }
   .sol-contact-dot {
-    width: 5px; height: 5px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: #cbd5e1;
     flex-shrink: 0;
   }
 
-  /* Status badges */
+  /* Status badges - slightly bigger */
   .sol-status {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
   }
   .sol-status-accepted  { background: #ecfdf5; color: #059669; }
@@ -244,64 +277,74 @@ const styles = `
   .sol-status-rejected  { background: #fef2f2; color: #dc2626; }
   .sol-status-withdrawn { background: #f8fafc; color: #64748b; }
 
-  /* Buttons */
+  /* Buttons - sharper */
   .sol-btn-withdraw {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 6px 13px;
-    border-radius: 8px;
-    border: 1.5px solid rgba(239,68,68,0.25);
-    background: rgba(239,68,68,0.04);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(239,68,68,0.3);
+    background: rgba(239,68,68,0.06);
     color: #ef4444;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.18s;
+    transition: all 0.2s;
     font-family: 'Outfit', sans-serif;
     white-space: nowrap;
   }
   .sol-btn-withdraw:hover:not(:disabled) {
-    background: rgba(239,68,68,0.1);
+    background: rgba(239,68,68,0.12);
     border-color: #ef4444;
     transform: translateY(-1px);
   }
   .sol-btn-withdraw:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  /* Eye button */
   .sol-btn-eye {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px;
-    border-radius: 9px;
-    border: 1.5px solid rgba(99,102,241,0.2);
-    background: rgba(99,102,241,0.05);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(99,102,241,0.25);
+    background: rgba(99,102,241,0.06);
     color: #6366f1;
     cursor: pointer;
-    transition: all 0.18s;
+    transition: all 0.2s;
     flex-shrink: 0;
   }
   .sol-btn-eye:hover {
     background: #6366f1;
     color: #fff;
     border-color: #6366f1;
-    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
-    transform: scale(1.08);
+    box-shadow: 0 6px 16px rgba(99,102,241,0.35);
+    transform: scale(1.1);
   }
 
   /* Empty state */
   .sol-empty {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 64px 32px;
-    gap: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 32px;
+    gap: 20px;
     text-align: center;
-    border-radius: 16px;
-    border: 2px dashed rgba(99,102,241,0.15);
-    background: linear-gradient(135deg, rgba(99,102,241,0.02), rgba(139,92,246,0.02));
+    border-radius: 20px;
+    border: 2px dashed rgba(99,102,241,0.18);
+    background: linear-gradient(135deg, rgba(99,102,241,0.03), rgba(139,92,246,0.03));
   }
 
   .sol-empty-icon {
-    width: 64px; height: 64px;
-    border-radius: 20px;
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
     background: linear-gradient(135deg,#eef2ff,#e0e7ff);
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* Skeleton */
@@ -313,34 +356,41 @@ const styles = `
     background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
     background-size: 800px 100%;
     animation: sol-shimmer 1.4s infinite linear;
-    border-radius: 12px;
+    border-radius: 16px;
   }
 
   /* Page header */
   .sol-page-header {
-    display: flex; align-items: flex-start; justify-content: space-between;
-    margin-bottom: 28px;
-    gap: 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    gap: 20px;
     flex-wrap: wrap;
   }
   .sol-page-title {
     font-family: 'Outfit', sans-serif;
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 800;
     color: #0f0e1a;
-    letter-spacing: -0.5px;
-    display: flex; align-items: center; gap: 10px;
-    margin: 0 0 6px;
+    letter-spacing: -0.6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 8px;
   }
   .sol-page-title-icon {
-    width: 38px; height: 38px;
-    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 16px rgba(99,102,241,0.35);
   }
   .sol-page-sub {
-    font-size: 14px;
+    font-size: 15px;
     color: #94a3b8;
     margin: 0;
     font-weight: 400;
@@ -349,21 +399,23 @@ const styles = `
   /* Filter label */
   .sol-filter-label {
     font-family: 'Outfit', sans-serif;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: #64748b;
-    margin-bottom: 12px;
-    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   @media (max-width: 640px) {
-    .sol-page-title { font-size: 20px; }
-    .sol-stat-count { font-size: 22px; }
-    .sol-table th, .sol-table td { padding: 10px 12px; }
+    .sol-page-title { font-size: 24px; }
+    .sol-stat-count { font-size: 28px; }
+    .sol-table th, .sol-table td { padding: 12px 16px; }
   }
 `;
 
-/* ─── Types ─────────────────────────────────────────────────────────────────── */
+/* ─── Types & Helpers (unchanged) ───────────────────────────────────────── */
 interface OfferRecord {
   offer_id: number;
   job_title: string;
@@ -399,7 +451,6 @@ interface OfferGroup {
   withdrawn: number;
 }
 
-/* ─── Helpers ────────────────────────────────────────────────────────────── */
 function fmt(n?: number) {
   if (!n) return null;
   return `₹${n >= 100000 ? (n / 100000).toFixed(1) + "L" : (n / 1000).toFixed(0) + "K"}`;
@@ -457,7 +508,6 @@ function groupOffers(offers: OfferRecord[]): OfferGroup[] {
   return [...map.values()];
 }
 
-/* ─── StatusBadge ────────────────────────────────────────────────────────── */
 function StatusBadge({ status }: { status: string }) {
   const cfg: Record<string, { cls: string; Icon: any }> = {
     Accepted: { cls: "sol-status-accepted", Icon: CheckCircle2 },
@@ -468,13 +518,13 @@ function StatusBadge({ status }: { status: string }) {
   const { cls, Icon } = cfg[status] ?? cfg["Pending"];
   return (
     <span className={`sol-status ${cls}`}>
-      <Icon size={11} />
+      <Icon size={13} />
       {status}
     </span>
   );
 }
 
-/* ─── StatCard ───────────────────────────────────────────────────────────── */
+/* ─── StatCard - Icon on RIGHT, text on LEFT ─────────────────────────────── */
 function StatCard({
   label,
   count,
@@ -499,22 +549,24 @@ function StatCard({
       onClick={onClick}
       className={`sol-stat ${active ? activeClass : ""}`}
     >
+      <div className="sol-stat-content">
+        <div
+          className="sol-stat-count"
+          style={{ color: active ? countColor : "#0f0e1a" }}
+        >
+          {count}
+        </div>
+        <div className="sol-stat-label">{label}</div>
+      </div>
       <div className="sol-stat-icon" style={{ background: iconBg }}>
-        <Icon size={19} color="#fff" />
+        <Icon size={24} color="#fff" />
       </div>
-      <div
-        className="sol-stat-count"
-        style={{ color: active ? countColor : "#0f0e1a" }}
-      >
-        {count}
-      </div>
-      <div className="sol-stat-label">{label}</div>
       <div className="sol-stat-glow" style={{ background: countColor }} />
     </button>
   );
 }
 
-/* ─── OfferGroupCard ─────────────────────────────────────────────────────── */
+/* ─── OfferGroupCard - Bigger & more spacious ────────────────────────────── */
 function OfferGroupCard({
   group,
   onWithdraw,
@@ -541,27 +593,27 @@ function OfferGroupCard({
 
   return (
     <div className="sol-card sol-fade-up">
-      {/* Header */}
+      {/* Header - bigger padding & font */}
       <div className="sol-card-header" onClick={() => setOpen((o) => !o)}>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "20px" }}>
           {/* Icon */}
           <div className="sol-job-icon">
-            <Send size={19} color="#fff" />
+            <Send size={24} color="#fff" />
           </div>
 
-          {/* Info */}
+          {/* Info - more space */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="sol-job-title" style={{ marginBottom: "8px" }}>
+            <div className="sol-job-title" style={{ marginBottom: "12px" }}>
               {group.job_title}
             </div>
 
-            {/* Pills */}
+            {/* Pills - bigger */}
             <div
               style={{
                 display: "flex",
                 flexWrap: "wrap",
-                gap: "6px",
-                marginBottom: "10px",
+                gap: "8px",
+                marginBottom: "16px",
               }}
             >
               {salary && (
@@ -575,40 +627,40 @@ function OfferGroupCard({
               )}
               {group.last_date && (
                 <span className="sol-pill sol-pill-date">
-                  <CalendarDays size={10} />
+                  <CalendarDays size={12} />
                   Closes {formatDate(group.last_date)}
                 </span>
               )}
             </div>
 
-            {/* Meta */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "14px" }}>
+            {/* Meta - bigger text */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
               <div className="sol-meta-item">
-                <CalendarDays size={12} />
+                <CalendarDays size={14} />
                 Sent {formatDate(group.offer_date)}
               </div>
               <div className="sol-meta-item">
-                <Building2 size={12} />
+                <Building2 size={14} />
                 {group.rows.length} institute
                 {group.rows.length !== 1 ? "s" : ""}
               </div>
             </div>
           </div>
 
-          {/* Right side: mini badges + chevron */}
+          {/* Right side - bigger chevron & badges */}
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               alignItems: "flex-end",
-              gap: "10px",
+              gap: "12px",
               flexShrink: 0,
             }}
           >
             <div
               style={{
                 display: "flex",
-                gap: "4px",
+                gap: "6px",
                 flexWrap: "wrap",
                 justifyContent: "flex-end",
               }}
@@ -647,13 +699,13 @@ function OfferGroupCard({
               )}
             </div>
             <div className={`sol-chevron ${open ? "open" : ""}`}>
-              <ChevronDown size={15} />
+              <ChevronDown size={18} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table - bigger rows */}
       {open && (
         <div className="sol-table-wrap">
           <table className="sol-table">
@@ -679,7 +731,7 @@ function OfferGroupCard({
                       style={{
                         display: "flex",
                         flexDirection: "column",
-                        gap: "3px",
+                        gap: "6px",
                       }}
                     >
                       {row.institute?.emailId && (
@@ -687,7 +739,7 @@ function OfferGroupCard({
                           <div className="sol-contact-dot" />
                           <span
                             style={{
-                              maxWidth: "150px",
+                              maxWidth: "180px",
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
@@ -704,7 +756,7 @@ function OfferGroupCard({
                         </div>
                       )}
                       {!row.institute?.emailId && !row.institute?.mobileno && (
-                        <span style={{ fontSize: "12px", color: "#cbd5e1" }}>
+                        <span style={{ fontSize: "13px", color: "#cbd5e1" }}>
                           No contact
                         </span>
                       )}
@@ -719,19 +771,9 @@ function OfferGroupCard({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "flex-end",
-                        gap: "8px",
+                        gap: "12px",
                       }}
                     >
-                      {/* Eye button — opens modal */}
-                      {/* <button
-                        className="sol-btn-eye"
-                        title="View offer details"
-                        onClick={() => onEyeClick(row)}
-                      >
-                        <Eye size={15} />
-                      </button> */}
-
-                      {/* Withdraw */}
                       {row.status === "Pending" && (
                         <button
                           className="sol-btn-withdraw"
@@ -740,11 +782,11 @@ function OfferGroupCard({
                         >
                           {withdrawing === row.offer_id ? (
                             <Loader2
-                              size={12}
+                              size={14}
                               style={{ animation: "spin 1s linear infinite" }}
                             />
                           ) : (
-                            <X size={12} />
+                            <X size={14} />
                           )}
                           Withdraw
                         </button>
@@ -773,7 +815,6 @@ export default function SentOffersListView() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  // For the detail modal — pass selectedOffer to your <JobDetailModal>
   const [selectedOffer, setSelectedOffer] = useState<OfferRecord | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -811,11 +852,6 @@ export default function SentOffersListView() {
   const rejected = offers.filter((o) => o.status === "Rejected").length;
   const withdrawn = offers.filter((o) => o.status === "Withdrawn").length;
 
-  // const filteredOffers = offers.filter(
-  //   (o) => filter === "All" || o.status === filter,
-  // );
-
-  // ── Search + Filter ──
   const filteredOffers = offers.filter((o) => {
     const matchesFilter = filter === "All" || o.status === filter;
     const matchesSearch =
@@ -836,9 +872,6 @@ export default function SentOffersListView() {
     <>
       <style>{styles}</style>
 
-      {/* ── Place your <JobDetailModal open={modalOpen} setOpen={setModalOpen} job={selectedOffer} /> here ── */}
-      {/* Example: <JobDetailModal open={modalOpen} setOpen={setModalOpen} job={selectedOffer} /> */}
-
       <div
         className="sol-root"
         style={{
@@ -847,7 +880,6 @@ export default function SentOffersListView() {
           margin: "0 auto",
         }}
       >
-        {/* Page Header */}
         {/* Page Header */}
         <div className="sol-page-header sol-fade-up flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
@@ -921,7 +953,7 @@ export default function SentOffersListView() {
           </div>
         )}
 
-        {/* Empty (no offers at all) */}
+        {/* Empty */}
         {!loading && !error && offers.length === 0 && (
           <div className="sol-empty">
             <div className="sol-empty-icon">
@@ -960,14 +992,14 @@ export default function SentOffersListView() {
         {/* Content */}
         {!loading && !error && offers.length > 0 && (
           <>
-            {/* Stat Cards */}
+            {/* Stat Cards - Icon on RIGHT */}
             <div
               className="sol-fade-up sol-delay-1"
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(5,1fr)",
-                gap: "14px",
-                marginBottom: "28px",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: "16px",
+                marginBottom: "32px",
               }}
             >
               <StatCard
@@ -1052,23 +1084,23 @@ export default function SentOffersListView() {
               </div>
             )}
 
-            {/* Offer Group Cards */}
+            {/* Offer Group Cards - Bigger */}
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "14px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "18px" }}
             >
               {groups.length === 0 ? (
                 <div className="sol-empty">
                   <div className="sol-empty-icon">
-                    <Send size={26} color="#6366f1" />
+                    <Send size={28} color="#6366f1" />
                   </div>
                   <div>
                     <div
                       style={{
                         fontFamily: "'Outfit',sans-serif",
-                        fontSize: "16px",
+                        fontSize: "18px",
                         fontWeight: 700,
                         color: "#0f0e1a",
-                        marginBottom: "4px",
+                        marginBottom: "6px",
                       }}
                     >
                       No {filter.toLowerCase()} offers
