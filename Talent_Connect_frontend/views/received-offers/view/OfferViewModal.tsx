@@ -11,6 +11,7 @@ import {
   CalendarDays,
   CalendarClock,
   Mail,
+  Briefcase,
 } from "lucide-react";
 
 interface Offer {
@@ -64,9 +65,9 @@ export default function OfferViewModal({
     const min = toNumber(offer.salary_min);
     const max = toNumber(offer.salary_max);
 
-    const fmt = (n: number) => `₹${(n / 100000).toFixed(1)}L`;
+    const fmt = (n: number) => `₹${(n / 100000).toFixed(1)} LPA`;
 
-    if (min && max) return `${fmt(min)} – ${fmt(max)} per annum`;
+    if (min && max) return `${fmt(min)} – ${fmt(max)}`;
     if (min) return `From ${fmt(min)}`;
     if (max) return `Up to ${fmt(max)}`;
     return "Not disclosed";
@@ -79,127 +80,197 @@ export default function OfferViewModal({
   const programs = splitList(offer.required_program_ids);
   const streams = splitList(offer.required_stream_ids);
 
+  const statusStyles = {
+    Pending: {
+      bg: "bg-amber-100 text-amber-800 border-amber-300",
+      icon: Clock,
+    },
+    Accepted: {
+      bg: "bg-emerald-100 text-emerald-800 border-emerald-300",
+      icon: CheckCircle2,
+    },
+    Rejected: {
+      bg: "bg-rose-100 text-rose-800 border-rose-300",
+      icon: XCircle,
+    },
+  };
+
+  const StatusConfig = statusStyles[
+    offer.status as keyof typeof statusStyles
+  ] || {
+    bg: "bg-gray-100 text-gray-800 border-gray-300",
+    icon: Clock,
+  };
+
+  const StatusIcon = StatusConfig.icon;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/65 backdrop-blur-md"
         onClick={() => setOpen(false)}
       />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
-        {/* Close */}
+      {/* Modal Content */}
+      <div
+        className="
+          relative w-full max-w-2xl lg:max-w-3xl 
+          bg-white/95 backdrop-blur-xl 
+          rounded-2xl sm:rounded-3xl 
+          shadow-2xl border border-gray-200/80
+          max-h-[92vh] overflow-y-auto
+          animate-in fade-in zoom-in-95 duration-300
+        "
+      >
+        {/* Close Button */}
         <button
           onClick={() => setOpen(false)}
-          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 transition"
+          className="
+            absolute top-4 right-4 sm:top-5 sm:right-5 
+            p-2.5 rounded-full 
+            bg-white/80 hover:bg-gray-100 
+            text-gray-700 hover:text-gray-900 
+            transition-all shadow-sm hover:shadow
+          "
         >
           <X size={20} />
         </button>
 
         {/* Header */}
-        <div className="p-6 border-b bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-2xl">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {offer.job_title}
-          </h2>
-
-          <div className="flex items-center gap-2 mt-2 text-indigo-600 font-medium">
-            <Building2 size={16} />
-            {offer.industry?.industry_name ?? "Industry"}
-          </div>
-
-          {offer.industry?.emailId && (
-            <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
-              <Mail size={14} />
-              {offer.industry.emailId}
+        <div className="px-6 pt-7 pb-5 sm:px-8 sm:pt-8 border-b bg-gradient-to-b from-indigo-50/70 to-white/50">
+          <div className="flex items-start gap-4">
+            <div
+              className="
+                flex-shrink-0 w-14 h-14 rounded-2xl 
+                bg-gradient-to-br from-indigo-500 to-indigo-600 
+                flex items-center justify-center shadow-md
+              "
+            >
+              <Briefcase size={26} className="text-white" strokeWidth={1.8} />
             </div>
-          )}
+
+            <div className="flex-1 min-w-0">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight leading-tight">
+                {offer.job_title}
+              </h2>
+
+              <div className="mt-2.5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-700">
+                <div className="flex items-center gap-2 font-medium">
+                  <Building2 size={16} className="text-indigo-600" />
+                  {offer.industry?.industry_name || "Industry Partner"}
+                </div>
+
+                {offer.industry?.emailId && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail size={15} className="text-gray-500" />
+                    <span className="font-mono text-gray-600 truncate max-w-[220px]">
+                      {offer.industry.emailId}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-6">
-          {/* Info Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="p-6 sm:p-8 space-y-8">
+          {/* Key Info Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5">
             <InfoCard
-              icon={<DollarSign size={16} />}
+              icon={<DollarSign size={18} />}
               label="Salary"
               value={formatSalary()}
             />
             <InfoCard
-              icon={<Users size={16} />}
-              label="Posts"
+              icon={<Users size={18} />}
+              label="Positions"
               value={offer.number_of_posts?.toString() || "—"}
             />
             <InfoCard
-              icon={<CalendarDays size={16} />}
-              label="Offer Date"
+              icon={<CalendarDays size={18} />}
+              label="Offered On"
               value={formatDate(offer.offer_date)}
             />
             <InfoCard
-              icon={<CalendarClock size={16} />}
+              icon={<CalendarClock size={18} />}
               label="Apply By"
               value={formatDate(offer.last_date)}
             />
           </div>
 
-          {/* Description */}
+          {/* Job Description */}
           {offer.job_description && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Briefcase size={18} className="text-indigo-600" />
                 Job Description
               </h3>
-              <p className="text-gray-700 leading-relaxed">
+              <div className="prose prose-sm sm:prose text-gray-700 leading-relaxed max-w-none">
                 {offer.job_description}
-              </p>
+              </div>
             </div>
           )}
 
-          {/* Lists */}
-          <div className="grid sm:grid-cols-3 gap-4">
-            {qualifications.length > 0 && (
-              <ListSection title="Qualifications" items={qualifications} />
-            )}
-            {programs.length > 0 && (
-              <ListSection title="Programs" items={programs} />
-            )}
-            {streams.length > 0 && (
-              <ListSection title="Streams" items={streams} />
-            )}
-          </div>
+          {/* Requirements Grid */}
+          {(qualifications.length > 0 ||
+            programs.length > 0 ||
+            streams.length > 0) && (
+            <div className="grid sm:grid-cols-3 gap-5">
+              {qualifications.length > 0 && (
+                <RequirementSection
+                  title="Qualifications"
+                  items={qualifications}
+                />
+              )}
+              {programs.length > 0 && (
+                <RequirementSection title="Programs" items={programs} />
+              )}
+              {streams.length > 0 && (
+                <RequirementSection title="Streams" items={streams} />
+              )}
+            </div>
+          )}
 
-          {/* Footer */}
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
-              <Clock size={16} />
-              Status:
-              <span
-                className={`ml-1 px-3 py-1 rounded-full text-xs font-semibold ${
-                  offer.status === "Accepted"
-                    ? "bg-green-100 text-green-700"
-                    : offer.status === "Rejected"
-                      ? "bg-red-100 text-red-700"
-                      : offer.status === "Pending"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-gray-100 text-gray-600"
-                }`}
+          {/* Footer / Status & Actions */}
+          <div className="pt-6 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <div className="flex items-center gap-3">
+              <div
+                className={`
+                  inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium border
+                  ${StatusConfig.bg} ${StatusConfig.icon || ""}
+                `}
               >
+                <StatusIcon size={16} />
                 {offer.status}
-              </span>
+              </div>
             </div>
 
             {offer.status === "Pending" && (
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <button
                   onClick={onReject}
-                  className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg font-semibold transition"
+                  className="
+                    flex-1 sm:flex-none px-6 py-2.5 rounded-lg font-medium 
+                    bg-rose-600 hover:bg-rose-700 text-white 
+                    transition-all shadow-sm hover:shadow
+                    disabled:opacity-60 disabled:cursor-not-allowed
+                  "
                 >
-                  Reject
+                  Reject Offer
                 </button>
+
                 <button
                   onClick={onAccept}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-semibold transition"
+                  className="
+                    flex-1 sm:flex-none px-6 py-2.5 rounded-lg font-medium 
+                    bg-indigo-600 hover:bg-indigo-700 text-white 
+                    transition-all shadow-sm hover:shadow
+                    disabled:opacity-60 disabled:cursor-not-allowed
+                  "
                 >
-                  Accept
+                  Accept Offer
                 </button>
               </div>
             )}
@@ -210,7 +281,6 @@ export default function OfferViewModal({
   );
 }
 
-/* Info Card */
 function InfoCard({
   icon,
   label,
@@ -221,24 +291,34 @@ function InfoCard({
   value: string;
 }) {
   return (
-    <div className="bg-gray-50 border rounded-xl p-4">
-      <div className="flex items-center gap-2 text-xs text-gray-500 uppercase font-semibold mb-1">
+    <div className="bg-gray-50/80 border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow">
+      <div className="flex items-center gap-2 text-xs text-gray-500 font-medium uppercase tracking-wide mb-1.5">
         {icon}
         {label}
       </div>
-      <div className="text-sm font-bold text-gray-900">{value}</div>
+      <div className="text-base font-semibold text-gray-900">{value}</div>
     </div>
   );
 }
 
-/* List Section */
-function ListSection({ title, items }: { title: string; items: string[] }) {
+function RequirementSection({
+  title,
+  items,
+}: {
+  title: string;
+  items: string[];
+}) {
   return (
-    <div className="bg-gray-50 border rounded-xl p-4">
-      <h3 className="text-sm font-semibold text-gray-900 mb-2">{title}</h3>
-      <ul className="space-y-1 text-sm text-gray-700">
+    <div className="bg-gray-50/70 border border-gray-200 rounded-xl p-5">
+      <h4 className="text-sm font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200/70">
+        {title}
+      </h4>
+      <ul className="space-y-2 text-sm text-gray-700">
         {items.map((item, i) => (
-          <li key={i}>• {item}</li>
+          <li key={i} className="flex items-start gap-2">
+            <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-indigo-500 flex-shrink-0" />
+            <span>{item}</span>
+          </li>
         ))}
       </ul>
     </div>
