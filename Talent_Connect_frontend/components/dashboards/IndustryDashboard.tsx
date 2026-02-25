@@ -91,105 +91,120 @@ export default function IndustryDashboard({
   industryName?: string;
 }) {
   return (
-    <div className="p-2 sm:p-3 lg:p-4">
-      <div className="w-full space-y-4">
-        {/* Hero Section - Compact */}
-        <div className="relative overflow-hidden p-4 rounded-xl bg-gradient-to-br from-primary/5 via-base-100 to-base-100 border border-primary/20 shadow-sm">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/3 rounded-full -translate-y-1/2 translate-x-1/2" />
+    <div className="min-h-screen bg-base-200/30">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-6 lg:py-10 mx-auto">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden p-6 lg:p-8 rounded-2xl bg-base-100 border border-base-200 shadow-xl mb-10">
+          {/* Subtle accent orb */}
+          <div className="absolute -top-16 -right-16 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md">
-              <Factory size={24} className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-base-content">
-                Welcome, {username} 👋
-              </h1>
-              <p className="text-primary text-xs sm:text-sm">
-                Industry Dashboard · {industryName}
-              </p>
+          <div className="relative flex items-center justify-between gap-6">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-md flex-shrink-0">
+                <Factory size={26} className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-bold text-base-content">
+                  Welcome, {username} 👋
+                </h1>
+                <p className="text-primary font-medium text-base lg:text-lg mt-1">
+                  Industry Dashboard · {industryName}
+                </p>
+              </div>
             </div>
           </div>
 
-          <p className="mt-2 text-sm text-base-content/70 max-w-lg">
+          <p className="mt-5 text-base-content/70 max-w-3xl text-base lg:text-lg">
             Manage drives, track placements, and collaborate with institutes
+            seamlessly.
           </p>
         </div>
 
-        {/* Stats Grid - Compact */}
-        <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Stats Grid */}
+        <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-6 mb-10">
           {statsData.map((stat, idx) => {
             const Icon = stat.icon;
             return (
               <div
                 key={idx}
-                className="bg-base-100 rounded-lg p-3 shadow-sm hover:shadow-md transition-all border border-base-200/50 h-full flex flex-col justify-between"
+                className="relative bg-base-100 rounded-2xl p-5 lg:p-6 border border-base-200 shadow-md hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 group overflow-hidden flex items-center justify-between gap-4"
               >
-                <div
-                  className={`w-10 h-10 flex items-center justify-center rounded-lg bg-gradient-to-br ${stat.gradient} mb-2`}
-                >
-                  <Icon size={18} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-xs text-base-content/70 mb-1">
+                {/* Hover glow */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none" />
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-base-content/70 mb-1">
                     {stat.label}
                   </p>
-                  <p className="text-lg sm:text-xl font-bold">{stat.value}</p>
+                  <p className="text-2xl lg:text-3xl font-bold text-base-content">
+                    {stat.value}
+                  </p>
                   <p
-                    className={`text-xs font-medium mt-0.5 ${
+                    className={`text-sm font-medium mt-1 ${
                       stat.trend === "up" ? "text-success" : "text-error"
                     }`}
                   >
                     {stat.change}
                   </p>
                 </div>
+
+                <div
+                  className={`w-14 h-14 lg:w-16 lg:h-16 flex items-center justify-center rounded-xl bg-gradient-to-br ${stat.gradient} shadow-md flex-shrink-0 group-hover:scale-105 transition-transform`}
+                >
+                  <Icon size={24} className="text-white" />
+                </div>
               </div>
             );
           })}
         </section>
 
-        {/* Quick Actions - Compact */}
-        <section>
-          <h2 className="text-lg font-bold text-base-content mb-3 flex items-center gap-2">
+        {/* Quick Actions */}
+        <section className="mb-10">
+          <h2 className="text-2xl lg:text-3xl font-bold text-base-content mb-6 flex items-center gap-3">
             Quick Actions
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6">
             {quickActions.map((action, idx) => {
               const Icon = action.icon;
               return (
                 <Link
                   key={idx}
                   href={action.href}
-                  className="group bg-base-100 rounded-lg p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all border border-base-200/50 h-full flex flex-col"
+                  className="group relative bg-base-100 rounded-2xl p-6 lg:p-7 border border-base-200 shadow-md hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full"
                 >
-                  <div
-                    className={`w-10 h-10 flex items-center justify-center mb-3 rounded-lg bg-gradient-to-br ${action.gradient} group-hover:scale-105 transition-transform`}
-                  >
-                    <Icon size={18} className="text-white" />
+                  <div className="flex items-center justify-between mb-5">
+                    <div
+                      className={`w-12 h-12 lg:w-14 lg:h-14 flex items-center justify-center rounded-xl bg-gradient-to-br ${action.gradient} shadow-md group-hover:scale-105 transition-transform`}
+                    >
+                      <Icon size={24} className="text-white" />
+                    </div>
+                    {action.badge && (
+                      <span className="inline-block bg-success/10 text-success text-xs lg:text-sm px-3 py-1 rounded-full font-medium">
+                        {action.badge}
+                      </span>
+                    )}
                   </div>
-                  <h3 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">
+
+                  <h3 className="font-semibold text-base lg:text-lg text-base-content group-hover:text-primary transition-colors mb-2">
                     {action.title}
                   </h3>
-                  <p className="text-xs text-base-content/70 mb-2 flex-1">
+                  <p className="text-sm lg:text-base text-base-content/70 flex-1">
                     {action.description}
                   </p>
-                  {action.badge && (
-                    <span className="inline-block bg-success text-white text-xs px-2 py-0.5 rounded-full">
-                      {action.badge}
-                    </span>
-                  )}
                 </Link>
               );
             })}
           </div>
         </section>
 
-        {/* Bottom Section - Compact */}
-        <section className="grid grid-cols-1 xl:grid-cols-3 gap-3">
-          {/* Recent Activity - Compact */}
-          <div className="xl:col-span-2 bg-base-100 rounded-lg p-4 shadow-sm border border-base-200/50">
-            <h3 className="font-semibold text-base mb-3">Recent Activity</h3>
-            <div className="space-y-2">
+        {/* Bottom Section */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent Activity */}
+          <div className="lg:col-span-2 bg-base-100 rounded-2xl p-6 lg:p-8 border border-base-200 shadow-xl">
+            <h3 className="text-xl lg:text-2xl font-bold text-base-content mb-6 flex items-center gap-3">
+              Recent Activity
+            </h3>
+            <div className="space-y-4">
               {[
                 {
                   title: "NIT Trichy - Campus Drive Approved",
@@ -209,21 +224,22 @@ export default function IndustryDashboard({
               ].map((activity, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-2.5 p-3 rounded-lg hover:bg-base-50 transition-all border border-base-200/30 group"
+                  className="flex items-center gap-4 p-4 lg:p-5 rounded-xl hover:bg-base-200/50 transition-all border border-base-200/30 group"
                 >
-                  <div className="w-9 h-9 flex items-center justify-center bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                    <activity.icon size={16} className="text-primary" />
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                    <activity.icon size={20} className="text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">
+                    <p className="font-medium text-base-content truncate text-base lg:text-lg">
                       {activity.title}
                     </p>
-                    <p className="text-xs text-base-content/60 flex items-center gap-1 mt-0.5">
-                      <Clock size={10} /> {activity.time}
+                    <p className="text-sm lg:text-base text-base-content/60 flex items-center gap-1.5 mt-1">
+                      <Clock size={14} />
+                      {activity.time}
                     </p>
                   </div>
                   <ArrowRight
-                    size={14}
+                    size={18}
                     className="text-base-content/40 group-hover:translate-x-1 transition-transform"
                   />
                 </div>
@@ -231,11 +247,11 @@ export default function IndustryDashboard({
             </div>
           </div>
 
-          {/* Hiring Stat Card - Compact */}
-          <div className="bg-gradient-to-br from-warning/5 to-warning/3 rounded-lg p-4 shadow-sm border border-warning/20 flex flex-col items-center justify-center text-center">
-            <Award size={24} className="text-warning mb-2" />
-            <p className="text-2xl sm:text-3xl font-bold text-warning">94%</p>
-            <p className="text-xs sm:text-sm text-base-content/70 mt-1">
+          {/* Hiring Stat Card */}
+          <div className="bg-gradient-to-br from-warning/5 to-warning/3 rounded-2xl p-6 lg:p-8 border border-warning/20 shadow-xl flex flex-col items-center justify-center text-center">
+            <Award size={40} className="text-warning mb-4" />
+            <p className="text-5xl lg:text-6xl font-bold text-warning">94%</p>
+            <p className="text-lg lg:text-xl text-base-content/70 mt-3">
               Drive Success Rate
             </p>
           </div>

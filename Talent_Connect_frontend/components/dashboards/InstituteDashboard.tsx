@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -18,9 +17,9 @@ import {
 import api from "@/lib/api";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
-import { off } from "process";
 import { setCurrentOffer } from "@/store/institute";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface Offer {
   offer_id: number;
@@ -113,7 +112,7 @@ export default function InstituteDashboard({
       label: "My Students",
       value: stats?.students,
       icon: Users,
-      color: "from-success to-success/70",
+      color: "from-indigo-600 to-[#7976ff]/90",
       note: "enrolled students",
       href: "/students",
     },
@@ -121,7 +120,7 @@ export default function InstituteDashboard({
       label: "Placements",
       value: stats?.placements,
       icon: TrendingUp,
-      color: "from-primary to-primary/70",
+      color: "from-[#7976ff] to-indigo-600",
       note: "placed students",
       href: "/placements",
     },
@@ -129,7 +128,7 @@ export default function InstituteDashboard({
       label: "Industry Requests",
       value: stats?.pendingRequests,
       icon: ClipboardList,
-      color: "from-warning to-warning/70",
+      color: "from-amber-500 to-amber-600",
       note: "pending requests",
       href: "/industry-requests",
     },
@@ -137,7 +136,7 @@ export default function InstituteDashboard({
       label: "Received Offers",
       value: stats?.receivedOffers,
       icon: Inbox,
-      color: "from-secondary to-secondary/70",
+      color: "from-purple-600 to-[#7976ff]/90",
       note: "job offers received",
       href: "/received-offers",
     },
@@ -149,144 +148,150 @@ export default function InstituteDashboard({
       label: "View My Students",
       description: "Browse students enrolled at your institute",
       href: "/students",
-      color: "from-success to-success/70",
+      color: "from-indigo-600 to-[#7976ff]/90",
     },
     {
       icon: Briefcase,
       label: "View Placements",
       description: "Track placement records for your students",
       href: "/placements",
-      color: "from-primary to-primary/70",
+      color: "from-[#7976ff] to-indigo-600",
     },
     {
       icon: ClipboardList,
       label: "Industry Requests",
       description: "Manage campus placement & internship requests",
       href: "/industry-requests",
-      color: "from-warning to-warning/70",
+      color: "from-amber-500 to-amber-600",
     },
     {
       icon: Send,
       label: "Received Offers",
       description: "Accept or reject job offers from industries",
       href: "/received-offers",
-      color: "from-secondary to-secondary/70",
+      color: "from-purple-600 to-[#7976ff]/90",
     },
   ];
 
-  // ─── COMPACT RENDER (ULTRA-MINIMAL SPACING) ────────────────────────────────
+  // ─── RENDER ─────────────────────────────────────────────────────────────────
   return (
-    <div className="p-2 sm:p-3 lg:p-4">
-      <div className="w-full space-y-4">
-        {/* Hero Section - Compact */}
-        <div className="relative overflow-hidden p-4 rounded-xl bg-gradient-to-br from-success/5 via-base-100 to-base-100 border border-success/20 shadow-sm">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-success/3 rounded-full -translate-y-1/2 translate-x-1/2" />
+    <div className="min-h-screen bg-base-200/30">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-6 lg:py-10 mx-auto">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden p-6 lg:p-8 rounded-2xl bg-base-100 border border-base-200 shadow-xl mb-10">
+          {/* Subtle accent orb */}
+          <div className="absolute -top-16 -right-16 w-64 h-64 bg-[#7976ff]/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-success to-success/70 flex items-center justify-center shadow-md">
-              <Building2 size={24} className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-base-content">
-                Welcome, {username} 👋
-              </h1>
-              <p className="text-success text-xs sm:text-sm">
-                Institute Portal · {instituteName ?? "Institute Account"}
-              </p>
+          <div className="relative flex items-center justify-between gap-6">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-gradient-to-br from-[#7976ff] to-indigo-600 flex items-center justify-center shadow-md flex-shrink-0">
+                <Building2 size={26} className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-bold text-base-content">
+                  Welcome, {username} 👋
+                </h1>
+                <p className="text-[#7976ff] font-medium text-base lg:text-lg mt-1">
+                  Institute Portal · {instituteName ?? "Institute Account"}
+                </p>
+              </div>
             </div>
           </div>
 
-          <p className="mt-2 text-sm text-base-content/70 max-w-lg">
+          <p className="mt-5 text-base-content/70 max-w-3xl text-base lg:text-lg">
             Manage students, track placements, handle industry requests
+            seamlessly.
           </p>
         </div>
 
-        {/* Stats Cards - Compact */}
-        <section>
-          <h2 className="text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-3">
-            Overview
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {statCards.map((c, idx) => (
-              <Link
-                key={idx}
-                href={c.href}
-                className="group bg-base-100 rounded-lg p-3 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all border border-base-200/50 h-full flex flex-col justify-between"
-              >
-                <div
-                  className={`w-9 h-9 rounded-lg bg-gradient-to-br ${c.color} flex items-center justify-center mb-2 shadow-md`}
-                >
-                  <c.icon size={16} className="text-white" />
-                </div>
+        {/* Stats Grid */}
+        <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-6 mb-10">
+          {statCards.map((c, idx) => (
+            <Link
+              key={idx}
+              href={c.href}
+              className="group relative bg-base-100 rounded-2xl p-5 lg:p-6 border border-base-200 shadow-md hover:shadow-xl hover:shadow-[#7976ff]/10 transition-all duration-300 overflow-hidden flex items-center justify-between gap-4"
+            >
+              {/* Hover glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#7976ff]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none" />
+
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-base-content/70 mb-1">{c.label}</p>
                 {loadingStats ? (
-                  <div className="h-6 w-12 rounded bg-base-200 animate-pulse mb-1" />
+                  <div className="h-8 w-16 rounded bg-base-200 animate-pulse mb-1" />
                 ) : (
-                  <div className="text-lg font-bold text-base-content">
+                  <p className="text-2xl lg:text-3xl font-bold text-base-content">
                     {c.value !== undefined ? c.value : "—"}
-                  </div>
+                  </p>
                 )}
-                <div className="text-xs text-base-content/60 mb-1">
-                  {c.note}
-                </div>
-                <div className="text-xs font-semibold text-base-content/80 group-hover:text-primary transition-colors">
-                  {c.label}
-                </div>
-              </Link>
-            ))}
-          </div>
+                <p className="text-sm text-base-content/70 mt-1">{c.note}</p>
+              </div>
+
+              <div
+                className={`w-14 h-14 lg:w-16 lg:h-16 flex items-center justify-center rounded-xl bg-gradient-to-br ${c.color} shadow-md flex-shrink-0 group-hover:scale-105 transition-transform`}
+              >
+                <c.icon size={24} className="text-white" />
+              </div>
+            </Link>
+          ))}
         </section>
 
-        {/* Offer Status Badges - Compact */}
+        {/* Offer Status Badges */}
         {stats && stats.receivedOffers > 0 && (
-          <div className="flex gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-warning/5 border border-warning/20 text-xs">
-              <Clock size={12} className="text-warning" />
-              <span className="font-semibold text-warning">
+          <div className="flex flex-wrap gap-3 mb-10">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#7976ff]/5 border border-[#7976ff]/20 text-sm">
+              <Clock size={16} className="text-[#7976ff]" />
+              <span className="font-semibold text-[#7976ff]">
                 {stats.pendingOffers}
               </span>
-              <span className="text-base-content/60">pending</span>
+              <span className="text-base-content/70">pending</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-success/5 border border-success/20 text-xs">
-              <CheckCircle2 size={12} className="text-success" />
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-success/5 border border-success/20 text-sm">
+              <CheckCircle2 size={16} className="text-success" />
               <span className="font-semibold text-success">
                 {stats.acceptedOffers}
               </span>
-              <span className="text-base-content/60">accepted</span>
+              <span className="text-base-content/70">accepted</span>
             </div>
           </div>
         )}
 
-        {/* Recent Offers - Compact */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold text-base-content/60 uppercase tracking-wider">
+        {/* Recent Offers */}
+        <section className="mb-10">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-xl lg:text-2xl font-bold text-base-content">
               Recent Offers
             </h2>
             <Link
               href="/received-offers"
-              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-all"
+              className="text-[#7976ff] hover:text-[#7976ff]/80 text-sm lg:text-base flex items-center gap-1.5 font-medium transition-colors"
             >
-              View all <ArrowRight size={10} />
+              View all{" "}
+              <ArrowRight
+                size={16}
+                className="group-hover:translate-x-1 transition-transform"
+              />
             </Link>
           </div>
+
           {loadingOffers ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-12 rounded-lg bg-base-100 border border-base-200/50 animate-pulse shadow-sm"
+                  className="h-16 rounded-xl bg-base-100 border border-base-200/50 animate-pulse shadow-sm"
                 />
               ))}
             </div>
           ) : recentOffers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-2 text-base-content/40 text-center rounded-lg border-2 border-dashed border-base-200 bg-base-50">
-              <div className="w-10 h-10 rounded-lg bg-base-100 border border-base-200 flex items-center justify-center">
-                <Send size={20} className="opacity-40" />
+            <div className="flex flex-col items-center justify-center py-16 gap-4 text-base-content/50 text-center bg-base-100 border border-base-200 rounded-2xl shadow-md">
+              <div className="w-16 h-16 rounded-xl bg-base-200 flex items-center justify-center">
+                <Send size={28} className="opacity-40" />
               </div>
-              <p className="text-sm">No job offers received yet</p>
+              <p className="text-lg font-medium">No job offers received yet</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {recentOffers.map((offer) => {
                 const sc =
                   statusConfig[offer.status] ?? statusConfig["Pending"];
@@ -299,35 +304,50 @@ export default function InstituteDashboard({
                       router.push("/received-offers");
                     }}
                     key={offer.offer_id}
-                    className="group flex items-center gap-3 p-3 rounded-lg bg-base-100 border border-base-200/50 hover:border-primary/30 hover:bg-base-50 hover:shadow-sm transition-all"
+                    className="group flex items-center justify-between gap-4 p-4 lg:p-5 rounded-xl bg-base-100 border border-base-200/50 hover:border-[#7976ff]/30 hover:bg-base-50/80 hover:shadow-md transition-all cursor-pointer"
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-sm font-semibold text-base-content truncate max-w-[180px]">
-                          {offer.job_title}
-                        </span>
-                        <span
-                          className={`badge ${sc.badge} badge-xs text-xs px-2 py-0.5 gap-0.5`}
-                        >
-                          <StatusIcon size={9} />
-                          {sc.label}
-                        </span>
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-[#7976ff]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#7976ff]/20 transition-colors">
+                        <StatusIcon size={20} className="text-[#7976ff]" />
                       </div>
-                      <div className="flex items-center gap-1 mt-1 text-xs text-base-content/60">
-                        <Building2 size={10} />
-                        <span className="truncate max-w-[120px]">
-                          {offer.industry?.industry_name ?? "Industry"}
-                        </span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-base-content text-base lg:text-lg truncate">
+                            {offer.job_title}
+                          </span>
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs lg:text-sm font-medium
+                              ${
+                                offer.status === "Accepted"
+                                  ? "bg-success/10 text-success"
+                                  : offer.status === "Rejected"
+                                    ? "bg-error/10 text-error"
+                                    : offer.status === "Pending"
+                                      ? "bg-warning/10 text-warning"
+                                      : "bg-neutral/10 text-neutral"
+                              }`}
+                          >
+                            <StatusIcon size={14} />
+                            {sc.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 text-sm text-base-content/70">
+                          <Building2 size={14} />
+                          <span className="truncate">
+                            {offer.industry?.industry_name ?? "Industry"}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex-shrink-0 text-right min-w-[100px]">
+
+                    <div className="flex-shrink-0 text-right min-w-[120px]">
                       {salary && (
-                        <div className="text-xs font-bold text-success">
+                        <div className="text-base lg:text-lg font-bold text-success">
                           {salary}
                         </div>
                       )}
                       {offer.last_date && (
-                        <div className="text-xs text-base-content/50 mt-0.5">
+                        <div className="text-xs lg:text-sm text-base-content/60 mt-1">
                           Due:{" "}
                           <span className="text-warning font-medium">
                             {offer.last_date}
@@ -342,33 +362,37 @@ export default function InstituteDashboard({
           )}
         </section>
 
-        {/* Quick Actions - Compact */}
-        <section>
-          <h2 className="text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-3">
+        {/* Quick Actions */}
+        <section className="mb-10">
+          <h2 className="text-xl lg:text-2xl font-bold text-base-content mb-6">
             Quick Actions
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6">
             {actions.map((a, idx) => (
               <Link
                 key={idx}
                 href={a.href}
-                className="group bg-base-100 rounded-lg p-3 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all border border-base-200/50 h-full flex flex-col"
+                className="group relative bg-base-100 rounded-2xl p-6 lg:p-7 border border-base-200 shadow-md hover:shadow-xl hover:shadow-[#7976ff]/10 hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full"
               >
-                <div
-                  className={`w-9 h-9 rounded-lg bg-gradient-to-br ${a.color} flex items-center justify-center mb-2 shadow-md group-hover:scale-105 transition-transform`}
-                >
-                  <a.icon size={16} className="text-white" />
+                <div className="flex items-center justify-between mb-5">
+                  <div
+                    className={`w-12 h-12 lg:w-14 lg:h-14 flex items-center justify-center rounded-xl bg-gradient-to-br ${a.color} shadow-md group-hover:scale-105 transition-transform`}
+                  >
+                    <a.icon size={24} className="text-white" />
+                  </div>
                 </div>
-                <h3 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">
+
+                <h3 className="font-semibold text-base lg:text-lg text-base-content group-hover:text-[#7976ff] transition-colors mb-2">
                   {a.label}
                 </h3>
-                <p className="text-xs text-base-content/70 flex-1">
+                <p className="text-sm lg:text-base text-base-content/70 flex-1">
                   {a.description}
                 </p>
-                <div className="mt-2 flex items-center gap-1 text-xs text-base-content/40 group-hover:text-primary transition-all">
+
+                <div className="mt-4 flex items-center gap-2 text-sm text-[#7976ff]/70 group-hover:text-[#7976ff] transition-all">
                   Open{" "}
                   <ArrowRight
-                    size={10}
+                    size={16}
                     className="group-hover:translate-x-1 transition-transform"
                   />
                 </div>
@@ -377,10 +401,10 @@ export default function InstituteDashboard({
           </div>
         </section>
 
-        {/* Info Box - Compact */}
-        <div className="p-3 rounded-lg bg-base-50 border border-base-200/50 text-xs text-base-content/70">
-          <span className="font-semibold">Note:</span> Data scoped to your
-          institute. Contact admin for other modules.
+        {/* Info Note */}
+        <div className="p-4 rounded-xl bg-base-100/80 border border-base-200/50 text-sm text-base-content/70 shadow-sm">
+          <span className="font-semibold text-base-content">Note:</span> Data
+          scoped to your institute. Contact admin for other modules.
         </div>
       </div>
     </div>
