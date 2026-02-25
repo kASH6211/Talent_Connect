@@ -30,6 +30,7 @@ interface CrudTableProps {
   onAdd: () => void;
   onEdit: (row: any) => void;
   pagination?: boolean;
+  extraActions?: React.ReactNode;
 }
 
 export default function CrudTable({
@@ -42,6 +43,7 @@ export default function CrudTable({
   onAdd,
   onEdit,
   pagination,
+  extraActions,
 }: CrudTableProps) {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
@@ -71,12 +73,12 @@ export default function CrudTable({
 
   const filtered = search
     ? rows.filter((r) =>
-        columns.some((c) =>
-          String(r[c.key] ?? "")
-            .toLowerCase()
-            .includes(search.toLowerCase()),
-        ),
-      )
+      columns.some((c) =>
+        String(r[c.key] ?? "")
+          .toLowerCase()
+          .includes(search.toLowerCase()),
+      ),
+    )
     : rows;
 
   return (
@@ -114,6 +116,7 @@ export default function CrudTable({
           >
             <RefreshCw size={16} className={isFetching ? "animate-spin" : ""} />
           </button>
+          {extraActions}
           <button onClick={onAdd} className="btn btn-primary btn-sm gap-2">
             <Plus size={16} /> Add New
           </button>

@@ -1,0 +1,7 @@
+components2/common/Pagination.tsx(3,24): error TS2307: Cannot find module 'rc-pagination' or its corresponding type declarations.
+components2/DynamicForm.tsx(4,28): error TS2307: Cannot find module '@/components/ui/InfiniteSelect' or its corresponding type declarations.
+components2/DynamicForm.tsx(5,26): error TS2307: Cannot find module '@/components/ui/FileUploader' or its corresponding type declarations.
+components2/DynamicForm.tsx(6,27): error TS2307: Cannot find module '@/helper/form' or its corresponding type declarations.
+components2/Login.tsx(6,22): error TS2307: Cannot find module 'yup' or its corresponding type declarations.
+components2/Signup.tsx(6,22): error TS2307: Cannot find module 'yup' or its corresponding type declarations.
+components2/ThemeSwitcher.tsx(4,26): error TS2307: Cannot find module '@/context/ThemeContext' or its corresponding type declarations.
