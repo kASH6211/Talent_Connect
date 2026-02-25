@@ -128,6 +128,7 @@ export class InstituteService {
   /** Import Institutes from uploaded Excel file */
   async importInstitutes(fileBuffer: Buffer): Promise<{ success: boolean; message: string; errorFile?: Buffer }> {
     const xlsx = await import('xlsx');
+    const bcrypt = await import('bcrypt');
     const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
@@ -260,8 +261,8 @@ export class InstituteService {
           }
         }
 
-        // Insert institute row
-        await this.dataSource.query(
+        // Insert institute row and return its generated ID
+        const insertedInstitute = await this.dataSource.query(
           `INSERT INTO "master_institute" (
             institute_name, university_board_id, institute_registration_id,
             institute_abbreviation, institute_type_id, institute_sub_type_id,
@@ -274,7 +275,7 @@ export class InstituteService {
             latitude, longitude, is_active, created_date, createdby
           ) VALUES (
             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,'Y',$29,'import'
-          )`,
+          ) RETURNING institute_id`,
           [
             instituteName,
             boardId,
@@ -306,6 +307,24 @@ export class InstituteService {
             row['longitude'] ? String(row['longitude']) : null,
             now,
           ]
+        );
+
+        // Auto-generate User account for this institute
+        const insertedInstituteId = insertedInstitute[0].institute_id;
+        // Pad the ID to 5 digits (e.g., 5 -> "00005")
+        const paddedId = String(insertedInstituteId).padStart(5, '0');
+        const newUsername = `inst_${paddedId}`;
+        const defaultPassword = `inst_${paddedId}`; // Using username as default password
+        const passwordHash = await bcrypt.hash(defaultPassword, 10);
+        const contactEmail = row['emailId'] ? String(row['emailId']).substring(0, 200).trim() : `${newUsername}@example.com`;
+
+        await this.dataSource.query(
+          `INSERT INTO "users" (
+            username, email, password_hash, role, institute_id, is_active, created_date
+          ) VALUES (
+            $1, $2, $3, 'institute', $4, 'Y', $5
+          )`,
+          [newUsername, contactEmail, passwordHash, insertedInstituteId, now]
         );
 
         successCount++;
