@@ -49,7 +49,7 @@ import { JobOfferModule } from './modules/job-offer/job-offer.module';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_DATABASE', 'talent_connect'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        autoLoadEntities: true,
         synchronize: true, // Set to false in production; use migrations
         logging: config.get<string>('NODE_ENV') !== 'production',
       }),

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { BaseEntity } from '../../common/base.entity';
 import { State } from '../state/state.entity';
 
@@ -17,6 +17,7 @@ export class District extends BaseEntity {
     @Column({ type: 'varchar', length: 200 })
     districtname: string;
 
-    @Column({ type: 'int', nullable: true })
+    @Index({ unique: true })
+    @Column({ type: 'int', nullable: true, unique: true })
     lgddistrictId: number;
 }
