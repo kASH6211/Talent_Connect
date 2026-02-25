@@ -657,11 +657,13 @@ export default function FindInstitutesPage() {
         {/* Results */}
         {searched && (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              {/* LEFT SIDE */}
+              <div className="flex items-start sm:items-center gap-4 flex-wrap">
+                {/* Select All */}
                 <button
                   onClick={toggleAll}
-                  className="btn btn-circle btn-outline btn-sm p-2"
+                  className="btn btn-circle btn-outline btn-sm"
                 >
                   {allSelected ? (
                     <CheckSquare size={16} className="text-primary" />
@@ -669,71 +671,65 @@ export default function FindInstitutesPage() {
                     <Square size={16} />
                   )}
                 </button>
-                {/* <div>
+
+                {/* Results Count */}
+                <div>
                   <h3 className="text-base sm:text-lg font-bold text-base-content">
                     {institutes.length} institute
                     {institutes.length !== 1 ? "s" : ""} found
                   </h3>
-                  <p className="text-xs text-base-content/50">
+                  <p className="text-xs text-base-content/60">
                     Click cards to select
                   </p>
-                </div> */}
-                <div className="flex justify-between items-center gap-4 mb-6 flex-wrap">
-                  {/* Results Count */}
-                  <div>
-                    <h3 className="text-base sm:text-lg font-bold text-base-content">
-                      {institutes.length} institute
-                      {institutes.length !== 1 ? "s" : ""} found
-                    </h3>
-                    <p className="text-xs text-base-content/50">
-                      Click cards to select
-                    </p>
-                  </div>
-
-                  {/* Filters */}
-                  <div className="flex items-center justify-between gap-2">
-                    {/* Nearby */}
-                    <div className="flex items-center gap-1 px-3 py-1.5 bg-base-100 rounded-lg border text-xs shadow-sm hover:shadow-md transition-all">
-                      <MapPin size={13} />
-                      <select className="bg-transparent border-0 outline-none text-base-content/90 font-medium cursor-pointer text-xs ml-1">
-                        <option value="all">All Areas</option>
-                        <option value="nearby">Nearby</option>
-                        <option value="50km">50km</option>
-                        <option value="100km">100km</option>
-                      </select>
-                    </div>
-
-                    {/* Sort */}
-                    <div className="flex items-center gap-1 px-3 py-1.5 bg-base-100 rounded-lg border text-xs shadow-sm hover:shadow-md transition-all">
-                      <ArrowUpDown size={13} className="rotate-90" />
-                      <select className="bg-transparent border-0 outline-none text-base-content/90 font-medium cursor-pointer text-xs ml-1">
-                        <option value="name">A-Z</option>
-                        <option value="name-rev">Z-A</option>
-                        <option value="rating">Rating</option>
-                        <option value="students">Students</option>
-                      </select>
-                    </div>
-
-                    {/* Filter */}
-                    <div className="flex items-center gap-1 px-3 py-1.5 bg-base-100 rounded-lg border text-xs shadow-sm hover:shadow-md transition-all cursor-pointer">
-                      <Filter size={13} />
-                      <span className="text-base-content/90 font-medium text-xs ml-1">
-                        Filter
-                      </span>
-                    </div>
-                  </div>
                 </div>
               </div>
-              {selected.size > 0 && (
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="btn btn-primary gap-2 text-sm shadow-md hover:shadow-lg"
-                >
-                  <Send size={16} />
-                  Send to {selected.size}
-                </button>
-              )}
+
+              {/* RIGHT SIDE */}
+              <div className="flex items-center gap-3 flex-wrap">
+                {/* Nearby */}
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-base-100 rounded-lg border text-xs shadow-sm hover:shadow-md transition">
+                  <MapPin size={14} />
+                  <select className="bg-transparent border-0 outline-none text-base-content/90 font-medium cursor-pointer text-xs">
+                    <option value="all">All Areas</option>
+                    <option value="nearby">Nearby</option>
+                    <option value="50km">50km</option>
+                    <option value="100km">100km</option>
+                  </select>
+                </div>
+
+                {/* Sort */}
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-base-100 rounded-lg border text-xs shadow-sm hover:shadow-md transition">
+                  <ArrowUpDown size={14} className="rotate-90" />
+                  <select className="bg-transparent border-0 outline-none text-base-content/90 font-medium cursor-pointer text-xs">
+                    <option value="name">A-Z</option>
+                    <option value="name-rev">Z-A</option>
+                    <option value="rating">Rating</option>
+                    <option value="students">Students</option>
+                  </select>
+                </div>
+
+                {/* Filter */}
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-base-100 rounded-lg border text-xs shadow-sm hover:shadow-md transition cursor-pointer">
+                  <Filter size={14} />
+                  <span className="text-base-content/90 font-medium text-xs">
+                    Filter
+                  </span>
+                </div>
+
+                {/* Send Button */}
+                {selected.size > 0 && (
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className="btn btn-primary btn-sm gap-2 shadow-md hover:shadow-lg"
+                  >
+                    <Send size={16} />
+                    Send to {selected.size}
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* Existing loading / empty / grid logic remains unchanged below */}
 
             {loading ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3 text-base-content/40">

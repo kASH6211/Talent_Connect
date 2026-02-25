@@ -307,9 +307,19 @@ export default function InstituteDashboard({
                           {offer.job_title}
                         </span>
                         <span
-                          className={`badge ${sc.badge} badge-xs text-xs px-2 py-0.5 gap-0.5`}
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold
+    ${
+      offer.status === "Accepted"
+        ? "bg-green-600 text-white"
+        : offer.status === "Rejected"
+          ? "bg-red-600 text-white"
+          : offer.status === "Pending"
+            ? "bg-amber-500 text-white"
+            : "bg-gray-500 text-white"
+    }
+  `}
                         >
-                          <StatusIcon size={9} />
+                          <StatusIcon size={10} />
                           {sc.label}
                         </span>
                       </div>
