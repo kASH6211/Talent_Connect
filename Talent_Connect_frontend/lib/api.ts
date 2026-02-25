@@ -2,7 +2,7 @@ import axios from "axios";
 
 const BASE_URL =
   typeof window !== "undefined"
-    ? "http://10.147.8.150:3001/api"
+    ? "http://10.147.8.138:3001/api"
     : process.env.NEXT_PUBLIC_API_URL;
 
 const api = axios.create({
