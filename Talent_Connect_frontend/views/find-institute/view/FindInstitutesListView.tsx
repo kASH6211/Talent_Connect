@@ -25,6 +25,7 @@ import { AppDispatch, RootState } from "@/store/store";
 import { setCurrentOffer, updateUiInstitute } from "@/store/institute";
 import { OfferModalV2 } from "./OfferModalView";
 import clsx from "clsx";
+import { InstituteViewModal } from "../list/InstituteViewModal";
 
 // ─── Types & Interfaces (UNCHANGED) ──────────────────────────────────────────
 interface InstituteRow {
@@ -86,6 +87,11 @@ export default function FindInstitutesPage() {
   const [sentSuccess, setSentSuccess] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const [viewInstitute, setViewInstitute] = useState<boolean>(false);
+  const [currentInstitute, setCurrentInstitute] = useState<InstituteRow | null>(
+    null,
+  );
 
   useEffect(() => {
     if (sentSuccess) {
@@ -528,6 +534,7 @@ export default function FindInstitutesPage() {
                   </thead>
                   <tbody className="divide-y divide-base-200 dark:divide-base-800">
                     {paginatedInstitutes.map((inst) => {
+                      console.log("inst>>>", inst);
                       const isSelected = selected.has(inst.institute_id);
                       return (
                         <tr
@@ -580,12 +587,8 @@ export default function FindInstitutesPage() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setCurrentOffer(inst);
-                                dispatch(
-                                  updateUiInstitute({
-                                    bulkOffer: { open: true },
-                                  }),
-                                );
+                                setCurrentInstitute(inst);
+                                setViewInstitute(true);
                               }}
                               title="View / Send Offer"
                               className="w-7 h-7 rounded-md border border-base-300 dark:border-base-700 bg-base-200 dark:bg-base-800 text-base-content/50 hover:border-primary hover:bg-primary hover:text-primary-content flex items-center justify-center transition-all duration-200 mx-auto"
@@ -663,6 +666,14 @@ export default function FindInstitutesPage() {
           setSentSuccess(true);
           setSelected(new Set());
         }}
+      />
+
+      {/* //view institute modal  */}
+
+      <InstituteViewModal
+        open={viewInstitute}
+        setOpen={() => setViewInstitute(false)}
+        institute={currentInstitute}
       />
     </div>
   );

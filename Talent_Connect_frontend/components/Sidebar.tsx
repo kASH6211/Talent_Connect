@@ -192,8 +192,9 @@ function NavGroup({ item, collapsed }: any) {
       {!collapsed && (
         <div
           className={clsx(
-            "ml-4 mt-2 flex flex-col gap-2 overflow-hidden transition-all duration-300",
-            open ? "max-h-96 opacity-100" : "max-h-0 opacity-0",
+            "ml-4 mt-2 flex flex-col gap-2",
+            open ? "block" : "hidden", // ← no height tricks
+            "transition-opacity duration-300",
           )}
         >
           {item.children?.map((c: any) => (
