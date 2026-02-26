@@ -20,6 +20,9 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { setCurrentIndustry } from "@/store/industry";
 
 /* ─── Styles ──────────────────────────────────────────────────────────────── */
 const styles = `
@@ -58,7 +61,11 @@ const styles = `
   .sol-stat.active-accepted{ border-color: #10b981; background: linear-gradient(135deg,#ecfdf5,#d1fae5); box-shadow: 0 10px 32px rgba(16,185,129,0.22); }
   .sol-stat.active-pending { border-color: #f59e0b; background: linear-gradient(135deg,#fffbeb,#fef3c7); box-shadow: 0 10px 32px rgba(245,158,11,0.22); }
   .sol-stat.active-rejected{ border-color: #ef4444; background: linear-gradient(135deg,#fef2f2,#fee2e2); box-shadow: 0 10px 32px rgba(239,68,68,0.22); }
-
+.sol-stat.active-withdrawn {
+  border-color: #8b5cf6;
+  background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+  box-shadow: 0 10px 32px rgba(139, 92, 246, 0.22);
+}
   .sol-stat-content {
     flex: 1;
     text-align: left;
@@ -803,6 +810,24 @@ function OfferGroupCard({
   );
 }
 
+const getStatus = (status: string) => {
+  switch (status) {
+    case "Total Sent":
+      return "All";
+    case "Pending":
+      return "Pending";
+    case "Accepted":
+      return "Accepted";
+    case "Withdrawn":
+      return "Withdrawn";
+    case "Not Interested":
+      return "Rejected";
+
+    default:
+      return "All";
+  }
+};
+
 /* ─── Main Component ─────────────────────────────────────────────────────── */
 export default function SentOffersListView() {
   const { isIndustry } = useAuth();
@@ -815,8 +840,22 @@ export default function SentOffersListView() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
+  const currentIndustry: any = useSelector(
+    (state: RootState) => state?.industries?.currentIndustry,
+  );
+
   const [selectedOffer, setSelectedOffer] = useState<OfferRecord | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (currentIndustry?.label) {
+      setFilter(getStatus(currentIndustry?.label));
+    }
+
+    return () => {
+      setFilter("All");
+    };
+  }, [currentIndustry]);
 
   const fetchOffers = useCallback(async () => {
     setLoading(true);
