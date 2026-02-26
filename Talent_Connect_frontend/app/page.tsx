@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
-import AdminDashboard from '@/components/dashboards/AdminDashboard';
-import InstituteDashboard from '@/components/dashboards/InstituteDashboard';
-import IndustryDashboard from '@/components/dashboards/IndustryDashboard';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import AdminDashboard from "@/components/dashboards/AdminDashboard";
+import InstituteDashboard from "@/components/dashboards/InstituteDashboard";
+import IndustryDashboard from "@/components/dashboards/IndustryDashboard";
 
 export default function DashboardPage() {
   const { user, role, loading } = useAuth();
@@ -13,7 +13,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace('/login');
+      router.replace("/login");
     }
   }, [loading, user, router]);
 
@@ -28,11 +28,11 @@ export default function DashboardPage() {
     );
   }
 
-  if (role === 'institute') {
+  if (role === "institute") {
     return <InstituteDashboard username={user.username} />;
   }
 
-  if (role === 'industry') {
+  if (role === "industry") {
     return <IndustryDashboard username={user.username} />;
   }
 

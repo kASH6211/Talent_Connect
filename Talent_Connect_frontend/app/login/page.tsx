@@ -18,10 +18,14 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
       const res = await api.post("/auth/login", { username, password });
       localStorage.setItem("tc_token", res.data.access_token);
+
+      // Clear cache AFTER setting token
       clearAuthCache();
+
       router.push("/");
     } catch (err: any) {
       setError(err?.response?.data?.message || "Invalid username or password");

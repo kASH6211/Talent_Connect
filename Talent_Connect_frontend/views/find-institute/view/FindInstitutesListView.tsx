@@ -15,14 +15,18 @@ import {
   GraduationCap,
   Landmark,
   ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
 } from "lucide-react";
 import api from "@/lib/api";
 import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
 import { useAuth } from "@/hooks/useAuth";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
-import { updateUiInstitute } from "@/store/institute";
+import { setCurrentOffer, updateUiInstitute } from "@/store/institute";
 import { OfferModalV2 } from "./OfferModalView";
+import clsx from "clsx";
 
 // ─── Types & Interfaces (UNCHANGED) ──────────────────────────────────────────
 interface InstituteRow {
@@ -56,75 +60,6 @@ const EMPTY_FILTERS: Filters = {
   stream_ids: [],
 };
 
-// ─── Redesigned Compact InstituteCard ────────────────────────────────────────
-function InstituteCard({ institute, isSelected, onToggle }: any) {
-  return (
-    <div
-      onClick={() => onToggle(institute.institute_id)}
-      className={`group relative rounded-2xl bg-base-100 border border-base-200 p-5 
-        hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10 
-        transition-all duration-300 cursor-pointer overflow-hidden
-        ${
-          isSelected
-            ? "border-primary/60 bg-primary/5 ring-2 ring-primary/30 shadow-lg"
-            : "hover:scale-[1.015]"
-        }`}
-    >
-      <div className="relative flex items-start justify-between gap-4 mb-4">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div
-            className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all shadow-sm ${
-              isSelected
-                ? "bg-primary text-primary-content shadow-md"
-                : "bg-base-200 group-hover:bg-primary/10"
-            }`}
-          >
-            {isSelected ? (
-              <CheckSquare size={20} />
-            ) : (
-              <Square
-                size={20}
-                className="opacity-70 group-hover:opacity-100"
-              />
-            )}
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-base lg:text-lg text-base-content group-hover:text-primary truncate leading-tight">
-              {institute.institute_name}
-            </h3>
-            <p className="text-sm text-base-content/70 mt-1 flex items-center gap-1.5">
-              <MapPin size={14} className="opacity-80" />
-              {institute.district || "—"}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 text-sm font-medium text-base-content/70 bg-base-200/60 px-3 py-1.5 rounded-lg">
-          <Users size={14} />
-          <span>{institute.student_count.toLocaleString()}</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 text-sm text-base-content/70">
-        <div className="flex items-center gap-2">
-          <Building2 size={14} />
-          <span className="truncate">{institute.type || "—"}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Landmark size={14} />
-          <span className="truncate">{institute.ownership || "—"}</span>
-        </div>
-      </div>
-
-      <div className="mt-5 pt-4 border-t border-base-200 text-xs text-base-content/50 flex items-center gap-2">
-        <GraduationCap size={14} />
-        <span>ID: #{institute.institute_id}</span>
-      </div>
-    </div>
-  );
-}
-
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function FindInstitutesPage() {
   const findInstituteUi = useSelector(
@@ -153,18 +88,19 @@ export default function FindInstitutesPage() {
 
   const [sentSuccess, setSentSuccess] = useState(false);
 
-  //toast timeout
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Toast auto-dismiss
   useEffect(() => {
     if (sentSuccess) {
-      const timer = setTimeout(() => {
-        setSentSuccess(false);
-      }, 4000);
+      const timer = setTimeout(() => setSentSuccess(false), 4000);
       return () => clearTimeout(timer);
     }
   }, [sentSuccess]);
 
   // ─── ALL LOGIC REMAINS 100% UNCHANGED ─────────────────────────────────────
-  // (your useEffect hooks, handleSearch, toggleSelect, etc. are untouched)
 
   useEffect(() => {
     const load = async () => {
@@ -302,6 +238,7 @@ export default function FindInstitutesPage() {
     setLoading(true);
     setSearched(true);
     setSelected(new Set());
+    setCurrentPage(1); // Reset to page 1 on new search
     const params = new URLSearchParams();
     if (filters.district_ids.length)
       params.set("district_ids", filters.district_ids.join(","));
@@ -346,13 +283,24 @@ export default function FindInstitutesPage() {
     institutes.map((i) => [i.institute_id, i.institute_name]),
   );
 
-  // ─── RENDER ─────────────────────────────────────────────────────────────────
+  // ─── PAGINATION ────────────────────────────────────────────────────────────
+  const totalItems = institutes.length;
+  const totalPages = Math.ceil(totalItems / 10);
+  const startIndex = (currentPage - 1) * 10;
+  const paginatedInstitutes = institutes.slice(startIndex, startIndex + 10);
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  // ─── RENDER ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-base-200">
       <div className="w-full px-3 sm:px-5 lg:px-8 xl:px-10 py-6 lg:py-10 mx-auto">
-        {/* Header + Filters (always visible) */}
+        {/* Header + Filters */}
         <div className="space-y-8">
-          {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
             <div>
               <h1 className="text-3xl lg:text-4xl font-bold text-base-content flex items-center gap-3">
@@ -385,7 +333,7 @@ export default function FindInstitutesPage() {
             )}
           </div>
 
-          {/* Filters Card – always visible */}
+          {/* Filters Card */}
           <div className="rounded-2xl bg-base-100 border border-base-200 shadow-xl p-6 lg:p-8">
             <div className="flex items-center gap-3 mb-8 pb-5 border-b border-base-200">
               <Filter size={24} className="text-primary" />
@@ -469,12 +417,11 @@ export default function FindInstitutesPage() {
           </div>
         </div>
 
-        {/* Results Section – appears below filters when searched */}
+        {/* Results Section */}
         {searched && (
           <div className="mt-10 space-y-8">
-            {/* Controls Bar – now includes Nearby, Sort, Filter + Send */}
+            {/* Controls Bar */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-base-100 border border-base-200 rounded-2xl p-5 shadow-md">
-              {/* LEFT SIDE */}
               <div className="flex items-center gap-5 flex-wrap">
                 <button
                   onClick={toggleAll}
@@ -493,14 +440,12 @@ export default function FindInstitutesPage() {
                     {institutes.length !== 1 ? "s" : ""} found
                   </h3>
                   <p className="text-base-content/70 mt-1">
-                    Click cards to select for bulk offer
+                    Click rows to select / deselect
                   </p>
                 </div>
               </div>
 
-              {/* RIGHT SIDE – restored Nearby, Sort, Filter + Send */}
               <div className="flex items-center gap-3 flex-wrap">
-                {/* Nearby */}
                 <div className="flex items-center gap-2 px-4 py-2 bg-base-100 rounded-lg border border-base-300 text-xs shadow-sm hover:shadow-md transition">
                   <MapPin size={14} className="text-primary" />
                   <select className="bg-transparent border-0 outline-none text-base-content/90 font-medium cursor-pointer text-xs">
@@ -511,7 +456,6 @@ export default function FindInstitutesPage() {
                   </select>
                 </div>
 
-                {/* Sort */}
                 <div className="flex items-center gap-2 px-4 py-2 bg-base-100 rounded-lg border border-base-300 text-xs shadow-sm hover:shadow-md transition">
                   <ArrowUpDown size={14} className="text-primary" />
                   <select className="bg-transparent border-0 outline-none text-base-content/90 font-medium cursor-pointer text-xs">
@@ -522,7 +466,6 @@ export default function FindInstitutesPage() {
                   </select>
                 </div>
 
-                {/* Filter */}
                 <div className="flex items-center gap-2 px-4 py-2 bg-base-100 rounded-lg border border-base-300 text-xs shadow-sm hover:shadow-md transition cursor-pointer">
                   <Filter size={14} className="text-primary" />
                   <span className="text-base-content/90 font-medium text-xs">
@@ -530,7 +473,6 @@ export default function FindInstitutesPage() {
                   </span>
                 </div>
 
-                {/* Send Button */}
                 {selected.size > 0 && (
                   <button
                     onClick={() =>
@@ -545,7 +487,7 @@ export default function FindInstitutesPage() {
               </div>
             </div>
 
-            {/* Results Content */}
+            {/* Table Results */}
             {loading ? (
               <div className="flex flex-col items-center justify-center py-24 gap-5 text-base-content/50">
                 <Loader2 size={40} className="animate-spin" />
@@ -562,15 +504,135 @@ export default function FindInstitutesPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                {institutes.map((inst) => (
-                  <InstituteCard
-                    key={inst.institute_id}
-                    institute={inst}
-                    isSelected={selected.has(inst.institute_id)}
-                    onToggle={toggleSelect}
-                  />
-                ))}
+              <div className="space-y-6">
+                {/* Table */}
+                <div className="overflow-x-auto rounded-xl border border-base-200 shadow-sm bg-base-100">
+                  <table className="min-w-full divide-y divide-base-200">
+                    <thead className="bg-base-200/50">
+                      <tr>
+                        <th className="px-6 py-4 text-left w-12">
+                          <button
+                            onClick={toggleAll}
+                            className="btn btn-circle btn-outline btn-xs border-primary text-primary hover:bg-primary/10"
+                          >
+                            {allSelected ? (
+                              <CheckSquare size={16} />
+                            ) : (
+                              <Square size={16} />
+                            )}
+                          </button>
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-base-content">
+                          Institute Name
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-base-content">
+                          District
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-base-content">
+                          Type
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-base-content">
+                          Ownership
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-base-content">
+                          Students
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-base-content">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-base-200">
+                      {paginatedInstitutes.map((inst) => (
+                        <tr
+                          key={inst.institute_id}
+                          onClick={() => toggleSelect(inst.institute_id)}
+                          className={clsx(
+                            "hover:bg-base-200/50 transition-colors cursor-pointer",
+                            selected.has(inst.institute_id) && "bg-primary/5",
+                          )}
+                        >
+                          <td className="px-6 py-4">
+                            {selected.has(inst.institute_id) ? (
+                              <CheckSquare size={18} className="text-primary" />
+                            ) : (
+                              <Square
+                                size={18}
+                                className="text-base-content/40"
+                              />
+                            )}
+                          </td>
+                          <td className="px-6 py-4 font-medium text-base-content">
+                            {inst.institute_name}
+                          </td>
+                          <td className="px-6 py-4 text-base-content/80">
+                            <div className="flex items-center gap-2">
+                              <MapPin size={14} />
+                              {inst.district || "—"}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-base-content/80">
+                            {inst.type || "—"}
+                          </td>
+                          <td className="px-6 py-4 text-base-content/80">
+                            {inst.ownership || "—"}
+                          </td>
+                          <td className="px-6 py-4 text-base-content/80">
+                            <div className="flex items-center gap-2">
+                              <Users size={14} />
+                              {inst.student_count.toLocaleString()}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCurrentOffer(inst);
+                                dispatch(
+                                  updateUiInstitute({
+                                    bulkOffer: { open: true },
+                                  }),
+                                );
+                              }}
+                              className="btn btn-ghost btn-xs text-primary hover:bg-primary/10"
+                              title="View / Send Offer"
+                            >
+                              <Eye size={18} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between bg-base-100 border border-base-200 rounded-xl p-4 shadow-sm">
+                    <button
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="btn btn-outline btn-sm gap-2 disabled:opacity-50"
+                    >
+                      <ChevronLeft size={16} />
+                      Previous
+                    </button>
+
+                    <span className="text-sm text-base-content/70">
+                      Page {currentPage} of {totalPages} ({totalItems}{" "}
+                      institutes)
+                    </span>
+
+                    <button
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="btn btn-outline btn-sm gap-2 disabled:opacity-50"
+                    >
+                      Next
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -581,16 +643,15 @@ export default function FindInstitutesPage() {
           <div className="fixed bottom-6 right-6 z-50 animate-slide-up-fade">
             <div
               className="
-        flex items-center gap-4 
-        px-6 py-4 rounded-2xl 
-        bg-emerald-50 text-emerald-900 
-        border border-emerald-200/80 
-        shadow-2xl shadow-emerald-900/10 
-        font-medium text-base lg:text-lg
-        transition-all duration-300
-      "
+                flex items-center gap-4 
+                px-6 py-4 rounded-2xl 
+                bg-emerald-50 text-emerald-900 
+                border border-emerald-200/80 
+                shadow-2xl shadow-emerald-900/10 
+                font-medium text-base lg:text-lg
+                transition-all duration-300
+              "
             >
-              {/* Icon with subtle pulse */}
               <div className="relative">
                 <Send
                   size={22}
@@ -604,7 +665,6 @@ export default function FindInstitutesPage() {
                 Job offers sent successfully!
               </span>
 
-              {/* Optional close button */}
               <button
                 onClick={() => setSentSuccess(false)}
                 className="ml-auto text-emerald-700 hover:text-emerald-900 transition-colors"
