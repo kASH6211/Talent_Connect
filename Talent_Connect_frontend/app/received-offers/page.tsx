@@ -11,177 +11,18 @@ import {
   CalendarDays,
   CalendarClock,
   Users2,
-  Banknote,
   MailOpen,
   Users,
   Eye,
-  ArrowRight,
+  Check,
+  X,
 } from "lucide-react";
 import api from "@/lib/api";
 import OfferViewModal from "@/views/received-offers/view/OfferViewModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 
-/* ─── Global Styles (same beautiful design language as Sent Offers) ─────── */
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-
-  .sol-root { font-family: 'Outfit', sans-serif; }
-
-  @keyframes sol-fade-up {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .sol-fade-up { animation: sol-fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both; }
-  .sol-delay-1 { animation-delay: 0.05s; }
-  .sol-delay-2 { animation-delay: 0.1s; }
-
-  .sol-stat {
-    position: relative;
-    overflow: hidden;
-    border-radius: 16px;
-    padding: 20px 24px;
-    border: 1.5px solid rgba(0,0,0,0.06);
-    background: #fff;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
-    text-align: center;
-  }
-  .sol-stat:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 14px 36px rgba(0,0,0,0.12);
-  }
-  .sol-stat.active-all      { border-color: #6366f1; background: linear-gradient(135deg,#eef2ff,#e0e7ff); box-shadow: 0 10px 28px rgba(99,102,241,0.22); }
-  .sol-stat.active-pending  { border-color: #f59e0b; background: linear-gradient(135deg,#fffbeb,#fef3c7); box-shadow: 0 10px 28px rgba(245,158,11,0.22); }
-  .sol-stat.active-accepted { border-color: #10b981; background: linear-gradient(135deg,#ecfdf5,#d1fae5); box-shadow: 0 10px 28px rgba(16,185,129,0.22); }
-  .sol-stat.active-rejected { border-color: #ef4444; background: linear-gradient(135deg,#fef2f2,#fee2e2); box-shadow: 0 10px 28px rgba(239,68,68,0.22); }
-
-  .sol-stat-icon {
-    width: 48px; height: 48px;
-    border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 12px;
-    transition: transform 0.25s;
-  }
-  .sol-stat:hover .sol-stat-icon { transform: scale(1.1) rotate(4deg); }
-
-  .sol-stat-count {
-    font-size: 32px;
-    font-weight: 800;
-    line-height: 1;
-    margin-bottom: 4px;
-    letter-spacing: -0.6px;
-  }
-  .sol-stat-label {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.9px;
-    text-transform: uppercase;
-    opacity: 0.65;
-  }
-
-  .sol-stat-glow {
-    position: absolute;
-    bottom: -30px; right: -30px;
-    width: 100px; height: 100px;
-    border-radius: 50%;
-    opacity: 0.09;
-    pointer-events: none;
-  }
-
-  .sol-card {
-    border-radius: 16px;
-    border: 1.5px solid rgba(0,0,0,0.07);
-    background: #fff;
-    overflow: hidden;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-    transition: all 0.24s cubic-bezier(0.16,1,0.3,1);
-  }
-  .sol-card:hover {
-    box-shadow: 0 10px 32px rgba(99,102,241,0.12);
-    transform: translateY(-2px);
-  }
-
-  .sol-card-header {
-    padding: 20px 24px;
-    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-  }
-
-  .sol-job-title {
-    font-size: 17px;
-    font-weight: 700;
-    color: #0f0e1a;
-    line-height: 1.3;
-    margin-bottom: 10px;
-  }
-
-  .sol-pill {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.1px;
-  }
-  .sol-pill-salary  { background: #ecfdf5; color: #059669; }
-  .sol-pill-posts   { background: #f1f5f9; color: #64748b; }
-  .sol-pill-date    { background: #fff7ed; color: #c2410c; }
-
-  .sol-meta {
-    display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px;
-    font-size: 13px; color: #64748b;
-  }
-
-  .sol-status {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 5px 12px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-  .sol-status-pending   { background: #fffbeb; color: #d97706; }
-  .sol-status-accepted  { background: #ecfdf5; color: #059669; }
-  .sol-status-rejected  { background: #fef2f2; color: #dc2626; }
-
-  .sol-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 16px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s;
-  }
-  .sol-btn-accept  { background: #10b981; color: white; }
-  .sol-btn-accept:hover  { background: #059669; }
-  .sol-btn-reject  { background: #ef4444; color: white; }
-  .sol-btn-reject:hover  { background: #dc2626; }
-
-  .sol-btn-eye {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    border: 1.5px solid rgba(99,102,241,0.2);
-    background: rgba(99,102,241,0.04);
-    color: #6366f1;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s;
-  }
-  .sol-btn-eye:hover {
-    background: #6366f1;
-    color: white;
-    border-color: #6366f1;
-    transform: scale(1.08);
-  }
-
-  .sol-empty {
-    padding: 80px 24px;
-    text-align: center;
-    border: 2px dashed rgba(99,102,241,0.18);
-    border-radius: 16px;
-    background: linear-gradient(135deg, rgba(99,102,241,0.02), rgba(139,92,246,0.02));
-  }
-`;
-
-/* ─── Types & Helpers ────────────────────────────────────────────────────── */
+/* ─── Types & Helpers ─────────────────────────────────────────────────────── */
 interface Offer {
   offer_id: number;
   job_title: string;
@@ -222,47 +63,103 @@ function formatDate(d?: string) {
   }
 }
 
-/* ─── Stat Card Component ────────────────────────────────────────────────── */
+/* ─── Status Badge ────────────────────────────────────────────────────────── */
+function StatusBadge({ status }: { status: string }) {
+  const s = status.toLowerCase();
+  const map: Record<string, { cls: string; Icon: any }> = {
+    pending: {
+      cls: "bg-warning/15 text-warning border-warning/25",
+      Icon: Clock,
+    },
+    accepted: {
+      cls: "bg-success/15 text-success border-success/25",
+      Icon: CheckCircle2,
+    },
+    rejected: {
+      cls: "bg-error/15  text-error  border-error/25",
+      Icon: XCircle,
+    },
+  };
+  const { cls, Icon } = map[s] ?? {
+    cls: "bg-base-200 text-base-content border-base-300",
+    Icon: Clock,
+  };
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${cls}`}
+    >
+      <Icon size={11} />
+      {status}
+    </span>
+  );
+}
+
+/* ─── Stat Card ───────────────────────────────────────────────────────────── */
 function StatCard({
   label,
   count,
   active,
   onClick,
   icon: Icon,
-  iconBg,
-  countColor,
-  activeClass,
+  activeColor,
 }: {
   label: string;
   count: number;
   active: boolean;
   onClick: () => void;
   icon: any;
-  iconBg: string;
-  countColor: string;
-  activeClass: string;
+  activeColor: string;
 }) {
+  const colorMap: Record<string, string> = {
+    indigo: "border-primary bg-primary/10 shadow-primary/20",
+    amber: "border-warning bg-warning/10 shadow-warning/20",
+    green: "border-success bg-success/10 shadow-success/20",
+    red: "border-error bg-error/10 shadow-error/20",
+  };
+  const iconMap: Record<string, string> = {
+    indigo: "bg-primary text-primary-content",
+    amber: "bg-warning text-warning-content",
+    green: "bg-success text-success-content",
+    red: "bg-error text-error-content",
+  };
+  const countMap: Record<string, string> = {
+    indigo: "text-primary",
+    amber: "text-warning",
+    green: "text-success",
+    red: "text-error",
+  };
+
   return (
     <button
       onClick={onClick}
-      className={`sol-stat ${active ? activeClass : ""} sol-fade-up sol-delay-1`}
+      className={`
+        group relative overflow-hidden rounded-2xl p-5 text-center w-full
+        border-2 transition-all duration-300 cursor-pointer
+        ${
+          active
+            ? `${colorMap[activeColor]} shadow-lg`
+            : "border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 hover:border-base-400 dark:hover:border-base-600 shadow-sm hover:shadow-md"
+        }
+      `}
     >
-      <div className="sol-stat-icon" style={{ background: iconBg }}>
-        <Icon size={22} color="#fff" />
+      <div
+        className={`w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 ${active ? iconMap[activeColor] : "bg-base-200 dark:bg-base-800 text-base-content/60"}`}
+      >
+        <Icon size={18} />
       </div>
       <div
-        className="sol-stat-count"
-        style={{ color: active ? countColor : "#0f0e1a" }}
+        className={`text-3xl font-black leading-none mb-1 tracking-tight ${active ? countMap[activeColor] : "text-base-content"}`}
       >
         {count}
       </div>
-      <div className="sol-stat-label">{label}</div>
-      <div className="sol-stat-glow" style={{ background: countColor }} />
+      <div className="text-[10px] font-bold tracking-widest uppercase text-base-content/50">
+        {label}
+      </div>
     </button>
   );
 }
 
-/* ─── Main Received Offers Page ──────────────────────────────────────────── */
+/* ─── Main Page ───────────────────────────────────────────────────────────── */
 export default function ReceivedOffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -277,9 +174,7 @@ export default function ReceivedOffersPage() {
   );
 
   useEffect(() => {
-    if (currentOfferRedirect?.status) {
-      setFilter(currentOfferRedirect.status);
-    }
+    if (currentOfferRedirect?.status) setFilter(currentOfferRedirect.status);
   }, [currentOfferRedirect]);
 
   const load = async () => {
@@ -323,237 +218,218 @@ export default function ReceivedOffersPage() {
   const filtered =
     filter === "All" ? offers : offers.filter((o) => o.status === filter);
 
+  const statConfig = [
+    { tab: "All", icon: Users, activeColor: "indigo" },
+    { tab: "Pending", icon: Clock, activeColor: "amber" },
+    { tab: "Accepted", icon: CheckCircle2, activeColor: "green" },
+    { tab: "Rejected", icon: XCircle, activeColor: "red" },
+  ];
+
   return (
-    <>
-      <style>{styles}</style>
-
-      <div className="sol-root px-[18px] pt-10 pb-5 mx-auto w-full max-w-7xl lg:max-w-screen-2xl">
-        {/* Header */}
-        <div className="sol-page-header sol-fade-up flex flex-col sm:flex-row items-center justify-between gap-6 mb-10 lg:mb-12">
-          <div className="flex items-center gap-4">
-            <div
-              className="
-        w-12 h-12 rounded-xl 
-        bg-gradient-to-br from-indigo-600 to-purple-600 
-        flex items-center justify-center 
-        shadow-md ring-1 ring-indigo-400/30
-      "
-            >
-              <MailOpen size={24} className="text-white" strokeWidth={2} />
-            </div>
-
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
-                Received Offers
-              </h1>
-              <p className="mt-1 text-gray-600 dark:text-gray-400">
-                Manage incoming job offers from industry partners
-              </p>
-            </div>
+    <div className="w-full px-3 sm:px-5 lg:px-8 xl:px-10 py-6 lg:py-10 mx-auto">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+            <MailOpen
+              size={22}
+              className="text-primary-content"
+              strokeWidth={2}
+            />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-base-content tracking-tight leading-tight">
+              Received Offers
+            </h1>
+            <p className="text-sm text-base-content/50 mt-0.5">
+              Manage incoming job offers from industry partners
+            </p>
           </div>
         </div>
-        {/* Stat Cards */}
-        {!loading && offers.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 lg:gap-6 mb-12">
+      </div>
+
+      {/* ── Stat Cards ── */}
+      {!loading && offers.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          {statConfig.map(({ tab, icon, activeColor }) => (
             <StatCard
-              label="Total"
-              count={counts["All"]}
-              active={filter === "All"}
-              onClick={() => setFilter("All")}
-              icon={Users}
-              iconBg="linear-gradient(135deg,#6366f1,#8b5cf6)"
-              countColor="#6366f1"
-              activeClass="active-all"
+              key={tab}
+              label={tab === "All" ? "Total" : tab}
+              count={counts[tab]}
+              active={filter === tab}
+              onClick={() => setFilter(tab)}
+              icon={icon}
+              activeColor={activeColor}
             />
-            <StatCard
-              label="Pending"
-              count={counts["Pending"]}
-              active={filter === "Pending"}
-              onClick={() => setFilter("Pending")}
-              icon={Clock}
-              iconBg="linear-gradient(135deg,#f59e0b,#fbbf24)"
-              countColor="#f59e0b"
-              activeClass="active-pending"
-            />
-            <StatCard
-              label="Accepted"
-              count={counts["Accepted"]}
-              active={filter === "Accepted"}
-              onClick={() => setFilter("Accepted")}
-              icon={CheckCircle2}
-              iconBg="linear-gradient(135deg,#10b981,#34d399)"
-              countColor="#10b981"
-              activeClass="active-accepted"
-            />
-            <StatCard
-              label="Rejected"
-              count={counts["Rejected"]}
-              active={filter === "Rejected"}
-              onClick={() => setFilter("Rejected")}
-              icon={XCircle}
-              iconBg="linear-gradient(135deg,#ef4444,#f87171)"
-              countColor="#ef4444"
-              activeClass="active-rejected"
-            />
+          ))}
+        </div>
+      )}
+
+      {/* ── Content ── */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-24 gap-3 text-base-content/50">
+          <Loader2 size={32} className="animate-spin text-primary" />
+          <p className="text-sm">Loading received offers…</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 rounded-2xl border-2 border-dashed border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Send size={24} className="text-primary" />
           </div>
-        )}
-
-        {/* Loading / Empty / Content */}
-        {loading ? (
-          <div className="text-center py-20">
-            <Loader2 className="animate-spin mx-auto" size={36} />
-            <p className="mt-4 text-gray-500">Loading received offers...</p>
+          <div className="text-center">
+            <p className="font-semibold text-base-content">No offers found</p>
+            <p className="text-sm text-base-content/50 mt-1">
+              {filter === "All"
+                ? "No job offers have been received yet."
+                : `No ${filter.toLowerCase()} offers at the moment.`}
+            </p>
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="sol-empty sol-fade-up">
-            <div className="sol-empty-icon">
-              <Send size={32} color="#6366f1" />
-            </div>
-            <div className="mt-5">
-              <div className="text-xl font-semibold text-gray-800">
-                No offers found
-              </div>
-              <p className="mt-2 text-gray-500">
-                {filter === "All"
-                  ? "No job offers have been received yet."
-                  : `No ${filter.toLowerCase()} offers at the moment.`}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {filtered.map((offer, index) => {
-              const isPending = offer.status === "Pending";
-              const salary = salaryStr(offer.salary_min, offer.salary_max);
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filtered.map((offer, index) => {
+            const isPending = offer.status === "Pending";
+            const salary = salaryStr(offer.salary_min, offer.salary_max);
+            const isUpdating = updating === offer.offer_id;
 
-              return (
-                <div
-                  key={offer.offer_id}
-                  className={`sol-card sol-fade-up`}
-                  style={{ animationDelay: `${index * 0.06}s` }}
-                >
-                  <div className="sol-card-header">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <h2 className="sol-job-title">{offer.job_title}</h2>
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mt-1.5">
-                          <Building2 size={15} />
-                          {offer.industry?.industry_name || "Industry Partner"}
-                        </div>
-
-                        <div className="sol-meta">
-                          <div className="flex items-center gap-1.5">
-                            <CalendarDays size={14} />
-                            Sent: {formatDate(offer.offer_date)}
-                          </div>
-                          {offer.last_date && (
-                            <div className="flex items-center gap-1.5">
-                              <CalendarClock size={14} />
-                              Apply by: {formatDate(offer.last_date)}
-                            </div>
-                          )}
-                          {offer.number_of_posts && (
-                            <div className="flex items-center gap-1.5">
-                              <Users2 size={14} />
-                              {offer.number_of_posts} post
-                              {offer.number_of_posts !== 1 ? "s" : ""}
-                            </div>
-                          )}
-                        </div>
-
-                        {salary && (
-                          <div className="mt-3">
-                            <span className="sol-pill sol-pill-salary">
-                              {salary}
-                            </span>
-                          </div>
-                        )}
+            return (
+              <div
+                key={offer.offer_id}
+                className="rounded-2xl border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                {/* Card body */}
+                <div className="p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    {/* Left: info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <h2 className="text-base font-bold text-base-content leading-tight truncate">
+                          {offer.job_title}
+                        </h2>
+                        <StatusBadge status={offer.status} />
                       </div>
 
-                      <div className="flex items-center gap-3 self-start sm:self-center">
-                        <button
-                          className="sol-btn-eye"
-                          onClick={() => {
-                            setCurrentOffer(offer);
-                            setViewModal(true);
-                          }}
-                        >
-                          <Eye size={18} />
-                        </button>
-
-                        <span
-                          className={`sol-status sol-status-${offer.status.toLowerCase()}`}
-                        >
-                          {offer.status === "Pending" && <Clock size={13} />}
-                          {offer.status === "Accepted" && (
-                            <CheckCircle2 size={13} />
-                          )}
-                          {offer.status === "Rejected" && <XCircle size={13} />}
-                          {offer.status}
+                      <div className="flex items-center gap-1.5 text-sm text-base-content/60 mb-3">
+                        <Building2 size={13} />
+                        <span>
+                          {offer.industry?.industry_name || "Industry Partner"}
                         </span>
                       </div>
+
+                      {/* Meta row */}
+                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-base-content/55">
+                        <span className="flex items-center gap-1">
+                          <CalendarDays size={12} />
+                          Sent: {formatDate(offer.offer_date)}
+                        </span>
+                        {offer.last_date && (
+                          <span className="flex items-center gap-1">
+                            <CalendarClock size={12} />
+                            Apply by: {formatDate(offer.last_date)}
+                          </span>
+                        )}
+                        {offer.number_of_posts && (
+                          <span className="flex items-center gap-1">
+                            <Users2 size={12} />
+                            {offer.number_of_posts} post
+                            {offer.number_of_posts !== 1 ? "s" : ""}
+                          </span>
+                        )}
+                        {salary && (
+                          <span className="flex items-center gap-1 text-success font-semibold">
+                            {salary}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Description */}
+                      {offer.job_description && (
+                        <p className="mt-3 text-sm text-base-content/60 line-clamp-2 leading-relaxed">
+                          {offer.job_description}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Right: actions */}
+                    <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+                      {/* View button */}
+                      <button
+                        onClick={() => {
+                          setCurrentOffer(offer);
+                          setViewModal(true);
+                        }}
+                        title="View details"
+                        className="w-8 h-8 rounded-lg border border-base-300 dark:border-base-700 bg-base-200 dark:bg-base-800 text-base-content/60 hover:border-primary hover:bg-primary hover:text-primary-content flex items-center justify-center transition-all duration-200"
+                      >
+                        <Eye size={15} />
+                      </button>
+
+                      {/* Accept / Reject — only for Pending */}
+                      {isPending && (
+                        <>
+                          <button
+                            onClick={() =>
+                              updateStatus(offer.offer_id, "Accepted")
+                            }
+                            disabled={isUpdating}
+                            title="Accept offer"
+                            className="h-8 px-3 rounded-lg bg-success/15 hover:bg-success text-success hover:text-success-content border border-success/30 hover:border-success text-xs font-semibold flex items-center gap-1.5 transition-all duration-200 disabled:opacity-50"
+                          >
+                            {isUpdating ? (
+                              <Loader2 size={13} className="animate-spin" />
+                            ) : (
+                              <Check size={13} />
+                            )}
+                            Accept
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              updateStatus(offer.offer_id, "Rejected")
+                            }
+                            disabled={isUpdating}
+                            title="Reject offer"
+                            className="h-8 px-3 rounded-lg bg-error/15 hover:bg-error text-error hover:text-error-content border border-error/30 hover:border-error text-xs font-semibold flex items-center gap-1.5 transition-all duration-200 disabled:opacity-50"
+                          >
+                            {isUpdating ? (
+                              <Loader2 size={13} className="animate-spin" />
+                            ) : (
+                              <X size={13} />
+                            )}
+                            Reject
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
-
-                  {offer.job_description && (
-                    <div className="px-6 pb-5 pt-3 text-sm text-gray-600 border-t">
-                      {offer.job_description}
-                    </div>
-                  )}
-
-                  {isPending && (
-                    <div className="px-6 pb-6 flex gap-4">
-                      <button
-                        className="sol-btn sol-btn-accept flex-1"
-                        onClick={() => updateStatus(offer.offer_id, "Accepted")}
-                        disabled={updating === offer.offer_id}
-                      >
-                        {updating === offer.offer_id ? (
-                          <Loader2 size={18} className="animate-spin" />
-                        ) : (
-                          "Accept Offer"
-                        )}
-                      </button>
-
-                      <button
-                        className="sol-btn sol-btn-reject flex-1"
-                        onClick={() => updateStatus(offer.offer_id, "Rejected")}
-                        disabled={updating === offer.offer_id}
-                      >
-                        {updating === offer.offer_id ? (
-                          <Loader2 size={18} className="animate-spin" />
-                        ) : (
-                          "Reject"
-                        )}
-                      </button>
-                    </div>
-                  )}
                 </div>
-              );
-            })}
-          </div>
-        )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-        <OfferViewModal
-          open={viewModal}
-          setOpen={setViewModal}
-          offer={currentOffer}
-          onAccept={() => {
-            if (currentOffer) {
-              updateStatus(currentOffer.offer_id, "Accepted").then(() =>
-                setViewModal(false),
-              );
-            }
-          }}
-          onReject={() => {
-            if (currentOffer) {
-              updateStatus(currentOffer.offer_id, "Rejected").then(() =>
-                setViewModal(false),
-              );
-            }
-          }}
-        />
-      </div>
-    </>
+      {/* ── Modal ── */}
+      <OfferViewModal
+        open={viewModal}
+        setOpen={setViewModal}
+        offer={currentOffer}
+        onAccept={() => {
+          if (currentOffer) {
+            updateStatus(currentOffer.offer_id, "Accepted").then(() =>
+              setViewModal(false),
+            );
+          }
+        }}
+        onReject={() => {
+          if (currentOffer) {
+            updateStatus(currentOffer.offer_id, "Rejected").then(() =>
+              setViewModal(false),
+            );
+          }
+        }}
+      />
+    </div>
   );
 }

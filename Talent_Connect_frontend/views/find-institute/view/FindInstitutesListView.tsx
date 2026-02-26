@@ -11,13 +11,11 @@ import {
   Filter,
   MapPin,
   Users,
-  Building2,
-  GraduationCap,
-  Landmark,
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   Eye,
+  Building2,
 } from "lucide-react";
 import api from "@/lib/api";
 import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
@@ -60,12 +58,11 @@ const EMPTY_FILTERS: Filters = {
   stream_ids: [],
 };
 
-// ─── Main Component ──────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function FindInstitutesPage() {
   const findInstituteUi = useSelector(
     (state: RootState) => state?.institutes?.ui,
   );
-
   const { user, isIndustry } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
 
@@ -87,12 +84,9 @@ export default function FindInstitutesPage() {
   const [streamOpts, setStreamOpts] = useState<Option[]>([]);
 
   const [sentSuccess, setSentSuccess] = useState(false);
-
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Toast auto-dismiss
   useEffect(() => {
     if (sentSuccess) {
       const timer = setTimeout(() => setSentSuccess(false), 4000);
@@ -100,8 +94,7 @@ export default function FindInstitutesPage() {
     }
   }, [sentSuccess]);
 
-  // ─── ALL LOGIC REMAINS 100% UNCHANGED ─────────────────────────────────────
-
+  // ─── ALL DATA LOADING LOGIC UNCHANGED ────────────────────────────────────
   useEffect(() => {
     const load = async () => {
       const [states, types, own, qual] = await Promise.all([
@@ -238,7 +231,7 @@ export default function FindInstitutesPage() {
     setLoading(true);
     setSearched(true);
     setSelected(new Set());
-    setCurrentPage(1); // Reset to page 1 on new search
+    setCurrentPage(1);
     const params = new URLSearchParams();
     if (filters.district_ids.length)
       params.set("district_ids", filters.district_ids.join(","));
@@ -273,7 +266,6 @@ export default function FindInstitutesPage() {
   const allSelected =
     institutes.length > 0 &&
     institutes.every((i) => selected.has(i.institute_id));
-
   const toggleAll = () =>
     setSelected(
       allSelected ? new Set() : new Set(institutes.map((i) => i.institute_id)),
@@ -283,307 +275,308 @@ export default function FindInstitutesPage() {
     institutes.map((i) => [i.institute_id, i.institute_name]),
   );
 
-  // ─── PAGINATION ────────────────────────────────────────────────────────────
   const totalItems = institutes.length;
-  const totalPages = Math.ceil(totalItems / 10);
-  const startIndex = (currentPage - 1) * 10;
-  const paginatedInstitutes = institutes.slice(startIndex, startIndex + 10);
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedInstitutes = institutes.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
 
-  // ─── RENDER ────────────────────────────────────────────────────────────────
+  // ─── RENDER ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-base-200">
-      <div className="w-full px-3 sm:px-5 lg:px-8 xl:px-10 py-6 lg:py-10 mx-auto">
-        {/* Header + Filters */}
-        <div className="space-y-8">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-            <div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-base-content flex items-center gap-3">
-                <Filter size={32} className="text-primary" />
-                Find Institutes
-              </h1>
-              <p className="text-base-content/70 mt-3 max-w-3xl text-lg">
-                Discover institutes and send job offers directly to placement
-                cells
-              </p>
-            </div>
-
-            {searched && (
-              <div className="flex flex-wrap gap-5">
-                <div className="px-6 py-4 bg-base-100 border border-base-300 rounded-2xl shadow-sm text-center min-w-[140px]">
-                  <div className="text-sm text-base-content/70">Found</div>
-                  <div className="text-3xl font-bold text-primary mt-1">
-                    {institutes.length}
-                  </div>
-                </div>
-                {selected.size > 0 && (
-                  <div className="px-6 py-4 bg-base-100 border border-base-300 rounded-2xl shadow-sm text-center min-w-[140px]">
-                    <div className="text-sm text-base-content/70">Selected</div>
-                    <div className="text-3xl font-bold text-success mt-1">
-                      {selected.size}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+    <div className="w-full px-3 sm:px-5 lg:px-8 xl:px-10 py-6 lg:py-10 mx-auto">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+            <Building2
+              size={22}
+              className="text-primary-content"
+              strokeWidth={2}
+            />
           </div>
-
-          {/* Filters Card */}
-          <div className="rounded-2xl bg-base-100 border border-base-200 shadow-xl p-6 lg:p-8">
-            <div className="flex items-center gap-3 mb-8 pb-5 border-b border-base-200">
-              <Filter size={24} className="text-primary" />
-              <h2 className="text-2xl font-bold text-base-content">Filters</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mb-8">
-              <MultiSelectDropdown
-                label="State"
-                options={stateOpts}
-                selected={filters.state_ids}
-                onChange={setFilter("state_ids")}
-                placeholder="Any state"
-              />
-              <MultiSelectDropdown
-                label="District"
-                options={districtOpts}
-                selected={filters.district_ids}
-                onChange={setFilter("district_ids")}
-                placeholder="Any district"
-              />
-              <MultiSelectDropdown
-                label="Institute Type"
-                options={typeOpts}
-                selected={filters.type_ids}
-                onChange={setFilter("type_ids")}
-                placeholder="Any type"
-              />
-              <MultiSelectDropdown
-                label="Ownership"
-                options={ownershipOpts}
-                selected={filters.ownership_ids}
-                onChange={setFilter("ownership_ids")}
-                placeholder="Any ownership"
-              />
-              <MultiSelectDropdown
-                label="Qualification"
-                options={qualOpts}
-                selected={filters.qualification_ids}
-                onChange={setFilter("qualification_ids")}
-                placeholder="Any qualification"
-              />
-              <MultiSelectDropdown
-                label="Program"
-                options={programOpts}
-                selected={filters.program_ids}
-                onChange={setFilter("program_ids")}
-                placeholder="Any program"
-              />
-              <MultiSelectDropdown
-                label="Stream"
-                options={streamOpts}
-                selected={filters.stream_ids}
-                onChange={setFilter("stream_ids")}
-                placeholder="Any stream"
-              />
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={handleSearch}
-                disabled={loading}
-                className="flex-1 btn btn-primary gap-3 text-base shadow-lg hover:shadow-xl transition-all"
-              >
-                {loading ? (
-                  <Loader2 size={20} className="animate-spin" />
-                ) : (
-                  <Search size={20} />
-                )}
-                {loading ? "Searching..." : "Search Institutes"}
-              </button>
-
-              <button
-                onClick={() => setFilters(EMPTY_FILTERS)}
-                disabled={loading}
-                className="btn btn-outline px-8 text-base shadow-md hover:shadow-lg transition-all"
-              >
-                Reset Filters
-              </button>
-            </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-base-content tracking-tight leading-tight">
+              Find Institutes
+            </h1>
+            <p className="text-sm text-base-content/50 mt-0.5">
+              Discover institutes and send job offers directly to placement
+              cells
+            </p>
           </div>
         </div>
 
-        {/* Results Section */}
-        {searched && (
-          <div className="mt-10 space-y-8">
-            {/* Controls Bar */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-base-100 border border-base-200 rounded-2xl p-5 shadow-md">
-              <div className="flex items-center gap-5 flex-wrap">
+        {/* Summary badges */}
+        {searched && !loading && (
+          <div className="flex items-center gap-3">
+            <div className="px-4 py-2 rounded-xl bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-base-content/50">
+                Found
+              </p>
+              <p className="text-xl font-black text-primary leading-tight">
+                {institutes.length}
+              </p>
+            </div>
+            {selected.size > 0 && (
+              <div className="px-4 py-2 rounded-xl bg-success/10 border border-success/25 text-center">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-success/70">
+                  Selected
+                </p>
+                <p className="text-xl font-black text-success leading-tight">
+                  {selected.size}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Filters Card ── */}
+      <div className="rounded-2xl bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-700 shadow-sm p-5 sm:p-6 mb-8">
+        <div className="flex items-center gap-2.5 mb-5 pb-4 border-b border-base-200 dark:border-base-800">
+          <Filter size={18} className="text-primary" />
+          <h2 className="text-base font-bold text-base-content">Filters</h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 mb-5">
+          <MultiSelectDropdown
+            label="State"
+            options={stateOpts}
+            selected={filters.state_ids}
+            onChange={setFilter("state_ids")}
+            placeholder="Any state"
+          />
+          <MultiSelectDropdown
+            label="District"
+            options={districtOpts}
+            selected={filters.district_ids}
+            onChange={setFilter("district_ids")}
+            placeholder="Any district"
+          />
+          <MultiSelectDropdown
+            label="Institute Type"
+            options={typeOpts}
+            selected={filters.type_ids}
+            onChange={setFilter("type_ids")}
+            placeholder="Any type"
+          />
+          <MultiSelectDropdown
+            label="Ownership"
+            options={ownershipOpts}
+            selected={filters.ownership_ids}
+            onChange={setFilter("ownership_ids")}
+            placeholder="Any ownership"
+          />
+          <MultiSelectDropdown
+            label="Qualification"
+            options={qualOpts}
+            selected={filters.qualification_ids}
+            onChange={setFilter("qualification_ids")}
+            placeholder="Any qualification"
+          />
+          <MultiSelectDropdown
+            label="Program"
+            options={programOpts}
+            selected={filters.program_ids}
+            onChange={setFilter("program_ids")}
+            placeholder="Any program"
+          />
+          <MultiSelectDropdown
+            label="Stream"
+            options={streamOpts}
+            selected={filters.stream_ids}
+            onChange={setFilter("stream_ids")}
+            placeholder="Any stream"
+          />
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={handleSearch}
+            disabled={loading}
+            className="btn btn-primary flex-1 gap-2 text-sm"
+          >
+            {loading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Search size={16} />
+            )}
+            {loading ? "Searching…" : "Search Institutes"}
+          </button>
+          <button
+            onClick={() => setFilters(EMPTY_FILTERS)}
+            disabled={loading}
+            className="btn btn-outline text-sm px-6"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+
+      {/* ── Results ── */}
+      {searched && (
+        <div className="space-y-4">
+          {/* Controls bar */}
+          {!loading && institutes.length > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-700 rounded-xl px-4 py-3 shadow-sm">
+              <div className="flex items-center gap-3">
                 <button
                   onClick={toggleAll}
-                  className="btn btn-circle btn-outline border-primary text-primary hover:bg-primary/10"
+                  className="w-8 h-8 rounded-lg border border-base-300 dark:border-base-700 bg-base-200 dark:bg-base-800 hover:border-primary hover:text-primary flex items-center justify-center text-base-content/60 transition-all"
                 >
                   {allSelected ? (
-                    <CheckSquare size={20} />
+                    <CheckSquare size={16} className="text-primary" />
                   ) : (
-                    <Square size={20} />
+                    <Square size={16} />
                   )}
                 </button>
-
-                <div>
-                  <h3 className="text-2xl font-bold text-base-content">
-                    {institutes.length} institute
-                    {institutes.length !== 1 ? "s" : ""} found
-                  </h3>
-                  <p className="text-base-content/70 mt-1">
-                    Click rows to select / deselect
-                  </p>
-                </div>
+                <p className="text-sm font-semibold text-base-content">
+                  {institutes.length} institute
+                  {institutes.length !== 1 ? "s" : ""} found
+                  <span className="text-base-content/50 font-normal ml-1.5">
+                    • click rows to select
+                  </span>
+                </p>
               </div>
 
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center gap-2 px-4 py-2 bg-base-100 rounded-lg border border-base-300 text-xs shadow-sm hover:shadow-md transition">
-                  <MapPin size={14} className="text-primary" />
-                  <select className="bg-transparent border-0 outline-none text-base-content/90 font-medium cursor-pointer text-xs">
-                    <option value="all">All Areas</option>
-                    <option value="nearby">Nearby</option>
-                    <option value="50km">50km</option>
-                    <option value="100km">100km</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-2 px-4 py-2 bg-base-100 rounded-lg border border-base-300 text-xs shadow-sm hover:shadow-md transition">
-                  <ArrowUpDown size={14} className="text-primary" />
-                  <select className="bg-transparent border-0 outline-none text-base-content/90 font-medium cursor-pointer text-xs">
-                    <option value="name">A-Z</option>
-                    <option value="name-rev">Z-A</option>
-                    <option value="rating">Rating</option>
+              <div className="flex items-center gap-2">
+                {/* Sort */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-base-300 dark:border-base-700 bg-base-200 dark:bg-base-800 text-xs">
+                  <ArrowUpDown size={12} className="text-primary" />
+                  <select className="bg-transparent border-0 outline-none text-base-content/80 font-medium cursor-pointer text-xs">
                     <option value="students">Students</option>
+                    <option value="name">A–Z</option>
+                    <option value="name-rev">Z–A</option>
                   </select>
                 </div>
 
-                <div className="flex items-center gap-2 px-4 py-2 bg-base-100 rounded-lg border border-base-300 text-xs shadow-sm hover:shadow-md transition cursor-pointer">
-                  <Filter size={14} className="text-primary" />
-                  <span className="text-base-content/90 font-medium text-xs">
-                    Filter
-                  </span>
-                </div>
-
+                {/* Send to selected */}
                 {selected.size > 0 && (
                   <button
                     onClick={() =>
                       dispatch(updateUiInstitute({ bulkOffer: { open: true } }))
                     }
-                    className="btn btn-primary gap-3 shadow-lg hover:shadow-xl transition-all text-base"
+                    className="btn btn-primary btn-sm gap-2 text-xs shadow-md"
                   >
-                    <Send size={18} />
+                    <Send size={14} />
                     Send to {selected.size}
                   </button>
                 )}
               </div>
             </div>
+          )}
 
-            {/* Table Results */}
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-24 gap-5 text-base-content/50">
-                <Loader2 size={40} className="animate-spin" />
-                <p className="text-xl font-medium">Searching institutes...</p>
+          {/* Table / States */}
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-3 text-base-content/50">
+              <Loader2 size={32} className="animate-spin text-primary" />
+              <p className="text-sm">Searching institutes…</p>
+            </div>
+          ) : institutes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 rounded-2xl border-2 border-dashed border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Search size={24} className="text-primary" />
               </div>
-            ) : institutes.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 gap-5 text-base-content/50 text-center bg-base-100 border border-base-200 rounded-2xl shadow-md">
-                <Search size={64} className="opacity-40" />
-                <div>
-                  <h3 className="text-3xl font-bold text-base-content mb-3">
-                    No institutes found
-                  </h3>
-                  <p className="text-lg">Try adjusting your filters</p>
-                </div>
+              <div className="text-center">
+                <p className="font-semibold text-base-content">
+                  No institutes found
+                </p>
+                <p className="text-sm text-base-content/50 mt-1">
+                  Try adjusting your filters
+                </p>
               </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Table */}
-                <div className="overflow-x-auto rounded-xl border border-base-200 shadow-sm bg-base-100">
-                  <table className="min-w-full divide-y divide-base-200">
-                    <thead className="bg-base-200/50">
-                      <tr>
-                        <th className="px-6 py-4 text-left w-12">
-                          <button
-                            onClick={toggleAll}
-                            className="btn btn-circle btn-outline btn-xs border-primary text-primary hover:bg-primary/10"
-                          >
-                            {allSelected ? (
-                              <CheckSquare size={16} />
-                            ) : (
-                              <Square size={16} />
-                            )}
-                          </button>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto rounded-xl border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 shadow-sm">
+                <table className="min-w-full divide-y divide-base-200 dark:divide-base-800">
+                  <thead>
+                    <tr className="bg-base-200/60 dark:bg-base-800/60">
+                      <th className="px-4 py-3 w-10">
+                        <button
+                          onClick={toggleAll}
+                          className="w-7 h-7 rounded-md border border-base-300 dark:border-base-600 bg-base-100 dark:bg-base-900 hover:border-primary flex items-center justify-center text-base-content/50 transition-all mx-auto"
+                        >
+                          {allSelected ? (
+                            <CheckSquare size={14} className="text-primary" />
+                          ) : (
+                            <Square size={14} />
+                          )}
+                        </button>
+                      </th>
+                      {[
+                        "Institute Name",
+                        "District",
+                        "Type",
+                        "Ownership",
+                        "Students",
+                        "",
+                      ].map((h) => (
+                        <th
+                          key={h}
+                          className="px-4 py-3 text-left text-xs font-bold text-base-content/60 uppercase tracking-wider"
+                        >
+                          {h}
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-base-content">
-                          Institute Name
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-base-content">
-                          District
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-base-content">
-                          Type
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-base-content">
-                          Ownership
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-base-content">
-                          Students
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-base-content">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-base-200">
-                      {paginatedInstitutes.map((inst) => (
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-base-200 dark:divide-base-800">
+                    {paginatedInstitutes.map((inst) => {
+                      const isSelected = selected.has(inst.institute_id);
+                      return (
                         <tr
                           key={inst.institute_id}
                           onClick={() => toggleSelect(inst.institute_id)}
                           className={clsx(
-                            "hover:bg-base-200/50 transition-colors cursor-pointer",
-                            selected.has(inst.institute_id) && "bg-primary/5",
+                            "cursor-pointer transition-colors duration-150",
+                            isSelected
+                              ? "bg-primary/5 dark:bg-primary/10"
+                              : "hover:bg-base-200/50 dark:hover:bg-base-800/50",
                           )}
                         >
-                          <td className="px-6 py-4">
-                            {selected.has(inst.institute_id) ? (
-                              <CheckSquare size={18} className="text-primary" />
+                          <td className="px-4 py-3 text-center">
+                            {isSelected ? (
+                              <CheckSquare
+                                size={16}
+                                className="text-primary mx-auto"
+                              />
                             ) : (
                               <Square
-                                size={18}
-                                className="text-base-content/40"
+                                size={16}
+                                className="text-base-content/30 mx-auto"
                               />
                             )}
                           </td>
-                          <td className="px-6 py-4 font-medium text-base-content">
-                            {inst.institute_name}
+                          <td className="px-4 py-3">
+                            <span className="text-sm font-semibold text-base-content">
+                              {inst.institute_name}
+                            </span>
                           </td>
-                          <td className="px-6 py-4 text-base-content/80">
-                            <div className="flex items-center gap-2">
-                              <MapPin size={14} />
+                          <td className="px-4 py-3">
+                            <span className="flex items-center gap-1.5 text-sm text-base-content/65">
+                              <MapPin size={12} />
                               {inst.district || "—"}
-                            </div>
+                            </span>
                           </td>
-                          <td className="px-6 py-4 text-base-content/80">
+                          <td className="px-4 py-3 text-sm text-base-content/65">
                             {inst.type || "—"}
                           </td>
-                          <td className="px-6 py-4 text-base-content/80">
+                          <td className="px-4 py-3 text-sm text-base-content/65">
                             {inst.ownership || "—"}
                           </td>
-                          <td className="px-6 py-4 text-base-content/80">
-                            <div className="flex items-center gap-2">
-                              <Users size={14} />
+                          <td className="px-4 py-3">
+                            <span className="flex items-center gap-1.5 text-sm text-base-content/65">
+                              <Users size={12} />
                               {inst.student_count.toLocaleString()}
-                            </div>
+                            </span>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-4 py-3">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -594,103 +587,83 @@ export default function FindInstitutesPage() {
                                   }),
                                 );
                               }}
-                              className="btn btn-ghost btn-xs text-primary hover:bg-primary/10"
                               title="View / Send Offer"
+                              className="w-7 h-7 rounded-md border border-base-300 dark:border-base-700 bg-base-200 dark:bg-base-800 text-base-content/50 hover:border-primary hover:bg-primary hover:text-primary-content flex items-center justify-center transition-all duration-200 mx-auto"
                             >
-                              <Eye size={18} />
+                              <Eye size={13} />
                             </button>
                           </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
-                {/* Pagination Controls */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between bg-base-100 border border-base-200 rounded-xl p-4 shadow-sm">
-                    <button
-                      onClick={() => goToPage(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="btn btn-outline btn-sm gap-2 disabled:opacity-50"
-                    >
-                      <ChevronLeft size={16} />
-                      Previous
-                    </button>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-700 rounded-xl px-4 py-3 shadow-sm">
+                  <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
+                  >
+                    <ChevronLeft size={14} /> Previous
+                  </button>
 
-                    <span className="text-sm text-base-content/70">
-                      Page {currentPage} of {totalPages} ({totalItems}{" "}
-                      institutes)
+                  <span className="text-xs text-base-content/50 font-medium">
+                    Page {currentPage} of {totalPages}
+                    <span className="hidden sm:inline">
+                      {" "}
+                      · {totalItems} institutes
                     </span>
+                  </span>
 
-                    <button
-                      onClick={() => goToPage(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="btn btn-outline btn-sm gap-2 disabled:opacity-50"
-                    >
-                      Next
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+                  <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
+                  >
+                    Next <ChevronRight size={14} />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
-        {/* Success Toast */}
-        {sentSuccess && (
-          <div className="fixed bottom-6 right-6 z-50 animate-slide-up-fade">
-            <div
-              className="
-                flex items-center gap-4 
-                px-6 py-4 rounded-2xl 
-                bg-emerald-50 text-emerald-900 
-                border border-emerald-200/80 
-                shadow-2xl shadow-emerald-900/10 
-                font-medium text-base lg:text-lg
-                transition-all duration-300
-              "
+      {/* ── Success Toast ── */}
+      {sentSuccess && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-success/10 border border-success/25 text-success shadow-xl shadow-success/10 font-medium text-sm">
+            <Send size={16} className="shrink-0" />
+            <span className="font-semibold">Job offers sent successfully!</span>
+            <button
+              onClick={() => setSentSuccess(false)}
+              className="ml-1 hover:opacity-70 transition-opacity"
             >
-              <div className="relative">
-                <Send
-                  size={22}
-                  className="text-emerald-600 animate-pulse-slow"
-                  strokeWidth={2.2}
-                />
-                <div className="absolute inset-0 rounded-full bg-emerald-400/20 animate-ping-slow" />
-              </div>
-
-              <span className="font-semibold">
-                Job offers sent successfully!
-              </span>
-
-              <button
-                onClick={() => setSentSuccess(false)}
-                className="ml-auto text-emerald-700 hover:text-emerald-900 transition-colors"
-              >
-                <X size={18} strokeWidth={2.5} />
-              </button>
-            </div>
+              <X size={15} />
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Bulk Offer Modal */}
-        <OfferModalV2
-          onClose={() => {}}
-          isOpen={findInstituteUi?.bulkOffer?.open ?? false}
-          selectedIds={Array.from(selected)}
-          institutesMap={institutesMap}
-          filters={filters}
-          qualOptions={qualOpts}
-          programOptions={programOpts}
-          streamOptions={streamOpts}
-          onSent={() => {
-            setSentSuccess(true);
-            setSelected(new Set());
-          }}
-        />
-      </div>
+      {/* ── Bulk Offer Modal ── */}
+      <OfferModalV2
+        onClose={() => {}}
+        isOpen={findInstituteUi?.bulkOffer?.open ?? false}
+        selectedIds={Array.from(selected)}
+        institutesMap={institutesMap}
+        filters={filters}
+        qualOptions={qualOpts}
+        programOptions={programOpts}
+        streamOptions={streamOpts}
+        onSent={() => {
+          setSentSuccess(true);
+          setSelected(new Set());
+        }}
+      />
     </div>
   );
 }
