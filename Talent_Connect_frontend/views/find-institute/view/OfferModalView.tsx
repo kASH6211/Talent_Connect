@@ -160,7 +160,7 @@ export function OfferModalV2({
     >
       <div
         className={`
-          relative w-full max-w-2xl max-h-[92vh] flex flex-col
+          relative w-full max-w-3xl max-h-[92vh] flex flex-col
           bg-base-100 dark:bg-base-900
           border border-base-300 dark:border-base-700
           rounded-2xl shadow-2xl overflow-hidden
