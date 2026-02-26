@@ -3,16 +3,23 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch } from "react-redux";
-import { Send, X, Loader2, CalendarClock, Briefcase } from "lucide-react";
+import {
+  Send,
+  X,
+  Loader2,
+  CalendarClock,
+  Briefcase,
+  ChevronDown,
+  ChevronUp,
+  Building2,
+} from "lucide-react";
 
-import api from "@/lib/api"; // adjust path
+import api from "@/lib/api";
 import { AppDispatch } from "@/store/store";
 import { updateUiInstitute } from "@/store/institute";
 import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Types
-───────────────────────────────────────────────────────────────────────────── */
+/* ─── Types ─────────────────────────────────────────────────────────────────── */
 interface Option {
   label: string;
   value: number;
@@ -24,9 +31,7 @@ interface Filters {
   stream_ids: number[];
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Component
-───────────────────────────────────────────────────────────────────────────── */
+/* ─── Component ─────────────────────────────────────────────────────────────── */
 export function OfferModalV2({
   isOpen,
   onClose,
@@ -61,6 +66,7 @@ export function OfferModalV2({
   const [streamIds, setStreamIds] = useState<number[]>(filters.stream_ids);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [showAllInstitutes, setShowAllInstitutes] = useState(false);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -93,6 +99,7 @@ export function OfferModalV2({
     setStreamIds([]);
     setSending(false);
     setError("");
+    setShowAllInstitutes(false);
   };
 
   const handleClose = () => {
@@ -137,470 +144,228 @@ export function OfferModalV2({
     }
   };
 
+  const PREVIEW_COUNT = 4;
+  const previewIds = selectedIds.slice(0, PREVIEW_COUNT);
+  const remainingCount = selectedIds.length - PREVIEW_COUNT;
+
   if (!mounted || !isOpen) return null;
 
   return createPortal(
-    <>
-      <style>{`
-        /* ── Imports ── */
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
-
-        /* ── Tokens ── */
-        .om2-root {
-          --om-primary:       var(--color-primary,       #2563eb);
-          --om-primary-light: var(--color-primary-light, #eff6ff);
-          --om-primary-mid:   var(--color-primary-mid,   #bfdbfe);
-          --om-accent:        var(--color-accent,        #0ea5e9);
-          --om-danger:        var(--color-danger,        #ef4444);
-          --om-surface:       var(--color-surface,       #ffffff);
-          --om-surface-2:     var(--color-surface-2,     #f8fafc);
-          --om-border:        var(--color-border,        #e2e8f0);
-          --om-text:          var(--color-text,          #0f172a);
-          --om-text-muted:    var(--color-text-muted,    #475569);
-          --om-text-subtle:   var(--color-text-subtle,   #64748b);
-          --om-radius:        var(--radius,              12px);
-          --om-shadow:        0 24px 80px rgba(15,23,42,0.14), 0 4px 20px rgba(15,23,42,0.08);
-
-          font-family: 'DM Sans', sans-serif;
-          box-sizing: border-box;
-        }
-        .om2-root *, .om2-root *::before, .om2-root *::after { box-sizing: inherit; }
-
-        /* ── Backdrop ── */
-        @keyframes om2-fade-in  { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes om2-fade-out { from { opacity: 1; } to { opacity: 0; } }
-        @keyframes om2-slide-in {
-          from { opacity: 0; transform: translateY(16px) scale(0.98); }
-          to   { opacity: 1; transform: translateY(0)   scale(1);    }
-        }
-        @keyframes om2-slide-out {
-          from { opacity: 1; transform: translateY(0)   scale(1);    }
-          to   { opacity: 0; transform: translateY(12px) scale(0.98); }
-        }
-
-        .om2-backdrop {
-          position: fixed; inset: 0; z-index: 9999;
-          background: rgba(15,23,42,0.35);
-          backdrop-filter: blur(4px);
-          display: flex; align-items: center; justify-content: center;
-          padding: 16px;
-        }
-        .om2-backdrop[data-open="true"]  { animation: om2-fade-in  0.18s ease both; }
-        .om2-backdrop[data-open="false"] { animation: om2-fade-out 0.18s ease both; }
-
-        /* ── Panel ── */
-        .om2-panel {
-          background: var(--om-surface);
-          border-radius: 20px;
-          box-shadow: var(--om-shadow);
-          width: 100%; max-width: 760px;          /* ← even wider */
-          max-height: 92vh;
-          display: flex; flex-direction: column;
-          border: 1px solid var(--om-border);
-          overflow: hidden;
-          position: relative;
-        }
-        .om2-panel[data-open="true"]  { animation: om2-slide-in 0.22s cubic-bezier(0.16,1,0.3,1) both; }
-        .om2-panel[data-open="false"] { animation: om2-slide-out 0.18s ease both; }
-
-        /* Decorative top stripe */
-        .om2-stripe {
-          height: 4px;
-          background: linear-gradient(90deg, var(--om-primary) 0%, var(--om-accent) 100%);
-          flex-shrink: 0;
-        }
-
-        /* ── Header ── */
-        .om2-header {
-          padding: 26px 30px 22px;
-          border-bottom: 1px solid var(--om-border);
-          flex-shrink: 0;
-        }
-        .om2-hrow {
-          display: flex; align-items: center;
-          justify-content: space-between; gap: 18px;
-          margin-bottom: 18px;
-        }
-        .om2-hleft { display: flex; align-items: center; gap: 18px; }
-
-        .om2-icon {
-          width: 52px; height: 52px;
-          border-radius: 14px;
-          background: var(--om-primary-light);
-          border: 1px solid var(--om-primary-mid);
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .om2-title {
-          // font-family: 'Instrument Serif', serif;
-          font-size: 26px;                    /* bigger & bolder */
-          font-weight: 600;
-          color: var(--om-text);
-          margin: 0 0 4px;
-          line-height: 1.2;
-          letter-spacing: -0.4px;
-        }
-        .om2-subtitle {
-          font-size: 15px;                    /* medium & clear */
-          color: var(--om-text-muted);
-          margin: 0;
-          font-weight: 500;
-        }
-
-        .om2-xbtn {
-          width: 40px; height: 40px;
-          border-radius: 10px;
-          border: 1px solid var(--om-border);
-          background: transparent;
-          color: var(--om-text-muted);
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; flex-shrink: 0;
-          transition: all 0.15s;
-        }
-        .om2-xbtn:hover {
-          background: #fef2f2;
-          border-color: #fecaca;
-          color: var(--om-danger);
-        }
-
-        /* Recipients row */
-        .om2-recip-label {
-          font-size: 12px; font-weight: 700; letter-spacing: 1.2px;
-          text-transform: uppercase; color: var(--om-text-muted);
-          margin-bottom: 12px;
-        }
-        .om2-chips { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-
-        .om2-count-badge {
-          display: inline-flex; align-items: center; gap: 8px;
-          padding: 6px 14px 6px 6px;
-          border-radius: 24px;
-          background: var(--om-primary-light);
-          border: 1px solid var(--om-primary-mid);
-          font-size: 14px; font-weight: 600; color: var(--om-primary);
-        }
-        .om2-count-num {
-          width: 26px; height: 26px;
-          border-radius: 8px;
-          background: var(--om-primary);
-          color: #fff;
-          font-size: 13px; font-weight: 700;
-          display: flex; align-items: center; justify-content: center;
-        }
-
-        .om2-chip {
-          display: inline-flex; align-items: center; gap: 6px;
-          padding: 5px 14px;
-          border-radius: 10px;
-          background: var(--om-surface-2);
-          border: 1px solid var(--om-border);
-          font-size: 14px; color: var(--om-text-muted);
-          font-weight: 500;
-        }
-        .om2-chip-dot {
-          width: 7px; height: 7px; border-radius: 50%;
-          background: var(--om-primary); flex-shrink: 0;
-        }
-        .om2-chip-more { color: var(--om-text-muted); font-style: italic; }
-
-        /* ── Body ── */
-        .om2-body {
-          flex: 1; overflow-y: auto; padding: 30px 32px;
-          scrollbar-width: thin;
-          scrollbar-color: var(--om-border) transparent;
-        }
-        .om2-body::-webkit-scrollbar { width: 6px; }
-        .om2-body::-webkit-scrollbar-thumb { background: var(--om-border); border-radius: 6px; }
-
-        /* Section */
-        .om2-sec { margin-bottom: 32px; }
-        .om2-sec-title {
-          font-size: 13px; font-weight: 700; letter-spacing: 1.3px;
-          text-transform: uppercase; color: var(--om-text-muted);
-          margin-bottom: 18px;
-          display: flex; align-items: center; gap: 12px;
-        }
-        .om2-sec-title::after {
-          content: ''; flex: 1; height: 1px; background: var(--om-border);
-        }
-
-        /* Field */
-        .om2-field { margin-bottom: 20px; }
-        .om2-lbl {
-          display: block;
-          font-size: 14px; font-weight: 600;        /* darker & medium */
-          color: var(--om-text);
-          margin-bottom: 8px;
-        }
-        .om2-req { color: var(--om-danger); margin-left: 3px; }
-
-        .om2-inp, .om2-ta {
-          width: 100%;
-          background: var(--om-surface);
-          border: 1px solid var(--om-border);
-          border-radius: 12px;
-          padding: 13px 18px;
-          font-size: 15px;                          /* readable medium size */
-          font-family: 'DM Sans', sans-serif;
-          color: var(--om-text);
-          outline: none;
-          transition: border-color 0.16s, box-shadow 0.16s, background 0.16s;
-        }
-        .om2-inp::placeholder, .om2-ta::placeholder { 
-          color: #9ca3af; 
-          font-size: 15px; 
-        }
-        .om2-inp:hover:not(:focus), .om2-ta:hover:not(:focus) {
-          border-color: #cbd5e1;
-        }
-        .om2-inp:focus, .om2-ta:focus {
-          border-color: var(--om-primary);
-          box-shadow: 0 0 0 3px color-mix(in srgb, var(--om-primary) 16%, transparent);
-          background: white;
-        }
-        .om2-ta { resize: vertical; min-height: 110px; line-height: 1.6; }
-        .om2-inp[type="number"] { -moz-appearance: textfield; }
-        .om2-inp[type="number"]::-webkit-inner-spin-button,
-        .om2-inp[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
-        .om2-inp[type="date"]::-webkit-calendar-picker-indicator {
-          cursor: pointer; opacity: 0.6;
-        }
-
-        /* Prefix wrapper */
-        .om2-pfx-wrap { position: relative; }
-        .om2-pfx {
-          position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-          font-size: 15px; font-weight: 600; color: var(--om-text-muted);
-          pointer-events: none;
-        }
-        .om2-pfx-wrap .om2-inp { padding-left: 38px; }
-
-        /* 3-col grid */
-        .om2-g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-
-        /* Date */
-        .om2-date-wrap { position: relative; }
-        .om2-date-icon {
-          position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-          color: var(--om-text-muted); pointer-events: none;
-        }
-        .om2-date-wrap .om2-inp { padding-right: 48px; }
-
-        /* Error */
-        .om2-err {
-          display: flex; align-items: center; gap: 12px;
-          padding: 14px 18px;
-          border-radius: 12px;
-          background: #fef2f2; border: 1px solid #fecaca;
-          color: #b91c1c; font-size: 15px;
-          margin-bottom: 24px;
-        }
-        .om2-err-ic {
-          width: 26px; height: 26px; border-radius: 50%;
-          background: #fee2e2;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-        }
-
-        /* ── Footer ── */
-        .om2-footer {
-          padding: 20px 30px;
-          border-top: 1px solid var(--om-border);
-          background: var(--om-surface-2);
-          display: flex; align-items: center; justify-content: space-between;
-          gap: 16px; flex-shrink: 0; flex-wrap: wrap;
-        }
-        .om2-note {
-          font-size: 14px; color: var(--om-text-muted);
-          display: flex; align-items: center; gap: 10px;
-        }
-        .om2-actions { display: flex; align-items: center; gap: 14px; }
-
-        .om2-cancel {
-          padding: 11px 22px;
-          border-radius: 10px;
-          border: 1px solid var(--om-border);
-          background: var(--om-surface);
-          color: var(--om-text);
-          font-size: 15px; font-weight: 500;
-          font-family: 'DM Sans', sans-serif;
-          cursor: pointer;
-          transition: all 0.15s;
-        }
-        .om2-cancel:hover:not(:disabled) {
-          background: var(--om-surface-2);
-          border-color: #cbd5e1;
-        }
-        .om2-cancel:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        .om2-send {
-          display: flex; align-items: center; gap: 10px;
-          padding: 12px 26px;
-          border-radius: 12px; border: none;
-          background: var(--om-primary);
-          color: #fff;
-          font-size: 15px; font-weight: 600;
-          font-family: 'DM Sans', sans-serif;
-          cursor: pointer;
-          transition: all 0.15s;
-          box-shadow: 0 4px 16px color-mix(in srgb, var(--om-primary) 40%, transparent);
-        }
-        .om2-send:hover:not(:disabled) {
-          opacity: 0.92; transform: translateY(-1.5px);
-          box-shadow: 0 8px 24px color-mix(in srgb, var(--om-primary) 45%, transparent);
-        }
-        .om2-send:active:not(:disabled) { transform: translateY(0); }
-        .om2-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-
-        @keyframes om2-spin { to { transform: rotate(360deg); } }
-        .om2-spin { animation: om2-spin 0.75s linear infinite; }
-
-        /* ── Responsive ── */
-        @media (max-width: 520px) {
-          .om2-panel { border-radius: 16px; }
-          .om2-header, .om2-body, .om2-footer { padding-left: 20px; padding-right: 20px; }
-          .om2-g3 { grid-template-columns: 1fr 1fr; }
-          .om2-g3 .om2-field:last-child { grid-column: span 2; }
-          .om2-title { font-size: 22px; }
-        }
-      `}</style>
-
+    <div
+      className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-opacity duration-200 ${visible ? "opacity-100" : "opacity-0"}`}
+      style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
+    >
       <div
-        className="om2-root om2-backdrop"
-        data-open={String(visible)}
-        onMouseDown={(e) => {
-          if (e.target === e.currentTarget) handleClose();
-        }}
+        className={`
+          relative w-full max-w-3xl max-h-[92vh] flex flex-col
+          bg-base-100 dark:bg-base-900
+          border border-base-300 dark:border-base-700
+          rounded-2xl shadow-2xl overflow-hidden
+          transition-all duration-200
+          ${visible ? "translate-y-0 scale-100 opacity-100" : "translate-y-4 scale-[0.98] opacity-0"}
+        `}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="om2-title"
       >
-        <div
-          className="om2-panel"
-          data-open={String(visible)}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="om2-title"
-        >
-          <div className="om2-stripe" />
+        {/* Top accent stripe */}
+        <div className="h-1 w-full bg-gradient-to-r from-primary to-secondary flex-shrink-0" />
 
-          <div className="om2-header">
-            <div className="om2-hrow">
-              <div className="om2-hleft">
-                <div className="om2-icon">
-                  <Briefcase size={24} color="var(--om-primary)" />
-                </div>
-                <div>
-                  <h2 className="om2-title" id="om2-title">
-                    Send Bulk Job Offer
-                  </h2>
-                  <p className="om2-subtitle">
-                    Dispatch to all selected institutes at once
-                  </p>
-                </div>
+        {/* ── Header ── */}
+        <div className="flex-shrink-0 px-6 pt-5 pb-5 border-b border-base-200 dark:border-base-800">
+          <div className="flex items-start justify-between gap-4 mb-5">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                <Briefcase size={20} className="text-primary" />
               </div>
-              <button
-                className="om2-xbtn"
-                onClick={handleClose}
-                aria-label="Close modal"
-              >
-                <X size={16} />
-              </button>
+              <div>
+                <h2
+                  id="om2-title"
+                  className="text-xl font-bold text-base-content leading-tight tracking-tight"
+                >
+                  Send Bulk Job Offer
+                </h2>
+                <p className="text-sm text-base-content/50 mt-0.5">
+                  Dispatch to all selected institutes at once
+                </p>
+              </div>
             </div>
+            <button
+              onClick={handleClose}
+              aria-label="Close"
+              className="w-8 h-8 rounded-lg border border-base-300 dark:border-base-700 bg-base-200 dark:bg-base-800 text-base-content/50 hover:border-error/40 hover:bg-error/10 hover:text-error flex items-center justify-center transition-all duration-200 flex-shrink-0"
+            >
+              <X size={15} />
+            </button>
+          </div>
 
-            <div className="om2-recip-label">Recipients</div>
-            <div className="om2-chips">
-              <span className="om2-count-badge">
-                <span className="om2-count-num">{selectedIds.length}</span>
-                institute{selectedIds.length !== 1 ? "s" : ""}
-              </span>
-              {selectedIds.slice(0, 5).map((id) => (
-                <span key={id} className="om2-chip">
-                  <span className="om2-chip-dot" />
+          {/* Recipients */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-base-content/50 mb-2.5">
+              Recipients · {selectedIds.length} institute
+              {selectedIds.length !== 1 ? "s" : ""}
+            </p>
+
+            {/* Preview chips (always shown) */}
+            <div className="flex flex-wrap gap-2">
+              {previewIds.map((id) => (
+                <span
+                  key={id}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 text-xs font-medium text-base-content/80"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                   {institutesMap.get(id) || `#${id}`}
                 </span>
               ))}
-              {selectedIds.length > 5 && (
-                <span className="om2-chip om2-chip-more">
-                  +{selectedIds.length - 5} more
-                </span>
+
+              {/* Toggle button for remaining */}
+              {remainingCount > 0 && (
+                <button
+                  onClick={() => setShowAllInstitutes((v) => !v)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
+                >
+                  {showAllInstitutes ? (
+                    <>
+                      <ChevronUp size={12} /> Show less
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown size={12} /> +{remainingCount} more
+                    </>
+                  )}
+                </button>
               )}
             </div>
+
+            {/* Expanded list */}
+            {showAllInstitutes && remainingCount > 0 && (
+              <div className="mt-3 p-3 rounded-xl bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 max-h-40 overflow-y-auto">
+                <div className="flex flex-wrap gap-2">
+                  {selectedIds.slice(PREVIEW_COUNT).map((id) => (
+                    <span
+                      key={id}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-700 text-xs font-medium text-base-content/70"
+                    >
+                      <Building2
+                        size={10}
+                        className="text-primary flex-shrink-0"
+                      />
+                      {institutesMap.get(id) || `#${id}`}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+        </div>
 
-          <div className="om2-body">
-            <div className="om2-sec">
-              <div className="om2-sec-title">Job Details</div>
+        {/* ── Scrollable Body ── */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+          {/* Job Details */}
+          <section>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-base-content/50 mb-3 flex items-center gap-3 after:flex-1 after:h-px after:bg-base-200 dark:after:bg-base-800 after:content-['']">
+              Job Details
+            </p>
 
-              <div className="om2-field">
-                <label className="om2-lbl">
-                  Job Title<span className="om2-req">*</span>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-base-content/70 mb-1.5 ml-0.5">
+                  Job Title <span className="text-error">*</span>
                 </label>
                 <input
                   type="text"
-                  className="om2-inp"
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
                   placeholder="e.g. Software Engineer, Marketing Lead"
+                  className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-4 py-3 text-sm text-base-content placeholder:text-base-content/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </div>
-
-              <div className="om2-field">
-                <label className="om2-lbl">Description</label>
+              <div>
+                <label className="block text-xs font-semibold text-base-content/70 mb-1.5 ml-0.5">
+                  Description
+                </label>
                 <textarea
-                  className="om2-ta"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Role overview, responsibilities, skills required..."
+                  placeholder="Role overview, responsibilities, skills required…"
+                  rows={4}
+                  className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-4 py-3 text-sm text-base-content placeholder:text-base-content/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-y min-h-[100px] leading-relaxed"
                 />
               </div>
             </div>
+          </section>
 
-            <div className="om2-sec">
-              <div className="om2-sec-title">Compensation & Openings</div>
-              <div className="om2-g3">
-                <div className="om2-field">
-                  <label className="om2-lbl">Min Salary</label>
-                  <div className="om2-pfx-wrap">
-                    <span className="om2-pfx">₹</span>
-                    <input
-                      type="number"
-                      className="om2-inp"
-                      value={salaryMin}
-                      onChange={(e) => setSalaryMin(e.target.value)}
-                      placeholder="300000"
-                    />
-                  </div>
-                </div>
-                <div className="om2-field">
-                  <label className="om2-lbl">Max Salary</label>
-                  <div className="om2-pfx-wrap">
-                    <span className="om2-pfx">₹</span>
-                    <input
-                      type="number"
-                      className="om2-inp"
-                      value={salaryMax}
-                      onChange={(e) => setSalaryMax(e.target.value)}
-                      placeholder="600000"
-                    />
-                  </div>
-                </div>
-                <div className="om2-field">
-                  <label className="om2-lbl">No. of Posts</label>
+          {/* Compensation & Openings */}
+          <section>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-base-content/50 mb-3 flex items-center gap-3 after:flex-1 after:h-px after:bg-base-200 dark:after:bg-base-800 after:content-['']">
+              Compensation & Openings
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              {/* Min Salary */}
+              <div>
+                <label className="block text-xs font-semibold text-base-content/70 mb-1.5 ml-0.5">
+                  Min Salary
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-base-content/50 pointer-events-none">
+                    ₹
+                  </span>
                   <input
                     type="number"
-                    className="om2-inp"
-                    value={numberOfPosts}
-                    onChange={(e) => setNumberOfPosts(e.target.value)}
-                    placeholder="5"
+                    value={salaryMin}
+                    onChange={(e) => setSalaryMin(e.target.value)}
+                    placeholder="300000"
+                    className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl pl-8 pr-4 py-3 text-sm text-base-content placeholder:text-base-content/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
+              {/* Max Salary */}
+              <div>
+                <label className="block text-xs font-semibold text-base-content/70 mb-1.5 ml-0.5">
+                  Max Salary
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-base-content/50 pointer-events-none">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    value={salaryMax}
+                    onChange={(e) => setSalaryMax(e.target.value)}
+                    placeholder="600000"
+                    className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl pl-8 pr-4 py-3 text-sm text-base-content placeholder:text-base-content/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+              </div>
+              {/* No. of Posts */}
+              <div>
+                <label className="block text-xs font-semibold text-base-content/70 mb-1.5 ml-0.5">
+                  Posts
+                </label>
+                <input
+                  type="number"
+                  value={numberOfPosts}
+                  onChange={(e) => setNumberOfPosts(e.target.value)}
+                  placeholder="5"
+                  className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-4 py-3 text-sm text-base-content placeholder:text-base-content/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
             </div>
+          </section>
 
-            <div className="om2-sec">
-              <div className="om2-sec-title">Candidate Requirements</div>
-
-              <div className="om2-field">
-                <label className="om2-lbl">Qualifications</label>
+          {/* Candidate Requirements */}
+          <section>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-base-content/50 mb-3 flex items-center gap-3 after:flex-1 after:h-px after:bg-base-200 dark:after:bg-base-800 after:content-['']">
+              Candidate Requirements
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-base-content/70 mb-1.5 ml-0.5">
+                  Qualifications
+                </label>
                 <MultiSelectDropdown
                   label="Qualification"
                   options={qualOptions}
@@ -609,8 +374,10 @@ export function OfferModalV2({
                   placeholder="Any qualification"
                 />
               </div>
-              <div className="om2-field">
-                <label className="om2-lbl">Programs</label>
+              <div>
+                <label className="block text-xs font-semibold text-base-content/70 mb-1.5 ml-0.5">
+                  Programs
+                </label>
                 <MultiSelectDropdown
                   label="Program"
                   options={programOptions}
@@ -619,8 +386,10 @@ export function OfferModalV2({
                   placeholder="Any program"
                 />
               </div>
-              <div className="om2-field">
-                <label className="om2-lbl">Streams / Branches</label>
+              <div>
+                <label className="block text-xs font-semibold text-base-content/70 mb-1.5 ml-0.5">
+                  Streams / Branches
+                </label>
                 <MultiSelectDropdown
                   label="Stream"
                   options={streamOptions}
@@ -630,67 +399,74 @@ export function OfferModalV2({
                 />
               </div>
             </div>
+          </section>
 
-            <div className="om2-sec">
-              <div className="om2-sec-title">Timeline</div>
-              <div className="om2-field">
-                <label className="om2-lbl">Last Date to Apply</label>
-                <div className="om2-date-wrap">
-                  <input
-                    type="date"
-                    className="om2-inp"
-                    value={lastDate}
-                    onChange={(e) => setLastDate(e.target.value)}
-                  />
-                  <CalendarClock size={16} className="om2-date-icon" />
-                </div>
+          {/* Timeline */}
+          <section>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-base-content/50 mb-3 flex items-center gap-3 after:flex-1 after:h-px after:bg-base-200 dark:after:bg-base-800 after:content-['']">
+              Timeline
+            </p>
+            <div>
+              <label className="block text-xs font-semibold text-base-content/70 mb-1.5 ml-0.5">
+                Last Date to Apply
+              </label>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={lastDate}
+                  onChange={(e) => setLastDate(e.target.value)}
+                  className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-4 py-3 pr-12 text-sm text-base-content focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                />
+                <CalendarClock
+                  size={15}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-base-content/40 pointer-events-none"
+                />
               </div>
             </div>
+          </section>
 
-            {error && (
-              <div className="om2-err">
-                <div className="om2-err-ic">
-                  <X size={13} color="#b91c1c" />
-                </div>
-                {error}
-              </div>
-            )}
-          </div>
+          {/* Error */}
+          {error && (
+            <div className="flex items-center gap-2.5 bg-error/10 border border-error/25 text-error text-sm px-4 py-3 rounded-xl">
+              <X size={15} className="flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+        </div>
 
-          <div className="om2-footer">
-            <div className="om2-note">
-              <Send size={13} />
-              Delivered instantly to all institutes
-            </div>
-            <div className="om2-actions">
-              <button
-                className="om2-cancel"
-                onClick={handleClose}
-                disabled={sending}
-              >
-                Cancel
-              </button>
-              <button
-                className="om2-send"
-                onClick={handleSend}
-                disabled={sending}
-              >
-                {sending ? (
-                  <>
-                    <Loader2 size={16} className="om2-spin" /> Sending...
-                  </>
-                ) : (
-                  <>
-                    <Send size={16} /> Send to {selectedIds.length} institute
-                    {selectedIds.length !== 1 ? "s" : ""}
-                  </>
-                )}
-              </button>
-            </div>
+        {/* ── Footer ── */}
+        <div className="flex-shrink-0 flex items-center justify-between gap-4 px-6 py-4 border-t border-base-200 dark:border-base-800 bg-base-200/50 dark:bg-base-800/50">
+          <p className="text-xs text-base-content/50 flex items-center gap-1.5 hidden sm:flex">
+            <Send size={12} />
+            Delivered instantly to all institutes
+          </p>
+          <div className="flex items-center gap-2.5 ml-auto">
+            <button
+              onClick={handleClose}
+              disabled={sending}
+              className="px-4 h-9 rounded-lg border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 text-sm font-medium text-base-content hover:bg-base-200 dark:hover:bg-base-800 transition-colors disabled:opacity-40"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSend}
+              disabled={sending}
+              className="h-9 px-5 rounded-lg bg-primary hover:brightness-110 text-primary-content text-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+            >
+              {sending ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" /> Sending…
+                </>
+              ) : (
+                <>
+                  <Send size={15} /> Send to {selectedIds.length}
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
-    </>,
+    </div>,
     document.body,
   );
 }

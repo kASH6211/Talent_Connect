@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react"; // ← add this import
 import {
   X,
   DollarSign,
@@ -12,6 +13,7 @@ import {
   CalendarClock,
   Mail,
   Briefcase,
+  LucideIcon,
 } from "lucide-react";
 
 interface Offer {
@@ -50,119 +52,108 @@ export default function OfferViewModal({
 }: OfferViewModalProps) {
   if (!open || !offer) return null;
 
-  const formatDate = (d?: string) => {
-    if (!d) return "—";
-    return new Date(d).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Close only if clicked directly on the backdrop (not on modal content)
+    if (e.target === e.currentTarget) {
+      setOpen(false);
+    }
   };
+
+  const formatDate = (d?: string) =>
+    d
+      ? new Date(d).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "—";
 
   const formatSalary = () => {
-    const toNumber = (val?: number | string) => (val ? Number(val) : null);
+    const min = offer.salary_min ? Number(offer.salary_min) : null;
+    const max = offer.salary_max ? Number(offer.salary_max) : null;
 
-    const min = toNumber(offer.salary_min);
-    const max = toNumber(offer.salary_max);
-
-    const fmt = (n: number) => `₹${(n / 100000).toFixed(1)} LPA`;
-
-    if (min && max) return `${fmt(min)} – ${fmt(max)}`;
-    if (min) return `From ${fmt(min)}`;
-    if (max) return `Up to ${fmt(max)}`;
-    return "Not disclosed";
+    if (min === null && max === null) return "Not disclosed";
+    if (min !== null && max !== null) {
+      return `₹${(min / 100000).toFixed(1)} – ₹${(max / 100000).toFixed(1)} LPA`;
+    }
+    if (min !== null) return `From ₹${(min / 100000).toFixed(1)} LPA`;
+    return `Up to ₹${(max! / 100000).toFixed(1)} LPA`;
   };
 
-  const splitList = (value?: string) =>
-    value ? value.split(",").map((v) => v.trim()) : [];
-
-  const qualifications = splitList(offer.required_qualification_ids);
-  const programs = splitList(offer.required_program_ids);
-  const streams = splitList(offer.required_stream_ids);
-
-  const statusStyles = {
+  const statusStyles: Record<
+    string,
+    { bg: string; text: string; icon: LucideIcon }
+  > = {
     Pending: {
-      bg: "bg-amber-50 text-amber-800 border-amber-200",
+      bg: "bg-amber-100",
+      text: "text-amber-800",
       icon: Clock,
-      accent: "border-l-4 border-amber-400",
     },
     Accepted: {
-      bg: "bg-emerald-50 text-emerald-800 border-emerald-200",
+      bg: "bg-emerald-100",
+      text: "text-emerald-800",
       icon: CheckCircle2,
-      accent: "border-l-4 border-emerald-500",
     },
     Rejected: {
-      bg: "bg-rose-50 text-rose-800 border-rose-200",
+      bg: "bg-rose-100",
+      text: "text-rose-800",
       icon: XCircle,
-      accent: "border-l-4 border-rose-500",
     },
   };
 
-  const StatusConfig = statusStyles[
-    offer.status as keyof typeof statusStyles
-  ] || {
-    bg: "bg-gray-50 text-gray-800 border-gray-200",
+  const defaultStatus = {
+    bg: "bg-gray-100",
+    text: "text-gray-700",
     icon: Clock,
-    accent: "border-l-4 border-gray-400",
   };
 
+  const StatusConfig = statusStyles[offer.status] ?? defaultStatus;
   const StatusIcon = StatusConfig.icon;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">
-      {/* Modal Content */}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={handleBackdropClick} // ← added
+    >
       <div
+        ref={modalRef} // ← optional, but good practice
         className="
-          relative w-full max-w-2xl lg:max-w-4xl 
-          bg-white rounded-2xl sm:rounded-3xl 
-          shadow-2xl overflow-hidden
-          max-h-[92vh] overflow-y-auto
-          animate-in fade-in zoom-in-95 duration-300
-          border border-gray-200
+          relative w-full max-w-lg sm:max-w-xl md:max-w-2xl
+          bg-white rounded-xl shadow-xl overflow-hidden
+          max-h-[90vh] overflow-y-auto
         "
       >
-        {/* Close Button */}
+        {/* Close button */}
         <button
           onClick={() => setOpen(false)}
-          className="
-            absolute top-4 right-4 sm:top-6 sm:right-6 
-            p-3 rounded-full 
-            bg-white/90 hover:bg-gray-100 
-            text-gray-700 hover:text-gray-900 
-            shadow-md hover:shadow-lg transition-all z-10
-          "
+          className="absolute top-3 right-3 p-2 rounded-full bg-white/90 hover:bg-gray-100 text-gray-600 hover:text-gray-900 z-10"
         >
-          <X size={22} strokeWidth={2.5} />
+          <X size={20} />
         </button>
 
         {/* Header */}
-        <div className="px-6 pt-8 pb-6 sm:px-10 sm:pt-10 border-b bg-gradient-to-b from-gray-50 to-white">
-          <div className="flex items-start gap-5">
-            <div
-              className="
-                flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl 
-                bg-gradient-to-br from-indigo-500 to-indigo-700 
-                flex items-center justify-center shadow-lg ring-1 ring-indigo-400/30
-              "
-            >
-              <Briefcase size={32} className="text-white" strokeWidth={1.8} />
+        <div className="px-5 sm:px-7 pt-6 pb-4 border-b bg-gray-50/70">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center">
+              <Briefcase size={24} className="text-white" />
             </div>
 
             <div className="flex-1 min-w-0">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight leading-tight">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
                 {offer.job_title}
               </h2>
 
-              <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-3 text-gray-700 text-base sm:text-lg">
-                <div className="flex items-center gap-2.5 font-medium">
-                  <Building2 size={18} className="text-indigo-600" />
-                  {offer.industry?.industry_name || "Industry Partner"}
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
+                <div className="flex items-center gap-1.5">
+                  <Building2 size={16} />
+                  {offer.industry?.industry_name || "Company"}
                 </div>
-
                 {offer.industry?.emailId && (
-                  <div className="flex items-center gap-2.5 text-base">
-                    <Mail size={18} className="text-gray-600" />
-                    <span className="font-mono text-gray-700 truncate max-w-[260px]">
+                  <div className="flex items-center gap-1.5">
+                    <Mail size={16} />
+                    <span className="font-mono truncate max-w-[220px]">
                       {offer.industry.emailId}
                     </span>
                   </div>
@@ -172,101 +163,69 @@ export default function OfferViewModal({
           </div>
         </div>
 
-        {/* Body */}
-        <div className="p-6 sm:p-8 lg:p-10 space-y-10">
-          {/* Key Info Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 lg:gap-6">
-            <InfoCard
-              icon={<DollarSign size={20} className="text-emerald-600" />}
-              label="Salary Package"
-              value={formatSalary()}
-              accent="border-l-4 border-emerald-500"
-            />
-            <InfoCard
-              icon={<Users size={20} className="text-indigo-600" />}
-              label="Positions"
-              value={offer.number_of_posts?.toString() || "—"}
-              accent="border-l-4 border-indigo-500"
-            />
-            <InfoCard
-              icon={<CalendarDays size={20} className="text-amber-600" />}
-              label="Offered On"
-              value={formatDate(offer.offer_date)}
-              accent="border-l-4 border-amber-500"
-            />
-            <InfoCard
-              icon={<CalendarClock size={20} className="text-purple-600" />}
-              label="Apply By"
-              value={formatDate(offer.last_date)}
-              accent="border-l-4 border-purple-500"
-            />
-          </div>
+        {/* Quick stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-5 sm:px-7 py-5 border-b">
+          <QuickStat
+            icon={DollarSign}
+            label="Salary"
+            value={formatSalary()}
+            color="text-emerald-700"
+          />
+          <QuickStat
+            icon={Users}
+            label="Positions"
+            value={offer.number_of_posts?.toString() ?? "—"}
+            color="text-indigo-700"
+          />
+          <QuickStat
+            icon={CalendarDays}
+            label="Offered"
+            value={formatDate(offer.offer_date)}
+            color="text-amber-700"
+          />
+          <QuickStat
+            icon={CalendarClock}
+            label="Apply by"
+            value={formatDate(offer.last_date)}
+            color="text-purple-700"
+          />
+        </div>
 
-          {/* Job Description */}
+        {/* Main content */}
+        <div className="p-5 sm:p-7 space-y-7">
+          {/* Description */}
           {offer.job_description && (
-            <div className="space-y-4 bg-gray-50/70 rounded-2xl p-6 lg:p-8 border border-gray-200">
-              <h3 className="text-xl lg:text-2xl font-semibold text-gray-900 flex items-center gap-3">
-                <Briefcase size={22} className="text-indigo-600" />
-                Job Description
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Briefcase size={18} className="text-indigo-600" />
+                Description
               </h3>
-              <div className="prose prose-base sm:prose-lg text-gray-800 leading-relaxed max-w-none">
+              <div className="text-gray-700 text-sm sm:text-base leading-relaxed whitespace-pre-line">
                 {offer.job_description}
               </div>
             </div>
           )}
 
-          {/* Requirements Grid */}
-          {/* {(qualifications.length > 0 ||
-            programs.length > 0 ||
-            streams.length > 0) && (
-            <div className="grid sm:grid-cols-3 gap-6">
-              {qualifications.length > 0 && (
-                <RequirementSection
-                  title="Required Qualifications"
-                  items={qualifications}
-                  accent="border-l-4 border-indigo-500"
-                />
-              )}
-              {programs.length > 0 && (
-                <RequirementSection
-                  title="Required Programs"
-                  items={programs}
-                  accent="border-l-4 border-purple-500"
-                />
-              )}
-              {streams.length > 0 && (
-                <RequirementSection
-                  title="Required Streams / Branches"
-                  items={streams}
-                  accent="border-l-4 border-blue-500"
-                />
-              )}
-            </div>
-          )} */}
-
-          {/* Footer / Status & Actions */}
-          <div className="pt-8 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div
-                className={`
-                  inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-base font-medium border shadow-sm
-                  ${StatusConfig.bg} ${StatusConfig.accent}
-                `}
-              >
-                <StatusIcon size={18} />
-                {offer.status}
-              </div>
+          {/* Status & Actions */}
+          <div className="pt-4 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <div
+              className={`
+                inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium
+                ${StatusConfig.bg} ${StatusConfig.text}
+              `}
+            >
+              <StatusIcon size={16} />
+              {offer.status}
             </div>
 
             {offer.status === "Pending" && (
-              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <button
                   onClick={onReject}
                   className="
-                    flex-1 sm:flex-none px-8 py-3 rounded-xl font-semibold text-base
-                    bg-rose-600 hover:bg-rose-700 text-white 
-                    transition-all shadow-md hover:shadow-lg
-                    disabled:opacity-60 disabled:cursor-not-allowed
+                    px-6 py-2.5 rounded-lg font-medium
+                    bg-rose-600 hover:bg-rose-700 text-white
+                    transition-colors
                   "
                 >
                   Reject Offer
@@ -275,10 +234,9 @@ export default function OfferViewModal({
                 <button
                   onClick={onAccept}
                   className="
-                    flex-1 sm:flex-none px-8 py-3 rounded-xl font-semibold text-base
-                    bg-indigo-600 hover:bg-indigo-700 text-white 
-                    transition-all shadow-md hover:shadow-lg
-                    disabled:opacity-60 disabled:cursor-not-allowed
+                    px-6 py-2.5 rounded-lg font-medium
+                    bg-indigo-600 hover:bg-indigo-700 text-white
+                    transition-colors
                   "
                 >
                   Accept Offer
@@ -292,64 +250,25 @@ export default function OfferViewModal({
   );
 }
 
-function InfoCard({
-  icon,
-  label,
-  value,
-  accent = "",
-}: {
-  icon: React.ReactNode;
+interface QuickStatProps {
+  icon: LucideIcon;
   label: string;
   value: string;
-  accent?: string;
-}) {
-  return (
-    <div
-      className={`
-        bg-white border border-gray-200 rounded-xl p-5 
-        hover:shadow-md transition-all duration-200
-        ${accent}
-      `}
-    >
-      <div className="flex items-center gap-3 text-sm text-gray-600 font-medium uppercase tracking-wide mb-2">
-        {icon}
-        {label}
-      </div>
-      <div className="text-lg lg:text-xl font-semibold text-gray-900">
-        {value}
-      </div>
-    </div>
-  );
+  color: string;
 }
 
-function RequirementSection({
-  title,
-  items,
-  accent = "",
-}: {
-  title: string;
-  items: string[];
-  accent?: string;
-}) {
+function QuickStat({ icon: Icon, label, value, color }: QuickStatProps) {
   return (
-    <div
-      className={`
-        bg-white rounded-2xl p-6 lg:p-7 
-        border border-gray-200 shadow-sm hover:shadow-md transition-all
-        ${accent}
-      `}
-    >
-      <h4 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-200/70">
-        {title}
-      </h4>
-      <ul className="space-y-3 text-base lg:text-lg text-gray-800">
-        {items.map((item, i) => (
-          <li key={i} className="flex items-start gap-3">
-            <span className="mt-1.5 h-2 w-2 rounded-full bg-indigo-500 flex-shrink-0" />
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
+    <div className="text-center sm:text-left">
+      <div
+        className={`flex items-center justify-center sm:justify-start gap-1.5 text-sm font-medium ${color}`}
+      >
+        <Icon size={16} />
+        {label}
+      </div>
+      <div className="mt-0.5 text-base sm:text-lg font-semibold text-gray-900">
+        {value}
+      </div>
     </div>
   );
 }
