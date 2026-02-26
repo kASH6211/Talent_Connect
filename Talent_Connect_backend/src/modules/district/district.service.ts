@@ -10,7 +10,11 @@ export class DistrictService {
     private readonly repo: Repository<District>,
   ) { }
 
-  findAll(stateId?: number) { return this.repo.find({ where: stateId ? { lgdstateid: stateId } as any : {} }); }
+  findAll(stateId?: number) {
+    return this.repo.find({
+      where: stateId ? { lgdstateid: stateId, is_active: 'Y' } as any : { is_active: 'Y' } as any
+    });
+  }
 
   async findOne(id: number) {
     const item = await this.repo.findOne({ where: { districtid: id } as any });

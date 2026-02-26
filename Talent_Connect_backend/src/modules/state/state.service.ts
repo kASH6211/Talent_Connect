@@ -8,9 +8,13 @@ export class StateService {
   constructor(
     @InjectRepository(State)
     private readonly repo: Repository<State>,
-  ) {}
+  ) { }
 
-  findAll() { return this.repo.find(); }
+  findAll() {
+    return this.repo.find({
+      where: { is_active: 'Y' } as any
+    });
+  }
 
   async findOne(id: number) {
     const item = await this.repo.findOne({ where: { stateid: id } as any });
