@@ -17,6 +17,8 @@ import {
   MailCheck,
   XCircle,
   Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -415,10 +417,76 @@ const styles = `
     gap: 8px;
   }
 
+  /* Pagination Styles */
+  .sol-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 32px;
+    padding: 24px 0;
+  }
+  .sol-pagination-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(0,0,0,0.08);
+    background: #fff;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .sol-pagination-btn:hover:not(:disabled) {
+    background: #6366f1;
+    color: #fff;
+    border-color: #6366f1;
+    transform: translateY(-1px);
+  }
+  .sol-pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .sol-pagination-info {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 500;
+    min-width: 100px;
+    text-align: center;
+  }
+  .sol-pagination-numbers {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sol-page-num {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+  }
+  .sol-page-num:hover { background: rgba(99,102,241,0.08); }
+  .sol-page-num.active {
+    background: #6366f1;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+  }
+
   @media (max-width: 640px) {
     .sol-page-title { font-size: 24px; }
     .sol-stat-count { font-size: 28px; }
     .sol-table th, .sol-table td { padding: 12px 16px; }
+    .sol-pagination { flex-wrap: wrap; gap: 8px; }
   }
 `;
 
@@ -583,7 +651,7 @@ function OfferGroupCard({
   onWithdraw: (id: number) => void;
   onEyeClick: (row: OfferRecord) => void;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState<boolean>(false);
   const [withdrawing, setWithdrawing] = useState<number | null>(null);
 
   const handleWithdraw = async (offerId: number) => {
@@ -828,6 +896,62 @@ const getStatus = (status: string) => {
   }
 };
 
+/* ─── Pagination Component ───────────────────────────────────────────────── */
+function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  const maxVisiblePages = 5;
+  const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+  const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+  const pages = [];
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i);
+  }
+
+  return (
+    <div className="sol-pagination">
+      <button
+        className="sol-pagination-btn"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+      >
+        <ChevronLeft size={18} />
+      </button>
+
+      <div className="sol-pagination-info">
+        Page {currentPage} of {totalPages}
+      </div>
+
+      <div className="sol-pagination-numbers">
+        {pages.map((pageNum) => (
+          <button
+            key={pageNum}
+            className={`sol-page-num ${currentPage === pageNum ? "active" : ""}`}
+            onClick={() => onPageChange(pageNum)}
+          >
+            {pageNum}
+          </button>
+        ))}
+      </div>
+
+      <button
+        className="sol-pagination-btn"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+      >
+        <ChevronRight size={18} />
+      </button>
+    </div>
+  );
+}
+
 /* ─── Main Component ─────────────────────────────────────────────────────── */
 export default function SentOffersListView() {
   const { isIndustry } = useAuth();
@@ -839,6 +963,10 @@ export default function SentOffersListView() {
   >("All");
 
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const CARDS_PER_PAGE = 5;
 
   const currentIndustry: any = useSelector(
     (state: RootState) => state?.industries?.currentIndustry,
@@ -873,6 +1001,11 @@ export default function SentOffersListView() {
     fetchOffers();
   }, [fetchOffers]);
 
+  // Reset to first page when filter or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchTerm]);
+
   const handleWithdraw = (offerId: number) =>
     setOffers((prev) =>
       prev.map((o) =>
@@ -902,6 +1035,12 @@ export default function SentOffersListView() {
   });
 
   const groups = groupOffers(filteredOffers);
+
+  // Pagination logic
+  const totalPages = Math.ceil(groups.length / CARDS_PER_PAGE);
+  const startIndex = (currentPage - 1) * CARDS_PER_PAGE;
+  const endIndex = startIndex + CARDS_PER_PAGE;
+  const paginatedGroups = groups.slice(startIndex, endIndex);
 
   const handleSearch = () => {
     // console.log("Search for:", searchTerm);
@@ -1123,11 +1262,11 @@ export default function SentOffersListView() {
               </div>
             )}
 
-            {/* Offer Group Cards - Bigger */}
+            {/* Offer Group Cards - Paginated */}
             <div
               style={{ display: "flex", flexDirection: "column", gap: "18px" }}
             >
-              {groups.length === 0 ? (
+              {paginatedGroups.length === 0 ? (
                 <div className="sol-empty">
                   <div className="sol-empty-icon">
                     <Send size={28} color="#6366f1" />
@@ -1150,7 +1289,7 @@ export default function SentOffersListView() {
                   </div>
                 </div>
               ) : (
-                groups.map((g, i) => (
+                paginatedGroups.map((g, i) => (
                   <div
                     key={g.key}
                     style={{ animationDelay: `${0.1 + i * 0.05}s` }}
@@ -1164,6 +1303,15 @@ export default function SentOffersListView() {
                 ))
               )}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            )}
           </>
         )}
       </div>

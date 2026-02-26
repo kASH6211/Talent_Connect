@@ -68,8 +68,6 @@ export default function FindInstitutesPage() {
   const dispatch = useDispatch<AppDispatch>();
 
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [sort, setSort] = useState<"name" | "student_count">("student_count");
-  const [order, setOrder] = useState<"asc" | "desc">("desc");
 
   const [institutes, setInstitutes] = useState<InstituteRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -92,6 +90,13 @@ export default function FindInstitutesPage() {
   const [currentInstitute, setCurrentInstitute] = useState<InstituteRow | null>(
     null,
   );
+
+  //table right side fitler
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sort, setSort] = useState<"name" | "name-rev" | "student_count">(
+    "student_count",
+  );
+  const [order, setOrder] = useState<"asc" | "desc">("desc");
 
   useEffect(() => {
     if (sentSuccess) {
@@ -237,7 +242,9 @@ export default function FindInstitutesPage() {
     setLoading(true);
     setSearched(true);
     setSelected(new Set());
+    setSearchTerm(""); // Reset search
     setCurrentPage(1);
+
     const params = new URLSearchParams();
     if (filters.district_ids.length)
       params.set("district_ids", filters.district_ids.join(","));
@@ -281,10 +288,37 @@ export default function FindInstitutesPage() {
     institutes.map((i) => [i.institute_id, i.institute_name]),
   );
 
-  const totalItems = institutes.length;
+  // Filter & Sort institutes (add this before pagination logic)
+  const filteredInstitutes = institutes.filter(
+    (inst) =>
+      inst.institute_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inst.district?.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+  const sortedInstitutes = filteredInstitutes.sort((a, b) => {
+    let aVal, bVal;
+
+    if (sort === "name") {
+      aVal = a.institute_name.toLowerCase();
+      bVal = b.institute_name.toLowerCase();
+      return aVal.localeCompare(bVal);
+    } else if (sort === "name-rev") {
+      aVal = a.institute_name.toLowerCase();
+      bVal = b.institute_name.toLowerCase();
+      return bVal.localeCompare(aVal);
+    } else {
+      // student_count
+      return order === "desc"
+        ? b.student_count - a.student_count
+        : a.student_count - b.student_count;
+    }
+  });
+
+  // Update pagination to use filtered/sorted data
+  const totalItems = sortedInstitutes.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedInstitutes = institutes.slice(
+  const paginatedInstitutes = sortedInstitutes.slice(
     startIndex,
     startIndex + itemsPerPage,
   );
@@ -428,8 +462,9 @@ export default function FindInstitutesPage() {
       {searched && (
         <div className="space-y-4">
           {/* Controls bar */}
+          {/* Controls bar */}
           {!loading && institutes.length > 0 && (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-700 rounded-xl px-4 py-3 shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-700 rounded-xl px-4 py-3 shadow-sm">
               <div className="flex items-center gap-3">
                 <button
                   onClick={toggleAll}
@@ -450,12 +485,37 @@ export default function FindInstitutesPage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
-                {/* Sort */}
+              {/* Right: Search + Sort + Send */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Search Input - NOW WORKS */}
+                <div className="relative flex-1 min-w-[200px] max-w-xs">
+                  <input
+                    type="text"
+                    placeholder="Search institutes..."
+                    className="input input-bordered input-sm w-full pl-10 pr-4 text-sm"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Search
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40 pointer-events-none"
+                  />
+                </div>
+
+                {/* Sort - NOW WORKS */}
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-base-300 dark:border-base-700 bg-base-200 dark:bg-base-800 text-xs">
                   <ArrowUpDown size={12} className="text-primary" />
-                  <select className="bg-transparent border-0 outline-none text-base-content/80 font-medium cursor-pointer text-xs">
-                    <option value="students">Students</option>
+                  <select
+                    className="bg-transparent border-0 outline-none text-base-content/80 font-medium cursor-pointer text-xs"
+                    value={sort}
+                    onChange={(e) => {
+                      setSort(
+                        e.target.value as "name" | "name-rev" | "student_count",
+                      );
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value="student_count">Students</option>
                     <option value="name">A–Z</option>
                     <option value="name-rev">Z–A</option>
                   </select>
@@ -618,7 +678,7 @@ export default function FindInstitutesPage() {
                     Page {currentPage} of {totalPages}
                     <span className="hidden sm:inline">
                       {" "}
-                      · {totalItems} institutes
+                      · {filteredInstitutes.length} institutes
                     </span>
                   </span>
 
