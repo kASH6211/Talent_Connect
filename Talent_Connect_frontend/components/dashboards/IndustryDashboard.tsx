@@ -189,7 +189,7 @@ export default function IndustryDashboard({
   ];
 
   return (
-    <div className="w-full px-3 sm:px-5 lg:px-8 xl:px-10 py-6 lg:py-10 mx-auto">
+    <div className="w-full  mx-auto">
       {/* ── Hero ── */}
       <div className="relative overflow-hidden rounded-2xl bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-700 shadow-sm p-6 sm:p-7 mb-8">
         <div className="absolute -top-16 -right-16 w-56 h-56 bg-primary/8 rounded-full blur-3xl pointer-events-none" />

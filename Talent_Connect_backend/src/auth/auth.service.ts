@@ -52,8 +52,8 @@ export class AuthService {
             sub: user.id,
             username: user.username,
             role: user.role,
-            institute_id: user.institute_id,
-            industry_id: user.industry_id
+            industry_id: user.industry_id ?? null,
+            institute_id: user.institute_id ?? null,
         };
         return {
             access_token: this.jwtService.sign(payload),
@@ -62,8 +62,8 @@ export class AuthService {
                 username: user.username,
                 email: user.email,
                 role: user.role,
-                institute_id: user.institute_id,
-                industry_id: user.industry_id
+                industry_id: user.industry_id ?? null,
+                institute_id: user.institute_id ?? null,
             },
         };
     }

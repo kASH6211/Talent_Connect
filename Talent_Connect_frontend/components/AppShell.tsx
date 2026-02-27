@@ -28,7 +28,12 @@ export default function AppShell({
       )}
 
       <main
-        className={`flex-1 transition-all duration-500 ease-in-out overflow-auto bg-gray-50`}
+        className={`
+      flex-1 transition-all duration-500 ease-in-out overflow-auto
+      bg-gray-50
+      pt-6 sm:pt-8 lg:pt-10               // ← top padding (responsive)
+      px-4 sm:px-6 lg:px-8 xl:px-10       // ← left/right padding (responsive)
+    `}
         style={{
           marginLeft: showSidebar
             ? sidebarCollapsed

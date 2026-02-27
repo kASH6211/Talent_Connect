@@ -1053,7 +1053,6 @@ export default function SentOffersListView() {
       <div
         className="sol-root"
         style={{
-          padding: "40px 18px 5px",
           maxWidth: "auto",
           margin: "0 auto",
         }}
