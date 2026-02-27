@@ -260,7 +260,7 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
         </div>
 
         {/* User Profile */}
-        {!loading && user && (
+        {/* {!loading && user && (
           <div
             className={clsx(
               "flex items-center gap-3 p-3 border-b border-base-200 dark:border-base-800",
@@ -278,7 +278,6 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
                   {user.username}
                 </div>
 
-                {/* Smaller, Attractive Badge */}
                 <div
                   className={clsx(
                     "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide shadow-sm transition-all duration-300",
@@ -295,7 +294,7 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
 
             {!collapsed && <ThemeToggle />}
           </div>
-        )}
+        )} */}
 
         {/* Navigation - Increased spacing */}
         <nav className="flex-1 px-2 py-6 space-y-2.5 overflow-y-auto scrollbar-thin scrollbar-thumb-base-300 dark:scrollbar-thumb-base-700 scrollbar-track-transparent">

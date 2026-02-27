@@ -2,6 +2,7 @@
 import { ReactNode, useState } from "react";
 import Sidebar from "./Sidebar";
 import { usePathname } from "next/navigation";
+import Header from "./Header";
 
 export default function AppShell({
   children,
@@ -37,6 +38,7 @@ export default function AppShell({
             : "0px",
         }}
       >
+        <Header />
         {children}
       </main>
     </div>
