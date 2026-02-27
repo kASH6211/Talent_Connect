@@ -44,7 +44,7 @@ export function useAuth() {
     _cachedUser = null;
     localStorage.removeItem("tc_token");
     clearAuthCache();
-    router.replace("/login");
+    router.replace("/");
   };
 
   return {

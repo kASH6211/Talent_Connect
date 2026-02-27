@@ -28,7 +28,7 @@ import { ThemeToggle } from "@/components2/ThemeToggle";
 
 // ── Nav definitions per role (unchanged) ───────────────────────────────────
 const adminNav = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
   {
     icon: Settings,
     label: "Master Data",
@@ -77,7 +77,7 @@ const adminNav = [
 ];
 
 const instituteNav = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/institute/dashboard" },
   { icon: Users, label: "Students", href: "/students" },
   { icon: Briefcase, label: "Placements", href: "/placements" },
   {
@@ -97,7 +97,7 @@ const instituteNav = [
 ];
 
 const industryNav = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/industry/dashboard" },
   { icon: Search, label: "Find Institutes", href: "/find-institutes" },
   { icon: Send, label: "Sent Offers", href: "/sent-offers" },
   { icon: Briefcase, label: "Placements", href: "/placements" },

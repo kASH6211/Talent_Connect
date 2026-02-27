@@ -102,7 +102,7 @@ export default function Page() {
   return (
     <div className="w-full min-h-screen bg-gray-50">
       {/* Table Section */}
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-full mx-auto">
         <CrudTable
           title="Industry Requests"
           icon={<Building2 />}

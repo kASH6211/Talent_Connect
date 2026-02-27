@@ -36,8 +36,8 @@ export default function LoginPage() {
     try {
       const res = await api.post("/auth/login", { username, password });
 
-      localStorage.setItem("tc_token", res.data.access_token);
       clearAuthCache();
+      localStorage.setItem("tc_token", res.data.access_token);
       router.push(getDashboardRoute(res?.data?.user?.role));
     } catch (err: any) {
       setError(err?.response?.data?.message || "Invalid username or password");
@@ -224,7 +224,7 @@ export default function LoginPage() {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700" />
             </button>
           </form>
-
+          {/* 
           <div className="flex items-center gap-3 my-8">
             <div className="flex-1 h-px bg-base-300 dark:bg-base-700" />
             <span className="text-xs text-base-content/40 font-medium">
@@ -265,7 +265,7 @@ export default function LoginPage() {
                 </span>
               </div>
             ))}
-          </div>
+          </div> */}
 
           <p className="text-center text-base-content/30 text-xs mt-10">
             © {new Date().getFullYear()} Talent Connect • All Rights Reserved
