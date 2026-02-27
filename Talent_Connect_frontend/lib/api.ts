@@ -24,8 +24,8 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err?.response?.status === 401 && typeof window !== "undefined") {
-      if (!window.location.pathname.startsWith("/login")) {
-        window.location.href = "/login";
+      if (!window.location.pathname.startsWith("/")) {
+        window.location.href = "/";
       }
     }
     return Promise.reject(err);
