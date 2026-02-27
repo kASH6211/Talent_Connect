@@ -53,7 +53,7 @@ export class JobOfferService {
     async getSentOffers(industry_id: number) {
         return this.repo.find({
             where: { industry_id },
-            relations: ['institute', 'industry'],
+            relations: ['institute', 'industry', 'institute.district'],
             order: { offer_id: 'DESC' },
         });
     }
@@ -62,7 +62,7 @@ export class JobOfferService {
     async getReceivedOffers(institute_id: number) {
         return this.repo.find({
             where: { institute_id },
-            relations: ['industry', 'institute'],
+            relations: ['industry', 'institute', 'institute.district'],
             order: { offer_id: 'DESC' },
         });
     }
@@ -70,8 +70,8 @@ export class JobOfferService {
     /** Update status (accept/reject/withdraw) */
     async updateStatus(offer_id: number, status: string) {
         await this.repo.update(offer_id, { status });
-        return this.repo.findOne({ where: { offer_id }, relations: ['industry', 'institute'] });
+        return this.repo.findOne({ where: { offer_id }, relations: ['industry', 'institute', 'institute.district'] });
     }
 
-    findAll() { return this.repo.find({ relations: ['industry', 'institute'], order: { offer_id: 'DESC' } }); }
+    findAll() { return this.repo.find({ relations: ['industry', 'institute', 'institute.district'], order: { offer_id: 'DESC' } }); }
 }

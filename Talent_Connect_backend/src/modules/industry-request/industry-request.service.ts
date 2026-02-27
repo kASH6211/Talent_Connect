@@ -10,7 +10,12 @@ export class IndustryRequestService {
     private readonly repo: Repository<IndustryRequest>,
   ) { }
 
-  findAll() { return this.repo.find(); }
+  findAll() {
+    return this.repo.find({
+      relations: ['institute', 'institute.district', 'requestType', 'requestStatus', 'program', 'streamBranch'],
+      order: { industry_request_id: 'DESC' },
+    });
+  }
 
   /** Fast COUNT */
   count() { return this.repo.count(); }
