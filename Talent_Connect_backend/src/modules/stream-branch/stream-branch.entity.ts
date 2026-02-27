@@ -9,10 +9,10 @@ export class StreamBranch extends BaseEntity {
     @PrimaryGeneratedColumn()
     stream_branch_Id: number;
 
-    @Column({ type: 'int' })
+    @Column({ type: 'int', nullable: true })
     programId: number;
 
-    @ManyToOne(() => Program, { eager: true })
+    @ManyToOne(() => Program, { nullable: true })
     @JoinColumn({ name: 'programId' })
     program: Program;
 
@@ -32,7 +32,7 @@ export class StreamBranch extends BaseEntity {
     @Column({ type: 'int', nullable: true })
     qualificationid: number;
 
-    @ManyToOne(() => Qualification, { nullable: true })
+    @ManyToOne(() => Qualification, { eager: true, nullable: true })
     @JoinColumn({ name: 'qualificationid' })
     qualification: Qualification;
 }

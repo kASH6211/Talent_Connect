@@ -27,7 +27,6 @@ interface Option {
 
 interface Filters {
   qualification_ids: number[];
-  program_ids: number[];
   stream_ids: number[];
 }
 
@@ -37,9 +36,7 @@ export function OfferModalV2({
   onClose,
   selectedIds,
   institutesMap,
-  filters,
   qualOptions,
-  programOptions,
   streamOptions,
   onSent,
 }: {
@@ -47,9 +44,7 @@ export function OfferModalV2({
   onClose: () => void;
   selectedIds: number[];
   institutesMap: Map<number, string>;
-  filters: Filters;
   qualOptions: Option[];
-  programOptions: Option[];
   streamOptions: Option[];
   onSent: () => void;
 }) {
@@ -61,9 +56,8 @@ export function OfferModalV2({
   const [salaryMax, setSalaryMax] = useState("");
   const [lastDate, setLastDate] = useState("");
   const [numberOfPosts, setNumberOfPosts] = useState("");
-  const [qualIds, setQualIds] = useState<number[]>(filters.qualification_ids);
-  const [programIds, setProgramIds] = useState<number[]>(filters.program_ids);
-  const [streamIds, setStreamIds] = useState<number[]>(filters.stream_ids);
+  const [qualIds, setQualIds] = useState<number[]>([]);
+  const [streamIds, setStreamIds] = useState<number[]>([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [showAllInstitutes, setShowAllInstitutes] = useState(false);
@@ -95,7 +89,6 @@ export function OfferModalV2({
     setLastDate("");
     setNumberOfPosts("");
     setQualIds([]);
-    setProgramIds([]);
     setStreamIds([]);
     setSending(false);
     setError("");
@@ -127,7 +120,6 @@ export function OfferModalV2({
         job_title: jobTitle,
         job_description: description,
         required_qualification_ids: qualIds.join(","),
-        required_program_ids: programIds.join(","),
         required_stream_ids: streamIds.join(","),
         salary_min: salaryMin ? parseFloat(salaryMin) : undefined,
         salary_max: salaryMax ? parseFloat(salaryMax) : undefined,
@@ -372,18 +364,6 @@ export function OfferModalV2({
                   selected={qualIds}
                   onChange={setQualIds}
                   placeholder="Any qualification"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-base-content/70 mb-1.5 ml-0.5">
-                  Programs
-                </label>
-                <MultiSelectDropdown
-                  label="Program"
-                  options={programOptions}
-                  selected={programIds}
-                  onChange={setProgramIds}
-                  placeholder="Any program"
                 />
               </div>
               <div>

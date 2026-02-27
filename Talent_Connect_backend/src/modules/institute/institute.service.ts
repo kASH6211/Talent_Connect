@@ -52,7 +52,6 @@ export class InstituteService {
     const typeIds = parse(q.type_ids);
     const ownershipIds = parse(q.ownership_ids);
     const qualIds = parse(q.qualification_ids);
-    const programIds = parse(q.program_ids);
     const streamIds = parse(q.stream_ids);
 
     const qb = this.dataSource
@@ -73,8 +72,7 @@ export class InstituteService {
         FROM student_details s
         WHERE s.institute_id = i.institute_id
           AND s.is_active = 'Y'
-          ${qualIds.length ? `AND s.qualificationid   IN (${qualIds.join(',')})` : ''}
-          ${programIds.length ? `AND s."programId"       IN (${programIds.join(',')})` : ''}
+          ${qualIds.length ? `AND s.qualificationid IN (${qualIds.join(',')})` : ''}
           ${streamIds.length ? `AND s."stream_branch_Id" IN (${streamIds.join(',')})` : ''}
       )`, 'student_count')
       .where(`i.is_active = 'Y'`);
@@ -83,21 +81,20 @@ export class InstituteService {
     if (typeIds.length) qb.andWhere(`i.institute_type_id IN (:...tids)`, { tids: typeIds });
     if (ownershipIds.length) qb.andWhere(`i.institute_ownership_type_id IN (:...oids)`, { oids: ownershipIds });
 
-    if (qualIds.length || programIds.length || streamIds.length) {
-      const subQb = this.dataSource.createQueryBuilder()
-        .select('DISTINCT mip."instituteId"')
-        .from('mapping_institute_program', 'mip')
-        .where(`mip.is_active = 'Y'`);
+    // Qualification filter: institutes with matching qualifications in mapping_institute_qualification
+    if (qualIds.length) {
+      qb.andWhere(
+        `i.institute_id IN (SELECT DISTINCT "instituteId" FROM mapping_institute_qualification WHERE is_active = 'Y' AND qualificationid = ANY(:qids))`,
+        { qids: qualIds },
+      );
+    }
 
-      if (qualIds.length) {
-        subQb.innerJoin('mapping_program_qualification', 'pq', 'pq."programId" = mip."programId" AND pq.is_active = \'Y\'')
-          .andWhere(`pq.qualificationid IN (:...qids)`, { qids: qualIds });
-      }
-
-      if (programIds.length) subQb.andWhere(`mip."programId" IN (:...pids)`, { pids: programIds });
-      if (streamIds.length) subQb.andWhere(`mip."stream_branch_Id" IN (:...sids)`, { sids: streamIds });
-
-      qb.andWhere(`i.institute_id IN (${subQb.getQuery()})`, subQb.getParameters());
+    // Stream filter: directly match stream_branch_Id in mapping_institute_qualification
+    if (streamIds.length) {
+      qb.andWhere(
+        `i.institute_id IN (SELECT DISTINCT "instituteId" FROM mapping_institute_qualification WHERE is_active = 'Y' AND "stream_branch_Id" = ANY(:sids))`,
+        { sids: streamIds },
+      );
     }
 
     const sortCol = q.sort === 'name' ? 'i.institute_name' : 'student_count';

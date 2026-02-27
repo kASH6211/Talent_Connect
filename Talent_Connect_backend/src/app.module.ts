@@ -37,6 +37,7 @@ import { InstituteProgramMappingModule } from './modules/institute-program-mappi
 import { JobRoleProgramMappingModule } from './modules/job-role-program-mapping/job-role-program-mapping.module';
 import { JobOfferModule } from './modules/job-offer/job-offer.module';
 import { StreamBranchQualificationMappingModule } from './modules/stream-branch-qualification-mapping/stream-branch-qualification-mapping.module';
+import { InstituteQualificationMappingModule } from './modules/institute-qualification-mapping/institute-qualification-mapping.module';
 
 @Module({
   imports: [
@@ -90,6 +91,7 @@ import { StreamBranchQualificationMappingModule } from './modules/stream-branch-
     JobRoleProgramMappingModule,
     JobOfferModule,
     StreamBranchQualificationMappingModule,
+    InstituteQualificationMappingModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

@@ -45,7 +45,6 @@ interface Filters {
   type_ids: number[];
   ownership_ids: number[];
   qualification_ids: number[];
-  program_ids: number[];
   stream_ids: number[];
 }
 
@@ -55,7 +54,6 @@ const EMPTY_FILTERS: Filters = {
   type_ids: [],
   ownership_ids: [],
   qualification_ids: [],
-  program_ids: [],
   stream_ids: [],
 };
 
@@ -79,7 +77,6 @@ export default function FindInstitutesPage() {
   const [typeOpts, setTypeOpts] = useState<Option[]>([]);
   const [ownershipOpts, setOwnershipOpts] = useState<Option[]>([]);
   const [qualOpts, setQualOpts] = useState<Option[]>([]);
-  const [programOpts, setProgramOpts] = useState<Option[]>([]);
   const [streamOpts, setStreamOpts] = useState<Option[]>([]);
 
   const [sentSuccess, setSentSuccess] = useState(false);
@@ -184,56 +181,30 @@ export default function FindInstitutesPage() {
   }, [filters.state_ids]);
 
   useEffect(() => {
-    const loadPrograms = async () => {
-      if (filters.qualification_ids.length > 0) {
-        const qId = filters.qualification_ids[0];
-        const res = await api.get(
-          `/program-qualification-mapping?qualification_id=${qId}`,
-        );
-        const progs = res.data.map((m: any) => ({
-          value: m.program.programId,
-          label: m.program.program_name,
-        }));
-        const unique = Array.from(
-          new Map(progs.map((p: any) => [p.value, p])).values(),
-        );
-        setProgramOpts(unique as Option[]);
-      } else {
-        const res = await api.get("/program");
-        setProgramOpts(
-          res.data.map((p: any) => ({
-            value: p.programId,
-            label: p.program_name,
-          })),
-        );
-      }
-    };
-    loadPrograms();
-  }, [filters.qualification_ids]);
-
-  useEffect(() => {
     const loadStreams = async () => {
-      if (filters.program_ids.length > 0) {
-        const pId = filters.program_ids[0];
-        const res = await api.get(`/stream-branch?program_id=${pId}`);
+      if (filters.qualification_ids.length > 0) {
+        // When qualification selected, load streams for that qualification from master
+        // but only those that also exist in mapping_institute_qualification
+        const qId = filters.qualification_ids[0];
+        const [masterRes, inUseRes] = await Promise.all([
+          api.get(`/stream-branch?qualification_id=${qId}`),
+          api.get('/institute-qualification-mapping/streams-in-use'),
+        ]);
+        const inUseIds = new Set(inUseRes.data.map((s: any) => s.stream_branch_Id));
+        const filtered = masterRes.data.filter((s: any) => inUseIds.has(s.stream_branch_Id));
         setStreamOpts(
-          res.data.map((s: any) => ({
-            value: s.stream_branch_Id,
-            label: s.stream_branch_name,
-          })),
+          filtered.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })),
         );
       } else {
-        const res = await api.get("/stream-branch");
+        // No qualification selected: show only streams that have institute mappings
+        const res = await api.get('/institute-qualification-mapping/streams-in-use');
         setStreamOpts(
-          res.data.map((s: any) => ({
-            value: s.stream_branch_Id,
-            label: s.stream_branch_name,
-          })),
+          res.data.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })),
         );
       }
     };
     loadStreams();
-  }, [filters.program_ids]);
+  }, [filters.qualification_ids]);
 
   const setFilter = (key: keyof Filters) => (vals: number[]) =>
     setFilters((f) => ({ ...f, [key]: vals }));
@@ -254,8 +225,6 @@ export default function FindInstitutesPage() {
       params.set("ownership_ids", filters.ownership_ids.join(","));
     if (filters.qualification_ids.length)
       params.set("qualification_ids", filters.qualification_ids.join(","));
-    if (filters.program_ids.length)
-      params.set("program_ids", filters.program_ids.join(","));
     if (filters.stream_ids.length)
       params.set("stream_ids", filters.stream_ids.join(","));
     params.set("sort", sort);
@@ -418,13 +387,6 @@ export default function FindInstitutesPage() {
             selected={filters.qualification_ids}
             onChange={setFilter("qualification_ids")}
             placeholder="Any qualification"
-          />
-          <MultiSelectDropdown
-            label="Program"
-            options={programOpts}
-            selected={filters.program_ids}
-            onChange={setFilter("program_ids")}
-            placeholder="Any program"
           />
           <MultiSelectDropdown
             label="Stream"
@@ -718,9 +680,7 @@ export default function FindInstitutesPage() {
         isOpen={findInstituteUi?.bulkOffer?.open ?? false}
         selectedIds={Array.from(selected)}
         institutesMap={institutesMap}
-        filters={filters}
         qualOptions={qualOpts}
-        programOptions={programOpts}
         streamOptions={streamOpts}
         onSent={() => {
           setSentSuccess(true);

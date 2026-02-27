@@ -7,7 +7,10 @@ const COLUMNS = [
   { key: 'stream_branch_Id', label: 'ID' },
   { key: 'stream_branch_name', label: 'Stream / Branch' },
   { key: 'stream_branch_abbreviation', label: 'Abbr.' },
-  { key: 'programId', label: 'Program ID' },
+  {
+    key: 'qualificationid', label: 'Qualification',
+    render: (val: any, row: any) => row.qualification?.qualification || val
+  },
   { key: 'is_active', label: 'Status' },
 ];
 
@@ -15,8 +18,8 @@ const FIELDS = [
   { key: 'stream_branch_name', label: 'Stream / Branch Name', required: true },
   { key: 'stream_branch_abbreviation', label: 'Abbreviation' },
   {
-    key: 'programId', label: 'Program', required: true,
-    optionsApi: 'program', optionsValueKey: 'programId', optionsLabelKey: 'program_name',
+    key: 'qualificationid', label: 'Qualification', required: true,
+    optionsApi: 'qualification', optionsValueKey: 'qualificationid', optionsLabelKey: 'qualification',
   },
   {
     key: 'affiliating_body_id', label: 'Affiliation Body',

@@ -67,7 +67,7 @@ const adminNav = [
     label: "Mappings",
     children: [
       { label: "Program ↔ Qualification", href: "/mappings/program-qualification" },
-      { label: "Institute ↔ Program", href: "/mappings/institute-program" },
+      { label: "Institute Qualification", href: "/mappings/institute-qualification" },
       { label: "Job Role ↔ Program", href: "/mappings/job-role-program" },
       { label: "Qualification ↔ Stream/Branch", href: "/mappings/stream-branch-qualification" },
     ],
@@ -84,7 +84,8 @@ const instituteNav = [
     icon: ClipboardList,
     label: "Mappings",
     children: [
-      { label: "Institute ↔ Program", href: "/mappings/institute-program" },
+      { label: "Institute Qualification", href: "/mappings/institute-qualification" },
+      { label: "Qualification ↔ Stream/Branch", href: "/mappings/stream-branch-qualification" },
     ],
   },
   {
