@@ -15,6 +15,19 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const getDashboardRoute = (role: string) => {
+    switch (role) {
+      case "superadmin":
+        return "/admin/dashboard";
+      case "institute":
+        return "/institute/dashboard";
+      case "industry":
+        return "/industry/dashboard";
+      default:
+        return "/";
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -22,9 +35,10 @@ export default function LoginPage() {
 
     try {
       const res = await api.post("/auth/login", { username, password });
+
       localStorage.setItem("tc_token", res.data.access_token);
       clearAuthCache();
-      router.push("/");
+      router.push(getDashboardRoute(res?.data?.user?.role));
     } catch (err: any) {
       setError(err?.response?.data?.message || "Invalid username or password");
     } finally {

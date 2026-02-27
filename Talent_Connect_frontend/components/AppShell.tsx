@@ -13,8 +13,9 @@ export default function AppShell({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = usePathname();
   const isLoginPage = pathname === "/login";
+  const home = pathname === "/";
 
-  if (isLoginPage) {
+  if (isLoginPage || home) {
     return <>{children}</>;
   }
 

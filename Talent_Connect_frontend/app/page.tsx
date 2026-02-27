@@ -1,41 +1,47 @@
-"use client";
+// "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import AdminDashboard from "@/components/dashboards/AdminDashboard";
-import InstituteDashboard from "@/components/dashboards/InstituteDashboard";
-import IndustryDashboard from "@/components/dashboards/IndustryDashboard";
+import IndustryLandingPage from "@/components/IndustryLanding";
 
-export default function DashboardPage() {
-  const { user, role, loading } = useAuth();
-  const router = useRouter();
+// import { useEffect } from "react";
+// import { useRouter } from "next/navigation";
+// import { useAuth } from "@/hooks/useAuth";
+// import AdminDashboard from "@/components/dashboards/AdminDashboard";
+// import InstituteDashboard from "@/components/dashboards/InstituteDashboard";
+// import IndustryDashboard from "@/components/dashboards/IndustryDashboard";
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login");
-    }
-  }, [loading, user, router]);
+// export default function DashboardPage() {
+//   const { user, role, loading } = useAuth();
+//   const router = useRouter();
 
-  if (loading || !user) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <span className="loading loading-spinner loading-md text-primary" />
-          <span className="text-base-content/40 text-sm">Loading…</span>
-        </div>
-      </div>
-    );
-  }
+//   useEffect(() => {
+//     if (!loading && !user) {
+//       router.replace("/login");
+//     }
+//   }, [loading, user, router]);
 
-  if (role === "institute") {
-    return <InstituteDashboard username={user.username} />;
-  }
+//   if (loading || !user) {
+//     return (
+//       <div className="flex items-center justify-center min-h-[60vh]">
+//         <div className="flex flex-col items-center gap-3">
+//           <span className="loading loading-spinner loading-md text-primary" />
+//           <span className="text-base-content/40 text-sm">Loading…</span>
+//         </div>
+//       </div>
+//     );
+//   }
 
-  if (role === "industry") {
-    return <IndustryDashboard username={user.username} />;
-  }
+//   if (role === "institute") {
+//     return <InstituteDashboard username={user.username} />;
+//   }
 
-  // Default: admin
-  return <AdminDashboard username={user.username} />;
+//   if (role === "industry") {
+//     return <IndustryDashboard username={user.username} />;
+//   }
+
+//   // Default: admin
+//   return <AdminDashboard username={user.username} />;
+// }
+
+export default function Home() {
+  return <IndustryLandingPage />;
 }
