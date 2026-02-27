@@ -213,9 +213,20 @@ export default function IndustryDashboard({
           </div>
           <Link
             href="/find-institutes"
-            className="btn btn-primary btn-sm gap-2 self-start sm:self-auto shadow-md"
+            className={`
+                  inline-flex items-center gap-2.5 px-6 py-3 rounded-full
+                  border-2 border-primary text-primary font-semibold text-sm
+                  hover:bg-primary hover:text-primary-content
+                  hover:shadow-[0_0_20px_rgba(var(--p),0.4)]
+                  transition-all duration-300 ease-in-out
+                  active:scale-95
+                `}
           >
-            <Send size={14} /> Send Offers
+            <Send
+              size={17}
+              className="group-hover:scale-110 transition-transform"
+            />
+            Find Institutes • Send Offer
           </Link>
         </div>
         <p className="mt-4 text-sm text-base-content/50 max-w-2xl">
