@@ -19,6 +19,7 @@ import {
   Send,
   ChevronRight,
   ChevronLeft,
+  Mail,
 } from "lucide-react";
 import { useState } from "react";
 import { clsx } from "clsx";
@@ -74,6 +75,7 @@ const adminNav = [
     ],
   },
   { icon: Briefcase, label: "Industry Requests", href: "/industry-requests" },
+  { icon: Mail, label: "All Requestes", href: "/all-requests" },
 ];
 
 const instituteNav = [
