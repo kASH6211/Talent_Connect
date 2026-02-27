@@ -9,7 +9,7 @@ const page = () => {
   const userNmae = user?.username ?? "Admin";
   return (
     <div>
-      <AdminDashboard username={userNmae} />;
+      <AdminDashboard username={userNmae} />
     </div>
   );
 };

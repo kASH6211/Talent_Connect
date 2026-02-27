@@ -8,7 +8,7 @@ const page = () => {
   const userName = user?.username ?? "Industry";
   return (
     <div>
-      <IndustryDashboard username={userName} />;
+      <IndustryDashboard username={userName} />
     </div>
   );
 };
