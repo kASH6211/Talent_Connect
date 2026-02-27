@@ -86,14 +86,14 @@ export default function AdminDashboard({ username }: { username: string }) {
     //   href: "/placements",
     // },
     {
-      label: "Sent Offers",
+      label: "Sent Requests",
       count: counts.sentOffers || 0, // use your actual count key
       icon: Send,
       color: "from-indigo-500 to-indigo-600",
       href: "/all-requests", // adjust path if needed
     },
     {
-      label: "Accepted Offers",
+      label: "Accepted Requests",
       count: counts.acceptedOffers || 0, // use your actual count key
       icon: CheckCircle2,
       color: "from-emerald-500 to-emerald-600",
