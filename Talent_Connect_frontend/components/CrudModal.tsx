@@ -24,6 +24,8 @@ export interface FieldDef {
   optionsApi?: string;
   optionsValueKey?: string;
   optionsLabelKey?: string;
+  dependsOn?: string;
+  dependsOnQueryKey?: string;
 }
 
 interface CrudModalProps {
@@ -36,18 +38,33 @@ interface CrudModalProps {
   onClose: () => void;
 }
 
-function ApiSelect({ field, register }: { field: FieldDef; register: any }) {
+function ApiSelect({ field, register, watch }: { field: FieldDef; register: any, watch: any }) {
+  // If this field depends on another, watch that field's value
+  const dependentValue = field.dependsOn ? watch(field.dependsOn) : undefined;
+
+  // Conditionally construct the API path if there is a dependency
+  let apiPath = field.optionsApi;
+  if (field.dependsOn && field.optionsApi) {
+    if (dependentValue) {
+      apiPath = `${field.optionsApi}?${field.dependsOnQueryKey}=${dependentValue}`;
+    } else {
+      apiPath = undefined; // Don't fetch until dependency is selected
+    }
+  }
+
   const options = useOptions(
-    field.optionsApi,
+    apiPath,
     field.optionsValueKey || "id",
     field.optionsLabelKey || "name",
   );
+
   return (
     <select
       {...register(field.key, {
         required: field.required ? `${field.label} is required` : false,
       })}
-      className="w-full h-14 px-4 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+      disabled={field.dependsOn && !dependentValue}
+      className="w-full h-14 px-4 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
     >
       <option value="">Select {field.label}…</option>
       {options.map((o) => (
@@ -95,6 +112,7 @@ export default function CrudModal({
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({ defaultValues: editData || {} });
 
@@ -115,7 +133,7 @@ export default function CrudModal({
 
   const renderField = (f: FieldDef) => {
     if (f.optionsApi)
-      return <ApiSelect key={f.key} field={f} register={register} />;
+      return <ApiSelect key={f.key} field={f} register={register} watch={watch} />;
     if (f.type === "textarea")
       return (
         <textarea
@@ -199,7 +217,7 @@ export default function CrudModal({
               <FormField
                 key={f.key}
                 label={f.label}
-                // error={errors[f.key]?.message}
+              // error={errors[f.key]?.message}
               >
                 {renderField(f)}
               </FormField>

@@ -18,7 +18,8 @@ export function useOptions(
         queryKey: ['options', apiPath, valueKey, labelKey],
         queryFn: async () => {
             if (!apiPath) return [];
-            const res = await api.get(`${apiPath}?limit=500`);
+            const separator = apiPath.includes('?') ? '&' : '?';
+            const res = await api.get(`${apiPath}${separator}limit=500`);
             const json = res.data;
             // Support both { data: [] } and plain []
             const list: any[] = Array.isArray(json) ? json : (json.data ?? json.items ?? []);

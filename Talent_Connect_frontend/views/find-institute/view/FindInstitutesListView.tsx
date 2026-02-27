@@ -714,7 +714,7 @@ export default function FindInstitutesPage() {
 
       {/* ── Bulk Offer Modal ── */}
       <OfferModalV2
-        onClose={() => {}}
+        onClose={() => { }}
         isOpen={findInstituteUi?.bulkOffer?.open ?? false}
         selectedIds={Array.from(selected)}
         institutesMap={institutesMap}

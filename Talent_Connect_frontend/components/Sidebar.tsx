@@ -82,6 +82,13 @@ const instituteNav = [
   { icon: Briefcase, label: "Placements", href: "/placements" },
   {
     icon: ClipboardList,
+    label: "Mappings",
+    children: [
+      { label: "Institute ↔ Program", href: "/mappings/institute-program" },
+    ],
+  },
+  {
+    icon: ClipboardList,
     label: "Industry Requests",
     href: "/industry-requests",
   },

@@ -85,12 +85,18 @@ export class InstituteService {
 
     if (qualIds.length || programIds.length || streamIds.length) {
       const subQb = this.dataSource.createQueryBuilder()
-        .select('DISTINCT s.institute_id')
-        .from('student_details', 's')
-        .where(`s.is_active = 'Y'`);
-      if (qualIds.length) subQb.andWhere(`s.qualificationid IN (:...qids)`, { qids: qualIds });
-      if (programIds.length) subQb.andWhere(`s."programId" IN (:...pids)`, { pids: programIds });
-      if (streamIds.length) subQb.andWhere(`s."stream_branch_Id" IN (:...sids)`, { sids: streamIds });
+        .select('DISTINCT mip."instituteId"')
+        .from('mapping_institute_program', 'mip')
+        .where(`mip.is_active = 'Y'`);
+
+      if (qualIds.length) {
+        subQb.innerJoin('mapping_program_qualification', 'pq', 'pq."programId" = mip."programId" AND pq.is_active = \'Y\'')
+          .andWhere(`pq.qualificationid IN (:...qids)`, { qids: qualIds });
+      }
+
+      if (programIds.length) subQb.andWhere(`mip."programId" IN (:...pids)`, { pids: programIds });
+      if (streamIds.length) subQb.andWhere(`mip."stream_branch_Id" IN (:...sids)`, { sids: streamIds });
+
       qb.andWhere(`i.institute_id IN (${subQb.getQuery()})`, subQb.getParameters());
     }
 
