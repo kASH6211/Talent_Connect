@@ -36,8 +36,8 @@ export default function LoginPage() {
     try {
       const res = await api.post("/auth/login", { username, password });
 
-      localStorage.setItem("tc_token", res.data.access_token);
       clearAuthCache();
+      localStorage.setItem("tc_token", res.data.access_token);
       router.push(getDashboardRoute(res?.data?.user?.role));
     } catch (err: any) {
       setError(err?.response?.data?.message || "Invalid username or password");
