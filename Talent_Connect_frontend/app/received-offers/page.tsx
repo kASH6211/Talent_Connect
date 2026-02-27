@@ -226,7 +226,7 @@ export default function ReceivedOffersPage() {
   ];
 
   return (
-    <div className="w-full px-3 sm:px-5 lg:px-8 xl:px-10 py-6 lg:py-10 mx-auto">
+    <div className="w-full  mx-auto">
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3.5">

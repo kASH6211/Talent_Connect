@@ -176,7 +176,7 @@ export default function InstituteDashboard({
   // ─── RENDER ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-base-200/30">
-      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 py-6 lg:py-10 mx-auto">
+      <div className="w-full mx-auto">
         {/* Hero Section */}
         <div className="relative overflow-hidden p-6 lg:p-8 rounded-2xl bg-base-100 border border-base-200 shadow-xl mb-10">
           {/* Subtle accent orb */}
