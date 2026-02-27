@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 't
 import { BaseEntity } from '../../common/base.entity';
 import { Program } from '../program/program.entity';
 import { Affiliation } from '../affiliation/affiliation.entity';
+import { Qualification } from '../qualification/qualification.entity';
 
 @Entity('master_stream_branch')
 export class StreamBranch extends BaseEntity {
@@ -27,4 +28,11 @@ export class StreamBranch extends BaseEntity {
     @ManyToOne(() => Affiliation, { nullable: true })
     @JoinColumn({ name: 'affiliating_body_id' })
     affiliation: Affiliation;
+
+    @Column({ type: 'int', nullable: true })
+    qualificationid: number;
+
+    @ManyToOne(() => Qualification, { nullable: true })
+    @JoinColumn({ name: 'qualificationid' })
+    qualification: Qualification;
 }

@@ -66,12 +66,10 @@ const adminNav = [
     icon: ClipboardList,
     label: "Mappings",
     children: [
-      {
-        label: "Program ↔ Qualification",
-        href: "/mappings/program-qualification",
-      },
+      { label: "Program ↔ Qualification", href: "/mappings/program-qualification" },
       { label: "Institute ↔ Program", href: "/mappings/institute-program" },
       { label: "Job Role ↔ Program", href: "/mappings/job-role-program" },
+      { label: "Qualification ↔ Stream/Branch", href: "/mappings/stream-branch-qualification" },
     ],
   },
   { icon: Briefcase, label: "Industry Requests", href: "/industry-requests" },

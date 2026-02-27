@@ -10,7 +10,12 @@ export class StreamBranchService {
     private readonly repo: Repository<StreamBranch>,
   ) { }
 
-  findAll(programId?: number) { return this.repo.find({ where: programId ? { programId } as any : {} }); }
+  findAll(programId?: number, qualificationId?: number) {
+    const where: any = {};
+    if (programId) where.programId = programId;
+    if (qualificationId) where.qualificationid = qualificationId;
+    return this.repo.find({ where: Object.keys(where).length ? where : {} });
+  }
 
   async findOne(id: number) {
     const item = await this.repo.findOne({ where: { stream_branch_Id: id } as any });
