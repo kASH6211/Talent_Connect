@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Param, Patch, Delete, ParseIntPipe, Req } from '@nestjs/common';
+import { Public } from '../../auth/public.decorator';
 import { ApiTags } from '@nestjs/swagger';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -14,6 +15,7 @@ export class InstituteQualificationMappingController {
     ) { }
 
     /** Returns distinct stream branches that have mappings in mapping_institute_qualification */
+    @Public()
     @Get('streams-in-use')
     async streamsInUse() {
         const rows = await this.dataSource.query(`
@@ -26,7 +28,9 @@ export class InstituteQualificationMappingController {
         return rows;
     }
 
+    @Public()
     @Get() findAll(@Req() req: any) { return this.service.findAll(req.user); }
+    @Public()
     @Get(':id') findOne(@Param('id', ParseIntPipe) id: number) { return this.service.findOne(id); }
     @Post() create(@Body() dto: Partial<InstituteQualificationMapping>, @Req() req: any) { return this.service.create(dto, req.user); }
     @Patch(':id') update(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<InstituteQualificationMapping>, @Req() req: any) { return this.service.update(id, dto, req.user); }

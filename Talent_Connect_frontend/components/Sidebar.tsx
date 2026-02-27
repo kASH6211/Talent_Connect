@@ -94,6 +94,7 @@ const instituteNav = [
     href: "/industry-requests",
   },
   { icon: Inbox, label: "Received Offers", href: "/received-offers" },
+  { icon: UserCircle, label: "My Profile", href: "/institute/profile" },
 ];
 
 const industryNav = [

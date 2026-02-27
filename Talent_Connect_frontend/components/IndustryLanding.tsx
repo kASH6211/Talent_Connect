@@ -45,7 +45,6 @@ interface Filters {
   type_ids: number[];
   ownership_ids: number[];
   qualification_ids: number[];
-  program_ids: number[];
   stream_ids: number[];
 }
 const EMPTY_FILTERS: Filters = {
@@ -54,7 +53,6 @@ const EMPTY_FILTERS: Filters = {
   type_ids: [],
   ownership_ids: [],
   qualification_ids: [],
-  program_ids: [],
   stream_ids: [],
 };
 const AVATAR_STOPS: [string, string][] = [
@@ -433,73 +431,64 @@ export default function IndustryLandingPage() {
   const [typeOpts, setTypeOpts] = useState<Option[]>([]);
   const [ownershipOpts, setOwnershipOpts] = useState<Option[]>([]);
   const [qualOpts, setQualOpts] = useState<Option[]>([]);
-  const [programOpts, setProgramOpts] = useState<Option[]>([]);
   const [streamOpts, setStreamOpts] = useState<Option[]>([]);
 
+  // Load static options on mount — same logic as FindInstitutesListView
   useEffect(() => {
-    (async () => {
-      try {
-        const [states, types, own, qual, districts, programs, streams] =
-          await Promise.all([
-            api.get("/state").then((r) =>
-              r.data
-                .map((s: any) => ({
-                  value: s.lgdstateid,
-                  label: s.statename,
-                }))
-                .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
-            ),
-            api.get("/institute-type").then((r) =>
-              r.data.map((t: any) => ({
-                value: t.institute_type_id,
-                label: t.institute_type,
-              })),
-            ),
-            api.get("/institute-ownership-type").then((r) =>
-              r.data.map((o: any) => ({
-                value: o.institute_ownership_type_id,
-                label: o.institute_type,
-              })),
-            ),
-            api.get("/qualification").then((r) =>
-              r.data.map((q: any) => ({
-                value: q.qualificationid,
-                label: q.qualification,
-              })),
-            ),
-            api.get("/district").then((r) =>
-              r.data
-                .map((d: any) => ({
-                  value: d.districtid,
-                  label: d.districtname,
-                }))
-                .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
-            ),
-            api.get("/program").then((r) =>
-              r.data.map((p: any) => ({
-                value: p.programId,
-                label: p.program_name,
-              })),
-            ),
-            api.get("/stream-branch").then((r) =>
-              r.data.map((s: any) => ({
-                value: s.stream_branch_Id,
-                label: s.stream_branch_name,
-              })),
-            ),
-          ]);
-        setStateOpts(states);
-        setTypeOpts(types);
-        setOwnershipOpts(own);
-        setQualOpts(qual);
-        setDistrictOpts(districts);
-        setProgramOpts(programs);
-        setStreamOpts(streams);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
+    const load = async () => {
+      const [states, types, own, qual] = await Promise.all([
+        api.get("/state").then(r => r.data.map((s: any) => ({ value: s.lgdstateid, label: s.statename })).sort((a: Option, b: Option) => a.label.localeCompare(b.label))).catch(() => []),
+        api.get("/institute-type").then(r => r.data.map((t: any) => ({ value: t.institute_type_id, label: t.institute_type }))).catch(() => []),
+        api.get("/institute-ownership-type").then(r => r.data.map((o: any) => ({ value: o.institute_ownership_type_id, label: o.institute_type }))).catch(() => []),
+        api.get("/qualification").then(r => r.data.map((q: any) => ({ value: q.qualificationid, label: q.qualification }))).catch(() => []),
+      ]);
+      setStateOpts(states);
+      setTypeOpts(types);
+      setOwnershipOpts(own);
+      setQualOpts(qual);
+    };
+    load();
   }, []);
+
+  // District cascade — same as FindInstitutesListView
+  useEffect(() => {
+    const loadDistricts = async () => {
+      if (filters.state_ids.length === 0) {
+        const res = await api.get("/district");
+        setDistrictOpts(
+          res.data.map((d: any) => ({ value: d.districtid, label: d.districtname })).sort((a: Option, b: Option) => a.label.localeCompare(b.label))
+        );
+      } else {
+        const results = await Promise.all(
+          filters.state_ids.map(sId => api.get(`/district?state_id=${sId}`).then(r => r.data))
+        );
+        const merged = results.flat();
+        const unique = Array.from(new Map(merged.map((d: any) => [d.districtid, d])).values());
+        setDistrictOpts(unique.map((d: any) => ({ value: d.districtid, label: d.districtname })).sort((a: Option, b: Option) => a.label.localeCompare(b.label)));
+      }
+    };
+    loadDistricts();
+  }, [filters.state_ids]);
+
+  // Stream cascade — same as FindInstitutesListView
+  useEffect(() => {
+    const loadStreams = async () => {
+      if (filters.qualification_ids.length > 0) {
+        const qId = filters.qualification_ids[0];
+        const [masterRes, inUseRes] = await Promise.all([
+          api.get(`/stream-branch?qualification_id=${qId}`),
+          api.get('/institute-qualification-mapping/streams-in-use'),
+        ]);
+        const inUseIds = new Set(inUseRes.data.map((s: any) => s.stream_branch_Id));
+        const filtered = masterRes.data.filter((s: any) => inUseIds.has(s.stream_branch_Id));
+        setStreamOpts(filtered.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })));
+      } else {
+        const res = await api.get('/institute-qualification-mapping/streams-in-use');
+        setStreamOpts(res.data.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })));
+      }
+    };
+    loadStreams();
+  }, [filters.qualification_ids]);
 
   const setFilter = (key: keyof Filters) => (vals: number[]) =>
     setFilters((f) => ({ ...f, [key]: vals }));
@@ -855,15 +844,15 @@ export default function IndustryLandingPage() {
                   style={
                     filtersOpen
                       ? {
-                          background: P_ALPHA(0.09),
-                          color: P,
-                          border: `1px solid ${P_ALPHA(0.25)}`,
-                        }
+                        background: P_ALPHA(0.09),
+                        color: P,
+                        border: `1px solid ${P_ALPHA(0.25)}`,
+                      }
                       : {
-                          background: "hsl(var(--bc) / 0.05)",
-                          color: "hsl(var(--bc) / 0.45)",
-                          border: "1px solid hsl(var(--bc) / 0.09)",
-                        }
+                        background: "hsl(var(--bc) / 0.05)",
+                        color: "hsl(var(--bc) / 0.45)",
+                        border: "1px solid hsl(var(--bc) / 0.09)",
+                      }
                   }
                 >
                   <Filter size={11} />
@@ -937,14 +926,7 @@ export default function IndustryLandingPage() {
                       placeholder="Any qualification"
                     />
                     <MultiSelectDropdown
-                      label="Program"
-                      options={programOpts}
-                      selected={filters.program_ids}
-                      onChange={setFilter("program_ids")}
-                      placeholder="Any program"
-                    />
-                    <MultiSelectDropdown
-                      label="Stream"
+                      label="Stream / Branch"
                       options={streamOpts}
                       selected={filters.stream_ids}
                       onChange={setFilter("stream_ids")}
