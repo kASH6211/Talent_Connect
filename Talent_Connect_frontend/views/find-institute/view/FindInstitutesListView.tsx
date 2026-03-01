@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Eye,
   Building2,
+  Mail,
 } from "lucide-react";
 import api from "@/lib/api";
 import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
@@ -37,6 +38,9 @@ interface InstituteRow {
   email: string;
   mobileno: string;
   student_count: number;
+  contactperson: string;
+  po_mobile: string;
+  po_email: string;
 }
 
 interface Filters {
@@ -49,7 +53,7 @@ interface Filters {
 }
 
 const EMPTY_FILTERS: Filters = {
-  state_ids: [],
+  state_ids: [3],
   district_ids: [],
   type_ids: [],
   ownership_ids: [],
@@ -105,33 +109,7 @@ export default function FindInstitutesPage() {
   // ─── ALL DATA LOADING LOGIC UNCHANGED ────────────────────────────────────
   useEffect(() => {
     const load = async () => {
-      const [states, types, own, qual] = await Promise.all([
-        api
-          .get("/state")
-          .then((r) =>
-            r.data
-              .map((s: any) => ({ value: s.lgdstateid, label: s.statename }))
-              .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
-          )
-          .catch(() => []),
-        api
-          .get("/institute-type")
-          .then((r) =>
-            r.data.map((t: any) => ({
-              value: t.institute_type_id,
-              label: t.institute_type,
-            })),
-          )
-          .catch(() => []),
-        api
-          .get("/institute-ownership-type")
-          .then((r) =>
-            r.data.map((o: any) => ({
-              value: o.institute_ownership_type_id,
-              label: o.institute_type,
-            })),
-          )
-          .catch(() => []),
+      const [qual] = await Promise.all([
         api
           .get("/qualification")
           .then((r) =>
@@ -142,9 +120,6 @@ export default function FindInstitutesPage() {
           )
           .catch(() => []),
       ]);
-      setStateOpts(states);
-      setTypeOpts(types);
-      setOwnershipOpts(own);
       setQualOpts(qual);
     };
     load();
@@ -152,33 +127,19 @@ export default function FindInstitutesPage() {
 
   useEffect(() => {
     const loadDistricts = async () => {
-      if (filters.state_ids.length === 0) {
-        const res = await api.get("/district");
+      try {
+        const res = await api.get(`/district?state_id=3`);
         setDistrictOpts(
           res.data
             .map((d: any) => ({ value: d.districtid, label: d.districtname }))
             .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
         );
-      } else {
-        const results = await Promise.all(
-          filters.state_ids.map((sId) =>
-            api.get(`/district?state_id=${sId}`).then((r) => r.data),
-          ),
-        );
-        const merged = results.flat();
-        const unique = Array.from(
-          new Map(merged.map((d: any) => [d.districtid, d])).values(),
-        );
-        setDistrictOpts(
-          unique
-            .map((d: any) => ({ value: d.districtid, label: d.districtname }))
-            .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
-        );
-        setFilters((f) => ({ ...f, district_ids: [] }));
+      } catch {
+        setDistrictOpts([]);
       }
     };
     loadDistricts();
-  }, [filters.state_ids]);
+  }, []);
 
   useEffect(() => {
     const loadStreams = async () => {
@@ -314,8 +275,7 @@ export default function FindInstitutesPage() {
               Find Institutes
             </h1>
             <p className="text-sm text-base-content/50 mt-0.5">
-              Discover institutes and send job offers directly to placement
-              cells
+              Search | Filter | Connect
             </p>
           </div>
         </div>
@@ -352,34 +312,13 @@ export default function FindInstitutesPage() {
           <h2 className="text-base font-bold text-base-content">Filters</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 mb-5">
-          <MultiSelectDropdown
-            label="State"
-            options={stateOpts}
-            selected={filters.state_ids}
-            onChange={setFilter("state_ids")}
-            placeholder="Any state"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
           <MultiSelectDropdown
             label="District"
             options={districtOpts}
             selected={filters.district_ids}
             onChange={setFilter("district_ids")}
             placeholder="Any district"
-          />
-          <MultiSelectDropdown
-            label="Institute Type"
-            options={typeOpts}
-            selected={filters.type_ids}
-            onChange={setFilter("type_ids")}
-            placeholder="Any type"
-          />
-          <MultiSelectDropdown
-            label="Ownership"
-            options={ownershipOpts}
-            selected={filters.ownership_ids}
-            onChange={setFilter("ownership_ids")}
-            placeholder="Any ownership"
           />
           <MultiSelectDropdown
             label="Qualification"
@@ -521,108 +460,208 @@ export default function FindInstitutesPage() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto rounded-xl border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 shadow-sm">
-                <table className="min-w-full divide-y divide-base-200 dark:divide-base-800">
-                  <thead>
-                    <tr className="bg-base-200/60 dark:bg-base-800/60">
-                      <th className="px-4 py-3 w-10">
-                        <button
-                          onClick={toggleAll}
-                          className="w-7 h-7 rounded-md border border-base-300 dark:border-base-600 bg-base-100 dark:bg-base-900 hover:border-primary flex items-center justify-center text-base-content/50 transition-all mx-auto"
-                        >
-                          {allSelected ? (
-                            <CheckSquare size={14} className="text-primary" />
-                          ) : (
-                            <Square size={14} />
-                          )}
-                        </button>
-                      </th>
-                      {[
-                        "Institute Name",
-                        "District",
-                        "Type",
-                        "Ownership",
-                        "Students",
-                        "",
-                      ].map((h) => (
-                        <th
-                          key={h}
-                          className="px-4 py-3 text-left text-xs font-bold text-base-content/60 uppercase tracking-wider"
-                        >
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-base-200 dark:divide-base-800">
-                    {paginatedInstitutes.map((inst) => {
-                      console.log("inst>>>", inst);
-                      const isSelected = selected.has(inst.institute_id);
-                      return (
-                        <tr
-                          key={inst.institute_id}
-                          onClick={() => toggleSelect(inst.institute_id)}
-                          className={clsx(
-                            "cursor-pointer transition-colors duration-150",
-                            isSelected
-                              ? "bg-primary/5 dark:bg-primary/10"
-                              : "hover:bg-base-200/50 dark:hover:bg-base-800/50",
-                          )}
-                        >
-                          <td className="px-4 py-3 text-center">
-                            {isSelected ? (
-                              <CheckSquare
-                                size={16}
-                                className="text-primary mx-auto"
-                              />
+              <div className="rounded-xl border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 shadow-sm overflow-hidden">
+                {/* Desktop Table */}
+                <div className="overflow-x-auto hidden md:block">
+                  <table className="min-w-full divide-y divide-base-200 dark:divide-base-800">
+                    <thead>
+                      <tr className="bg-base-200/60 dark:bg-base-800/60">
+                        <th className="px-4 py-3 w-10">
+                          <button
+                            onClick={toggleAll}
+                            className="w-7 h-7 rounded-md border border-base-300 dark:border-base-600 bg-base-100 dark:bg-base-900 hover:border-primary flex items-center justify-center text-base-content/50 transition-all mx-auto"
+                          >
+                            {allSelected ? (
+                              <CheckSquare size={14} className="text-primary" />
                             ) : (
-                              <Square
-                                size={16}
-                                className="text-base-content/30 mx-auto"
-                              />
+                              <Square size={14} />
                             )}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="text-sm font-semibold text-base-content">
-                              {inst.institute_name}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="flex items-center gap-1.5 text-sm text-base-content/65">
-                              <MapPin size={12} />
-                              {inst.district || "—"}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-base-content/65">
-                            {inst.type || "—"}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-base-content/65">
-                            {inst.ownership || "—"}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="flex items-center gap-1.5 text-sm text-base-content/65">
-                              <Users size={12} />
-                              {inst.student_count.toLocaleString()}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCurrentInstitute(inst);
-                                setViewInstitute(true);
-                              }}
-                              title="View / Send Offer"
-                              className="w-7 h-7 rounded-md border border-base-300 dark:border-base-700 bg-base-200 dark:bg-base-800 text-base-content/50 hover:border-primary hover:bg-primary hover:text-primary-content flex items-center justify-center transition-all duration-200 mx-auto"
-                            >
-                              <Eye size={13} />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                          </button>
+                        </th>
+                        {[
+                          "Institute Name",
+                          "District",
+                          "Students",
+                          "Placement Officer",
+                          "Actions",
+                        ].map((h) => (
+                          <th
+                            key={h}
+                            className="px-4 py-3 text-left text-xs font-bold text-base-content/60 uppercase tracking-wider"
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-base-200 dark:divide-base-800">
+                      {paginatedInstitutes.map((inst) => {
+                        const isSelected = selected.has(inst.institute_id);
+                        return (
+                          <tr
+                            key={inst.institute_id}
+                            onClick={() => toggleSelect(inst.institute_id)}
+                            className={clsx(
+                              "cursor-pointer transition-colors duration-150",
+                              isSelected
+                                ? "bg-primary/5 dark:bg-primary/10"
+                                : "hover:bg-base-200/50 dark:hover:bg-base-800/50",
+                            )}
+                          >
+                            <td className="px-4 py-3 text-center align-top">
+                              {isSelected ? (
+                                <CheckSquare
+                                  size={16}
+                                  className="text-primary mx-auto"
+                                />
+                              ) : (
+                                <Square
+                                  size={16}
+                                  className="text-base-content/30 mx-auto"
+                                />
+                              )}
+                            </td>
+                            <td className="px-4 py-3 align-top">
+                              <span className="text-sm font-semibold text-base-content">
+                                {inst.institute_name}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 align-top">
+                              <span className="flex items-center gap-1.5 text-sm text-base-content/65">
+                                <MapPin size={12} />
+                                {inst.district || "—"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 align-top">
+                              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-primary/10 text-primary text-xs font-bold">
+                                <Users size={12} />
+                                {inst.student_count.toLocaleString()}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 align-top">
+                              <div className="flex flex-col gap-0.5">
+                                {inst.contactperson ? (
+                                  <span className="text-sm font-medium text-base-content">{inst.contactperson}</span>
+                                ) : (
+                                  <span className="text-sm text-base-content/40">—</span>
+                                )}
+                                {(inst.po_email || inst.po_mobile) && (
+                                  <div className="flex flex-col text-xs text-base-content/60 mt-0.5">
+                                    {inst.po_email && <span>{inst.po_email}</span>}
+                                    {inst.po_mobile && <span>{inst.po_mobile}</span>}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 align-top">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (inst.po_email) window.location.href = `mailto:${inst.po_email}`;
+                                  }}
+                                  disabled={!inst.po_email}
+                                  title="Email Placement Officer"
+                                  className="h-8 w-8 rounded-md bg-base-100 border border-base-300 dark:border-base-700 text-base-content/60 hover:border-primary hover:text-primary hover:bg-primary/10 flex items-center justify-center transition-all disabled:opacity-40"
+                                >
+                                  <Mail size={14} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentInstitute(inst);
+                                    setViewInstitute(true);
+                                  }}
+                                  title="View Profile"
+                                  className="h-8 w-8 rounded-md bg-base-100 border border-base-300 dark:border-base-700 text-base-content/60 hover:border-primary hover:text-primary hover:bg-primary/10 flex items-center justify-center transition-all"
+                                >
+                                  <Eye size={14} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    dispatch(updateUiInstitute({ bulkOffer: { open: true } }));
+                                  }}
+                                  className="h-8 px-3 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-primary-content text-xs font-bold flex items-center gap-1.5 transition-all"
+                                >
+                                  <Send size={12} />
+                                  Connect
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="md:hidden flex flex-col divide-y divide-base-200 dark:divide-base-800">
+                  {paginatedInstitutes.map((inst) => {
+                    const isSelected = selected.has(inst.institute_id);
+                    return (
+                      <div
+                        key={inst.institute_id}
+                        onClick={() => toggleSelect(inst.institute_id)}
+                        className={clsx(
+                          "p-4 bg-base-100 flex flex-col gap-3 cursor-pointer transition-colors",
+                          isSelected ? "bg-primary/5 dark:bg-primary/10" : ""
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="mt-0.5">
+                            {isSelected ? (
+                              <CheckSquare size={16} className="text-primary" />
+                            ) : (
+                              <Square size={16} className="text-base-content/30" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-bold text-base-content leading-snug mb-1.5">{inst.institute_name}</h3>
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-base-content/60">
+                              <span className="flex items-center gap-1"><MapPin size={11} /> {inst.district || "—"}</span>
+                              <span className="flex items-center gap-1 font-semibold text-primary"><Users size={11} /> {inst.student_count.toLocaleString()} Students</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-base-200/50 dark:bg-base-800/50 text-xs ml-7">
+                          <span className="font-semibold text-base-content/80 uppercase tracking-wide text-[10px]">Placement Officer</span>
+                          {inst.contactperson ? (
+                            <div className="flex flex-col">
+                              <span className="font-medium text-base-content">{inst.contactperson}</span>
+                              <div className="flex flex-col gap-0.5 mt-0.5 text-[11px] text-base-content/60">
+                                {inst.po_email && <span className="truncate">{inst.po_email}</span>}
+                                {inst.po_mobile && <span>{inst.po_mobile}</span>}
+                              </div>
+                            </div>
+                          ) : <span className="text-base-content/40 text-[10px]">—</span>}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 ml-7">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); inst.po_email && (window.location.href = `mailto:${inst.po_email}`); }}
+                            disabled={!inst.po_email}
+                            className="flex-1 py-1.5 rounded bg-base-200 border border-base-300 flex items-center justify-center disabled:opacity-50 text-base-content/70 hover:border-primary hover:text-primary"
+                          >
+                            <Mail size={14} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setCurrentInstitute(inst); setViewInstitute(true); }}
+                            className="flex-1 py-1.5 rounded bg-base-200 border border-base-300 flex items-center justify-center text-base-content/70 hover:border-primary hover:text-primary"
+                          >
+                            <Eye size={14} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); dispatch(updateUiInstitute({ bulkOffer: { open: true } })); }}
+                            className="flex-[2] py-1.5 rounded bg-primary text-primary-content text-xs font-bold flex items-center justify-center gap-1.5"
+                          >
+                            <Send size={12} /> Connect
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Pagination */}
