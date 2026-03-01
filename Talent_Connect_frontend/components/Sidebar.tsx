@@ -259,10 +259,12 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
             </div>
             {!collapsed && (
               <div className="flex flex-col">
-                <span className="text-base font-bold text-base-content">
-                  Talent Connect
+                <span className="text-sm font-bold text-base-content leading-tight">
+                  HUNAR Punjab
                 </span>
-                <span className="text-xs text-base-content/60">Portal</span>
+                <span className="text-[9px] text-base-content/60 leading-tight pr-2">
+                  Hub for Upskilling, Networking & Access to Rozgar
+                </span>
               </div>
             )}
           </div>

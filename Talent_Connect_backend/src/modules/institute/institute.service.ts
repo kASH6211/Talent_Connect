@@ -66,6 +66,9 @@ export class InstituteService {
         '"i"."lgddistrictId"         AS district_id',
         'i.institute_type_id         AS type_id',
         'i.institute_ownership_type_id AS ownership_id',
+        'i.contactperson             AS contactperson',
+        'i.placement_officer_email_id AS po_email',
+        'i.placement_officer_contact_number AS po_mobile',
       ])
       .addSelect(`(
         SELECT COUNT(*)
@@ -125,6 +128,9 @@ export class InstituteService {
       type: typeMap[r.type_id] ?? '',
       ownership: ownMap[r.ownership_id] ?? '',
       student_count: parseInt(r.student_count ?? '0', 10),
+      contactperson: r.contactperson ?? '',
+      po_email: r.po_email ?? r.email ?? '',
+      po_mobile: r.po_mobile ?? r.mobileno ?? '',
     }));
   }
 

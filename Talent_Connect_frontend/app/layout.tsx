@@ -8,7 +8,7 @@ import ReduxProvider from "./StoreProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Talent Connect | Portal",
+  title: "HUNAR Punjab | Hub for Upskilling, Networking & Access to Rozgar",
   description: "Placement & Training Management Portal",
 };
 

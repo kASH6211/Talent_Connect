@@ -112,9 +112,9 @@ export default function LoginPage() {
                 className="text-5xl font-black text-primary-content tracking-tight leading-none"
                 style={{ textShadow: "0 4px 24px hsl(var(--p) / 0.5)" }}
               >
-                Talent
+                HUNAR
                 <br />
-                Connect
+                Punjab
               </h1>
               <div className="mt-4 w-12 h-1 rounded-full bg-primary-content/30 mx-auto" />
             </div>
@@ -151,7 +151,7 @@ export default function LoginPage() {
               />
             </div>
             <h1 className="text-3xl font-black text-base-content">
-              Talent Connect
+              HUNAR Punjab
             </h1>
           </div>
 
@@ -268,7 +268,7 @@ export default function LoginPage() {
           </div> */}
 
           <p className="text-center text-base-content/30 text-xs mt-10">
-            © {new Date().getFullYear()} Talent Connect • All Rights Reserved
+            © {new Date().getFullYear()} HUNAR Punjab • All Rights Reserved
           </p>
         </div>
       </div>

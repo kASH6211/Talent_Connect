@@ -21,9 +21,12 @@ import {
   Zap,
   Globe2,
   ShieldCheck,
+  Mail,
+  Eye,
 } from "lucide-react";
 import api from "@/lib/api";
 import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
+import { InstituteViewModal } from "@/views/find-institute/list/InstituteViewModal";
 
 /* ─── Brand color ────────────────────────────────────────────────── */
 const P = "#605dff";
@@ -38,6 +41,9 @@ interface InstituteRow {
   type: string;
   ownership: string;
   student_count: number;
+  contactperson: string;
+  po_mobile: string;
+  po_email: string;
 }
 interface Filters {
   state_ids: number[];
@@ -48,7 +54,7 @@ interface Filters {
   stream_ids: number[];
 }
 const EMPTY_FILTERS: Filters = {
-  state_ids: [],
+  state_ids: [3],
   district_ids: [],
   type_ids: [],
   ownership_ids: [],
@@ -425,50 +431,38 @@ export default function IndustryLandingPage() {
   const [searched, setSearched] = useState(false);
   const [loginModal, setLoginModal] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
+  const [viewInstitute, setViewInstitute] = useState(false);
+  const [currentInstitute, setCurrentInstitute] = useState<InstituteRow | null>(null);
 
-  const [stateOpts, setStateOpts] = useState<Option[]>([]);
   const [districtOpts, setDistrictOpts] = useState<Option[]>([]);
-  const [typeOpts, setTypeOpts] = useState<Option[]>([]);
-  const [ownershipOpts, setOwnershipOpts] = useState<Option[]>([]);
   const [qualOpts, setQualOpts] = useState<Option[]>([]);
   const [streamOpts, setStreamOpts] = useState<Option[]>([]);
 
   // Load static options on mount — same logic as FindInstitutesListView
   useEffect(() => {
     const load = async () => {
-      const [states, types, own, qual] = await Promise.all([
-        api.get("/state").then(r => r.data.map((s: any) => ({ value: s.lgdstateid, label: s.statename })).sort((a: Option, b: Option) => a.label.localeCompare(b.label))).catch(() => []),
-        api.get("/institute-type").then(r => r.data.map((t: any) => ({ value: t.institute_type_id, label: t.institute_type }))).catch(() => []),
-        api.get("/institute-ownership-type").then(r => r.data.map((o: any) => ({ value: o.institute_ownership_type_id, label: o.institute_type }))).catch(() => []),
+      const [qual] = await Promise.all([
         api.get("/qualification").then(r => r.data.map((q: any) => ({ value: q.qualificationid, label: q.qualification }))).catch(() => []),
       ]);
-      setStateOpts(states);
-      setTypeOpts(types);
-      setOwnershipOpts(own);
       setQualOpts(qual);
     };
     load();
   }, []);
 
-  // District cascade — same as FindInstitutesListView
+  // District cascade — fetch for Punjab (state_id=3)
   useEffect(() => {
     const loadDistricts = async () => {
-      if (filters.state_ids.length === 0) {
-        const res = await api.get("/district");
+      try {
+        const res = await api.get(`/district?state_id=3`);
         setDistrictOpts(
           res.data.map((d: any) => ({ value: d.districtid, label: d.districtname })).sort((a: Option, b: Option) => a.label.localeCompare(b.label))
         );
-      } else {
-        const results = await Promise.all(
-          filters.state_ids.map(sId => api.get(`/district?state_id=${sId}`).then(r => r.data))
-        );
-        const merged = results.flat();
-        const unique = Array.from(new Map(merged.map((d: any) => [d.districtid, d])).values());
-        setDistrictOpts(unique.map((d: any) => ({ value: d.districtid, label: d.districtname })).sort((a: Option, b: Option) => a.label.localeCompare(b.label)));
+      } catch {
+        setDistrictOpts([]);
       }
     };
     loadDistricts();
-  }, [filters.state_ids]);
+  }, []);
 
   // Stream cascade — same as FindInstitutesListView
   useEffect(() => {
@@ -510,7 +504,7 @@ export default function IndustryLandingPage() {
   }, [filters]);
 
   const activeFilterCount = Object.values(filters).filter(
-    (v) => v.length > 0,
+    (v, i) => Object.keys(filters)[i] !== 'state_ids' && Array.isArray(v) && v.length > 0,
   ).length;
 
   return (
@@ -620,10 +614,10 @@ export default function IndustryLandingPage() {
                 </div>
                 <div>
                   <span className="font-bold text-[15px] leading-none block text-white">
-                    Talent Connect
+                    HUNAR Punjab
                   </span>
-                  <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/50">
-                    Industry Portal
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.05em] text-white/50">
+                    Hub for Upskilling, Networking & Access to Rozgar
                   </span>
                 </div>
               </div>
@@ -754,8 +748,7 @@ export default function IndustryLandingPage() {
         <div className="w-full" style={{ background: "hsl(var(--b1))" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-8 flex flex-wrap justify-center gap-2.5">
             {[
-              { icon: Globe2, text: "All-India Coverage" },
-              { icon: Filter, text: "7 Filter Dimensions" },
+              { icon: Filter, text: "Multi filter dimensions" },
               { icon: Zap, text: "Instant Matching" },
               { icon: ShieldCheck, text: "Verified Institutes" },
             ].map(({ icon: Icon, text }) => (
@@ -819,7 +812,7 @@ export default function IndustryLandingPage() {
                       className="text-xs"
                       style={{ color: "hsl(var(--bc) / 0.38)" }}
                     >
-                      Filter & connect with placement cells
+                      Search | Filter | Connect
                     </p>
                   </div>
                 </div>
@@ -865,44 +858,24 @@ export default function IndustryLandingPage() {
 
               {/* Filters */}
               <div
-                className="ilp-collapse"
+                className="transition-all duration-300 relative z-20"
                 style={{
                   maxHeight: filtersOpen ? "700px" : "0",
                   opacity: filtersOpen ? 1 : 0,
+                  overflow: filtersOpen ? "visible" : "hidden",
                 }}
               >
                 <div
                   className="px-6 sm:px-8 py-5"
                   style={{ borderBottom: "1px solid hsl(var(--bc) / 0.06)" }}
                 >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                    <MultiSelectDropdown
-                      label="State"
-                      options={stateOpts}
-                      selected={filters.state_ids}
-                      onChange={setFilter("state_ids")}
-                      placeholder="Any state"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <MultiSelectDropdown
                       label="District"
                       options={districtOpts}
                       selected={filters.district_ids}
                       onChange={setFilter("district_ids")}
                       placeholder="Any district"
-                    />
-                    <MultiSelectDropdown
-                      label="Institute Type"
-                      options={typeOpts}
-                      selected={filters.type_ids}
-                      onChange={setFilter("type_ids")}
-                      placeholder="Any type"
-                    />
-                    <MultiSelectDropdown
-                      label="Ownership"
-                      options={ownershipOpts}
-                      selected={filters.ownership_ids}
-                      onChange={setFilter("ownership_ids")}
-                      placeholder="Any ownership"
                     />
                     <MultiSelectDropdown
                       label="Qualification"
@@ -926,8 +899,7 @@ export default function IndustryLandingPage() {
                         className="text-xs"
                         style={{ color: "hsl(var(--bc) / 0.33)" }}
                       >
-                        {activeFilterCount} filter
-                        {activeFilterCount !== 1 ? "s" : ""} active
+                        {activeFilterCount} filter{activeFilterCount !== 1 ? "s" : ""} active
                       </span>
                       <button
                         onClick={() => setFilters(EMPTY_FILTERS)}
@@ -938,11 +910,23 @@ export default function IndustryLandingPage() {
                       </button>
                     </div>
                   )}
+                  {/* Always show reset button explicitly as requested */}
+                  {activeFilterCount === 0 && (
+                    <div className="mt-4 flex items-center justify-end">
+                      <button
+                        onClick={() => setFilters(EMPTY_FILTERS)}
+                        className="text-xs font-semibold flex items-center gap-1 opacity-40 hover:opacity-100 transition-opacity"
+                        style={{ color: "hsl(var(--bc))" }}
+                      >
+                        Reset filters
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Search button */}
-              <div className="px-6 sm:px-8 py-4">
+              <div className="px-6 sm:px-8 py-4 relative z-10">
                 <button
                   onClick={handleSearch}
                   disabled={loading}
@@ -1038,20 +1022,135 @@ export default function IndustryLandingPage() {
                       </p>
                     </div>
                   ) : (
-                    <div className="ilp-scroll grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[580px] overflow-y-auto pr-1">
-                      {institutes.map((inst, idx) => (
-                        <div
-                          key={inst.institute_id}
-                          className="ilp-card-anim"
-                          style={{ animationDelay: `${idx * 35}ms` }}
-                        >
-                          <InstituteCard
-                            inst={inst}
-                            onSend={() => setLoginModal(true)}
-                            index={idx}
-                          />
-                        </div>
-                      ))}
+                    <div className="overflow-x-auto rounded-xl border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 shadow-sm shadow-base-300">
+                      {/* Desktop Table */}
+                      <table className="min-w-full divide-y divide-base-200 dark:divide-base-800 hidden md:table">
+                        <thead>
+                          <tr className="bg-base-200/60 dark:bg-base-800/60">
+                            {[
+                              "Institute Name",
+                              "District",
+                              "Students",
+                              "Placement Officer",
+                              "Actions",
+                            ].map((h) => (
+                              <th
+                                key={h}
+                                className="px-4 py-3 text-left text-xs font-bold text-base-content/60 uppercase tracking-wider"
+                              >
+                                {h}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-base-200 dark:divide-base-800">
+                          {institutes.map((inst, idx) => (
+                            <tr key={inst.institute_id} className="transition-colors duration-150 hover:bg-base-200/50 dark:hover:bg-base-800/50">
+                              <td className="px-4 py-3 align-top">
+                                <span className="text-sm font-semibold text-base-content block">
+                                  {inst.institute_name}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-base-content/65 align-top">
+                                {inst.district || "—"}
+                              </td>
+                              <td className="px-4 py-3 align-top">
+                                <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-primary/10 text-primary text-xs font-bold">
+                                  <Users size={12} />
+                                  {inst.student_count.toLocaleString()}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 align-top">
+                                {inst.contactperson ? (
+                                  <div>
+                                    <div className="text-sm font-medium text-base-content">{inst.contactperson}</div>
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-base-content/40">—</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 align-top">
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (inst.po_email) window.location.href = `mailto:${inst.po_email}`;
+                                    }}
+                                    disabled={!inst.po_email}
+                                    title="Email Placement Officer"
+                                    className="h-8 w-8 rounded-md bg-base-200 text-base-content/60 hover:text-primary hover:bg-primary/10 flex items-center justify-center transition-all disabled:opacity-40"
+                                  >
+                                    <Mail size={14} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setCurrentInstitute(inst);
+                                      setViewInstitute(true);
+                                    }}
+                                    title="View Profile"
+                                    className="h-8 w-8 rounded-md bg-base-200 text-base-content/60 hover:text-primary hover:bg-primary/10 flex items-center justify-center transition-all"
+                                  >
+                                    <Eye size={14} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setLoginModal(true);
+                                    }}
+                                    className="h-8 px-3 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-primary-content text-xs font-bold flex items-center gap-1.5 transition-all"
+                                  >
+                                    <Send size={12} />
+                                    Connect
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+
+                      {/* Mobile Cards */}
+                      <div className="md:hidden flex flex-col divide-y divide-base-200 dark:divide-base-800">
+                        {institutes.map((inst, idx) => (
+                          <div key={inst.institute_id} className="p-4 bg-base-100 flex flex-col gap-3 ilp-card-anim" style={{ animationDelay: `${idx * 35}ms` }}>
+                            <div>
+                              <h3 className="text-sm font-bold text-base-content leading-snug mb-1.5">{inst.institute_name}</h3>
+                              <div className="flex flex-wrap items-center gap-3 text-xs text-base-content/60">
+                                <span className="flex items-center gap-1"><MapPin size={11} /> {inst.district || "—"}</span>
+                                <span className="flex items-center gap-1 font-semibold text-primary"><Users size={11} /> {inst.student_count.toLocaleString()} Students</span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-base-200/50 dark:bg-base-800/50 text-xs">
+                              <span className="font-semibold text-base-content/80 uppercase tracking-wide text-[10px]">Placement Officer</span>
+                              {inst.contactperson ? (
+                                <span className="font-medium text-base-content">{inst.contactperson}</span>
+                              ) : <span className="text-base-content/40 text-[10px]">—</span>}
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <button
+                                onClick={() => inst.po_email && (window.location.href = `mailto:${inst.po_email}`)}
+                                disabled={!inst.po_email}
+                                className="flex-1 py-1.5 rounded bg-base-200 flex items-center justify-center disabled:opacity-50 text-base-content/70 hover:text-primary"
+                              >
+                                <Mail size={14} />
+                              </button>
+                              <button
+                                onClick={() => { setCurrentInstitute(inst); setViewInstitute(true); }}
+                                className="flex-1 py-1.5 rounded bg-base-200 flex items-center justify-center text-base-content/70 hover:text-primary"
+                              >
+                                <Eye size={14} />
+                              </button>
+                              <button
+                                onClick={() => setLoginModal(true)}
+                                className="flex-[2] py-1.5 rounded bg-primary text-primary-content text-xs font-bold flex items-center justify-center gap-1.5"
+                              >
+                                <Send size={12} /> Connect
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1084,7 +1183,7 @@ export default function IndustryLandingPage() {
                   <Sparkles size={13} color="#fff" />
                 </div>
                 <span className="text-sm font-semibold" style={{ color: P }}>
-                  New to Talent Connect?
+                  New to HUNAR Punjab?
                 </span>
                 <span
                   className="text-sm"
@@ -1123,6 +1222,11 @@ export default function IndustryLandingPage() {
           </button>
         </footer>
       </div>
+      <InstituteViewModal
+        open={viewInstitute}
+        setOpen={setViewInstitute}
+        institute={currentInstitute}
+      />
     </>
   );
 }
