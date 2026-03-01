@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -30,11 +30,11 @@ export default function AuthWrapper({ children }: Props) {
     }
   };
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-    // Wait until auth state is settled
-    if (loading) return;
+  useEffect(() => {
+    if (!mounted || loading) return;
 
     if (hasRedirected.current) return;
 
@@ -63,11 +63,11 @@ export default function AuthWrapper({ children }: Props) {
         router.replace("/login");
       }
     }
-  }, [router, pathname, user, role, loading]);
+  }, [router, pathname, user, role, loading, mounted]);
 
   // ── Render logic ───────────────────────────────────────────────────────
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-base-200">
         <span className="loading loading-spinner loading-lg text-primary"></span>
@@ -75,8 +75,7 @@ export default function AuthWrapper({ children }: Props) {
     );
   }
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("tc_token") : null;
+  const token = localStorage.getItem("tc_token");
 
   if (!token && !["/", "/login"].includes(pathname)) {
     return null; // or a minimal "Redirecting..." message

@@ -22,7 +22,7 @@ export default function LoginPage() {
       case "institute":
         return "/institute/dashboard";
       case "industry":
-        return "/industry/dashboard";
+        return "/find-institutes";
       default:
         return "/";
     }

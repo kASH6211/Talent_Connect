@@ -577,16 +577,6 @@ export default function FindInstitutesPage() {
                                 >
                                   <Eye size={14} />
                                 </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    dispatch(updateUiInstitute({ bulkOffer: { open: true } }));
-                                  }}
-                                  className="h-8 px-3 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-primary-content text-xs font-bold flex items-center gap-1.5 transition-all"
-                                >
-                                  <Send size={12} />
-                                  Connect
-                                </button>
                               </div>
                             </td>
                           </tr>
@@ -650,12 +640,6 @@ export default function FindInstitutesPage() {
                             className="flex-1 py-1.5 rounded bg-base-200 border border-base-300 flex items-center justify-center text-base-content/70 hover:border-primary hover:text-primary"
                           >
                             <Eye size={14} />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); dispatch(updateUiInstitute({ bulkOffer: { open: true } })); }}
-                            className="flex-[2] py-1.5 rounded bg-primary text-primary-content text-xs font-bold flex items-center justify-center gap-1.5"
-                          >
-                            <Send size={12} /> Connect
                           </button>
                         </div>
                       </div>
@@ -721,6 +705,8 @@ export default function FindInstitutesPage() {
         institutesMap={institutesMap}
         qualOptions={qualOpts}
         streamOptions={streamOpts}
+        prefilledQualIds={filters.qualification_ids}
+        prefilledStreamIds={filters.stream_ids}
         onSent={() => {
           setSentSuccess(true);
           setSelected(new Set());

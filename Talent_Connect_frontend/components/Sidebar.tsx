@@ -21,8 +21,9 @@ import {
   ChevronLeft,
   Mail,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { clsx } from "clsx";
+import api from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components2/ThemeToggle";
 
@@ -78,8 +79,9 @@ const adminNav = [
 
 const instituteNav = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/institute/dashboard" },
-  { icon: Users, label: "Students", href: "/students" },
-  { icon: Briefcase, label: "Placements", href: "/placements" },
+  { icon: Inbox, label: "Received EOI", href: "/received-offers" },
+  /* { icon: Users, label: "Students", href: "/students" },
+  { icon: Briefcase, label: "Placements", href: "/placements" }, */
   {
     icon: ClipboardList,
     label: "Mappings",
@@ -88,25 +90,24 @@ const instituteNav = [
       { label: "Qualification ↔ Stream/Branch", href: "/mappings/stream-branch-qualification" },
     ],
   },
-  {
+  /* {
     icon: ClipboardList,
     label: "Industry Requests",
     href: "/industry-requests",
-  },
-  { icon: Inbox, label: "Received Offers", href: "/received-offers" },
+  }, */
   { icon: UserCircle, label: "My Profile", href: "/institute/profile" },
 ];
 
 const industryNav = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/industry/dashboard" },
   { icon: Search, label: "Find Institutes", href: "/find-institutes" },
-  { icon: Send, label: "Sent Offers", href: "/sent-offers" },
-  { icon: Briefcase, label: "Placements", href: "/placements" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/industry/dashboard" },
+  { icon: Send, label: "Sent EOI", href: "/sent-offers" },
+  /* { icon: Briefcase, label: "Placements", href: "/placements" },
   {
     icon: ClipboardList,
     label: "Industry Requests",
     href: "/industry-requests",
-  },
+  }, */
 ];
 
 const roleBadge: Record<string, { label: string; color: string }> = {
@@ -223,6 +224,20 @@ function NavGroup({ item, collapsed }: any) {
 // ── Sidebar Component ──────────────────────────────────────────────────────
 export default function Sidebar({ collapsed, setCollapsed }: any) {
   const { user, role, logout, loading } = useAuth();
+  const [orgName, setOrgName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user?.institute_id && role === "institute") {
+      api.get(`/institute/${user.institute_id}`)
+        .then(res => setOrgName(res.data?.institute_name))
+        .catch(console.error);
+    } else if (user?.industry_id && role === "industry") {
+      api.get(`/industry/${user.industry_id}`)
+        .then(res => setOrgName(res.data?.industry_name))
+        .catch(console.error);
+    }
+  }, [user, role]);
+
   const navItems =
     role === "institute"
       ? instituteNav
@@ -288,6 +303,11 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
                 <div className="text-sm font-semibold text-base-content truncate">
                   {user.username}
                 </div>
+                {orgName && (
+                  <div className="text-xs font-medium text-base-content/70 truncate" title={orgName}>
+                    {orgName}
+                  </div>
+                )}
 
                 {/* Smaller, Attractive Badge */}
                 <div
