@@ -652,30 +652,16 @@ export default function IndustryLandingPage() {
 
           {/* ── Hero content ── */}
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-32 text-center">
-            {/* Badge */}
-            <div
-              className="ilp-rise inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-7 text-xs font-semibold uppercase tracking-[0.1em]"
-              style={{
-                background: "rgba(255,255,255,0.14)",
-                border: "1px solid rgba(255,255,255,0.22)",
-                color: "#fff",
-              }}
-            >
-              <Sparkles size={11} /> India's Largest Placement Network
-            </div>
-
             {/* H1 */}
             <h1 className="ilp-rise ilp-d1 text-4xl sm:text-5xl lg:text-[64px] font-extrabold leading-[1.07] tracking-tight mb-5">
               <span className="text-white">Connect with </span>
               <span className="ilp-shine">Top Institutes</span>
               <br />
-              <span className="text-white/90">Across India</span>
+              <span className="text-white/90">across Punjab</span>
             </h1>
 
             <p className="ilp-rise ilp-d2 text-base sm:text-[17px] max-w-2xl mx-auto leading-relaxed mb-11 text-white/65">
-              Search 1,200+ institutes, filter by stream, location &
-              qualification, and send job offers directly to placement cells —
-              all in one place.
+              Search institutes by location and course offerings - connect directly with their placement teams to meet your workforce requirements.
             </p>
 
             {/* CTA row */}
