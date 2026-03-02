@@ -69,6 +69,8 @@ export class InstituteService {
         'i.contactperson             AS contactperson',
         'i.placement_officer_email_id AS po_email',
         'i.placement_officer_contact_number AS po_mobile',
+        'i.latitude                  AS latitude',
+        'i.longitude                 AS longitude',
       ])
       .addSelect(`(
         SELECT COUNT(*)
@@ -78,6 +80,15 @@ export class InstituteService {
           ${qualIds.length ? `AND s.qualificationid IN (${qualIds.join(',')})` : ''}
           ${streamIds.length ? `AND s."stream_branch_Id" IN (${streamIds.join(',')})` : ''}
       )`, 'student_count')
+      .addSelect(`(
+        SELECT COUNT(*)
+        FROM student_details s
+        WHERE s.institute_id = i.institute_id
+          AND s.is_active = 'Y'
+          AND s.passing_year = extract(year from current_date)::text
+          ${qualIds.length ? `AND s.qualificationid IN (${qualIds.join(',')})` : ''}
+          ${streamIds.length ? `AND s."stream_branch_Id" IN (${streamIds.join(',')})` : ''}
+      )`, 'final_year_student_count')
       .where(`i.is_active = 'Y'`);
 
     if (districtIds.length) qb.andWhere(`i."lgddistrictId" IN (:...dids)`, { dids: districtIds });
@@ -128,9 +139,52 @@ export class InstituteService {
       type: typeMap[r.type_id] ?? '',
       ownership: ownMap[r.ownership_id] ?? '',
       student_count: parseInt(r.student_count ?? '0', 10),
+      final_year_student_count: parseInt(r.final_year_student_count ?? '0', 10),
       contactperson: r.contactperson ?? '',
       po_email: r.po_email ?? r.email ?? '',
       po_mobile: r.po_mobile ?? r.mobileno ?? '',
+      latitude: r.latitude ?? null,
+      longitude: r.longitude ?? null,
+    }));
+  }
+
+  /** Fetch course breakdown for a specific institute considering active filters */
+  async getFilteredCourses(id: number, q: InstituteSearchQuery) {
+    const parse = (s?: string) => s ? s.split(',').map(Number).filter(Boolean) : [];
+    const qualIds = parse(q.qualification_ids);
+    const streamIds = parse(q.stream_ids);
+
+    const qb = this.dataSource.createQueryBuilder()
+      .select([
+        'q.qualification_name AS qualification_name',
+        'str.stream_branch_name AS stream_name',
+        'COUNT(s.student_id) AS student_count',
+        `COUNT(CASE WHEN s.passing_year = extract(year from current_date)::text THEN 1 END) AS final_year_student_count`
+      ])
+      .from('student_details', 's')
+      .innerJoin('master_qualification', 'q', 's.qualificationid = q.qualificationid')
+      .innerJoin('master_stream_branch', 'str', 's."stream_branch_Id" = str."stream_branch_Id"')
+      .where('s.institute_id = :id', { id })
+      .andWhere(`s.is_active = 'Y'`);
+
+    if (qualIds.length) {
+      qb.andWhere(`s.qualificationid IN (:...qids)`, { qids: qualIds });
+    }
+    if (streamIds.length) {
+      qb.andWhere(`s."stream_branch_Id" IN (:...sids)`, { sids: streamIds });
+    }
+
+    qb.groupBy('q.qualification_name');
+    qb.addGroupBy('str.stream_branch_name');
+    qb.orderBy('q.qualification_name', 'ASC');
+    qb.addOrderBy('str.stream_branch_name', 'ASC');
+
+    const rows = await qb.getRawMany();
+    return rows.map(r => ({
+      qualification: r.qualification_name,
+      course: r.stream_name,
+      student_count: parseInt(r.student_count ?? '0', 10),
+      final_year_student_count: parseInt(r.final_year_student_count ?? '0', 10),
     }));
   }
 

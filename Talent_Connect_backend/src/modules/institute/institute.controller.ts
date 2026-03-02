@@ -29,6 +29,15 @@ export class InstituteController {
 
   @Public()
   @Get(':id') findOne(@Param('id', ParseIntPipe) id: number) { return this.service.findOne(id); }
+
+  @Public()
+  @Get(':id/filtered-courses')
+  @ApiQuery({ name: 'qualification_ids', required: false })
+  @ApiQuery({ name: 'stream_ids', required: false })
+  getFilteredCourses(@Param('id', ParseIntPipe) id: number, @Query() q: InstituteSearchQuery) {
+    return this.service.getFilteredCourses(id, q);
+  }
+
   @Post() create(@Body() dto: Partial<Institute>) { return this.service.create(dto); }
   @Patch(':id') update(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<Institute>) { return this.service.update(id, dto); }
   @Delete(':id') remove(@Param('id', ParseIntPipe) id: number) { return this.service.remove(id); }

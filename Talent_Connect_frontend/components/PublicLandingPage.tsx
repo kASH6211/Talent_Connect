@@ -25,6 +25,7 @@ interface InstituteRow {
     email?: string;
     mobileno?: string;
     student_count: number;
+    final_year_student_count?: number;
 }
 
 interface Filters {
@@ -135,7 +136,11 @@ export default function PublicLandingPage() {
         setLoading(false);
     }, [filters]);
 
-    const reset = () => { setFilters(EMPTY); setInstitutes([]); setSearched(false); };
+    useEffect(() => {
+        handleSearch();
+    }, [handleSearch]);
+
+    const reset = () => setFilters(EMPTY);
 
     const totalPages = Math.ceil(institutes.length / PAGE_SIZE);
     const paged = institutes.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -145,7 +150,7 @@ export default function PublicLandingPage() {
             {showLoginPrompt && <LoginPromptModal onClose={() => setShowLoginPrompt(false)} />}
 
             {/* Hero / Search Panel */}
-            <div className="bg-gradient-to-br from-primary/90 to-primary text-primary-content py-12 px-4">
+            <div className="bg-gradient-to-br from-primary/90 to-primary text-primary-content py-12 px-4 relative z-20">
                 <div className="max-w-5xl mx-auto">
                     <div className="text-center mb-8">
                         <h1 className="text-3xl md:text-4xl font-bold mb-2">Find Institutes</h1>
@@ -153,23 +158,19 @@ export default function PublicLandingPage() {
                     </div>
 
                     {/* Filters */}
-                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6 space-y-4">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6 space-y-4 relative z-30">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <MultiSelectDropdown label="State" options={stateOpts} selected={filters.state_ids} onChange={vals => { setFilter('state_ids')(vals); setFilter('district_ids')([]); }} placeholder="Any state" />
-                            <MultiSelectDropdown label="District" options={districtOpts} selected={filters.district_ids} onChange={setFilter('district_ids')} placeholder={filters.state_ids.length ? 'Any district' : 'Select state first'} />
-                            <MultiSelectDropdown label="Qualification" options={qualOpts} selected={filters.qualification_ids} onChange={setFilter('qualification_ids')} placeholder="Any qualification" />
-                            <MultiSelectDropdown label="Stream / Branch" options={streamOpts} selected={filters.stream_ids} onChange={setFilter('stream_ids')} placeholder="Any stream" />
-                            <MultiSelectDropdown label="Institute Type" options={typeOpts} selected={filters.type_ids} onChange={setFilter('type_ids')} placeholder="Any type" />
-                            <MultiSelectDropdown label="Ownership" options={ownershipOpts} selected={filters.ownership_ids} onChange={setFilter('ownership_ids')} placeholder="Any ownership" />
+                            <MultiSelectDropdown label="State" options={stateOpts} selected={filters.state_ids} onChange={vals => { setFilter('state_ids')(vals); setFilter('district_ids')([]); }} placeholder="All states" />
+                            <MultiSelectDropdown label="District" options={districtOpts} selected={filters.district_ids} onChange={setFilter('district_ids')} placeholder={filters.state_ids.length ? 'All districts' : 'Select state first'} />
+                            <MultiSelectDropdown label="Qualification" options={qualOpts} selected={filters.qualification_ids} onChange={setFilter('qualification_ids')} placeholder="All qualifications" />
+                            <MultiSelectDropdown label="Course/Trade" options={streamOpts} selected={filters.stream_ids} onChange={setFilter('stream_ids')} placeholder="All courses/trades" />
+                            <MultiSelectDropdown label="Institute Type" options={typeOpts} selected={filters.type_ids} onChange={setFilter('type_ids')} placeholder="All types" />
+                            <MultiSelectDropdown label="Ownership" options={ownershipOpts} selected={filters.ownership_ids} onChange={setFilter('ownership_ids')} placeholder="All ownerships" />
                         </div>
 
-                        <div className="flex gap-3 justify-end">
-                            <button onClick={reset} className="btn btn-ghost btn-sm text-primary-content/80 gap-1.5">
-                                <X size={14} /> Reset
-                            </button>
-                            <button onClick={handleSearch} disabled={loading} className="btn btn-white btn-sm text-primary font-semibold gap-2 shadow-lg">
-                                {loading ? <span className="loading loading-spinner loading-xs" /> : <Search size={16} />}
-                                Search Institutes
+                        <div className="flex gap-3 justify-end mt-4">
+                            <button onClick={reset} disabled={loading} className="btn btn-ghost btn-sm text-primary-content/80 gap-1.5 border border-white/20">
+                                <X size={14} /> Reset Filters
                             </button>
                         </div>
                     </div>
@@ -230,9 +231,15 @@ export default function PublicLandingPage() {
                                                 <span>{inst.district || `District #${inst.district_id}`}</span>
                                             </div>
                                         )}
-                                        <div className="flex items-center gap-1.5">
-                                            <Users size={12} className="flex-shrink-0" />
-                                            <span>{inst.student_count ?? 0} students</span>
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <div className="flex items-center gap-1 text-primary">
+                                                <Users size={12} className="flex-shrink-0" />
+                                                <span className="font-semibold">{inst.student_count ?? 0} Total Enrolled</span>
+                                            </div>
+                                            <div className="flex items-center gap-1 text-secondary">
+                                                <Users size={12} className="flex-shrink-0" />
+                                                <span className="font-semibold">{inst.final_year_student_count ?? 0} Final Year</span>
+                                            </div>
                                         </div>
                                         {inst.mobileno && <p>📞 {inst.mobileno}</p>}
                                     </div>

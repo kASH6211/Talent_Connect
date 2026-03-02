@@ -17,16 +17,20 @@ import {
   TrendingUp,
   Award,
   ChevronDown,
-  ArrowRight,
-  Zap,
-  Globe2,
-  ShieldCheck,
   Mail,
   Eye,
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
+  ArrowRight,
+  ShieldCheck,
+  Zap,
+  Globe2,
 } from "lucide-react";
 import api from "@/lib/api";
 import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
 import { InstituteViewModal } from "@/views/find-institute/list/InstituteViewModal";
+import InstituteCoursesModal from "@/views/find-institute/view/InstituteCoursesModal";
 
 /* ─── Brand color ────────────────────────────────────────────────── */
 const P = "#605dff";
@@ -41,6 +45,7 @@ interface InstituteRow {
   type: string;
   ownership: string;
   student_count: number;
+  final_year_student_count?: number;
   contactperson: string;
   po_mobile: string;
   po_email: string;
@@ -432,7 +437,9 @@ export default function IndustryLandingPage() {
   const [loginModal, setLoginModal] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [viewInstitute, setViewInstitute] = useState(false);
+  const [viewCourses, setViewCourses] = useState(false);
   const [currentInstitute, setCurrentInstitute] = useState<InstituteRow | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [districtOpts, setDistrictOpts] = useState<Option[]>([]);
   const [qualOpts, setQualOpts] = useState<Option[]>([]);
@@ -490,6 +497,7 @@ export default function IndustryLandingPage() {
   const handleSearch = useCallback(async () => {
     setLoading(true);
     setSearched(true);
+    setCurrentPage(1);
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => {
       if ((v as number[]).length) params.set(k, (v as number[]).join(","));
@@ -503,9 +511,17 @@ export default function IndustryLandingPage() {
     setLoading(false);
   }, [filters]);
 
+  useEffect(() => {
+    handleSearch();
+  }, [handleSearch]);
+
   const activeFilterCount = Object.values(filters).filter(
     (v, i) => Object.keys(filters)[i] !== 'state_ids' && Array.isArray(v) && v.length > 0,
   ).length;
+
+  const PAGE_SIZE = 10;
+  const totalPages = Math.ceil(institutes.length / PAGE_SIZE);
+  const pagedInstitutes = institutes.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <>
@@ -748,8 +764,6 @@ export default function IndustryLandingPage() {
         <div className="w-full" style={{ background: "hsl(var(--b1))" }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-8 flex flex-wrap justify-center gap-2.5">
             {[
-              { icon: Filter, text: "Multi filter dimensions" },
-              { icon: Zap, text: "Instant Matching" },
               { icon: ShieldCheck, text: "Verified Institutes" },
             ].map(({ icon: Icon, text }) => (
               <div
@@ -875,21 +889,21 @@ export default function IndustryLandingPage() {
                       options={districtOpts}
                       selected={filters.district_ids}
                       onChange={setFilter("district_ids")}
-                      placeholder="Any district"
+                      placeholder="All districts"
                     />
                     <MultiSelectDropdown
                       label="Qualification"
                       options={qualOpts}
                       selected={filters.qualification_ids}
                       onChange={setFilter("qualification_ids")}
-                      placeholder="Any qualification"
+                      placeholder="All qualifications"
                     />
                     <MultiSelectDropdown
-                      label="Stream / Branch"
+                      label="Course/Trade"
                       options={streamOpts}
                       selected={filters.stream_ids}
                       onChange={setFilter("stream_ids")}
-                      placeholder="Any stream"
+                      placeholder="All courses/trades"
                     />
                   </div>
 
@@ -925,30 +939,7 @@ export default function IndustryLandingPage() {
                 </div>
               </div>
 
-              {/* Search button */}
-              <div className="px-6 sm:px-8 py-4 relative z-10">
-                <button
-                  onClick={handleSearch}
-                  disabled={loading}
-                  className="ilp-btn-p w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    background: P,
-                    color: "#fff",
-                    boxShadow: `0 4px 18px ${P_ALPHA(0.3)}`,
-                  }}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 size={17} className="animate-spin" /> Searching…
-                    </>
-                  ) : (
-                    <>
-                      <Search size={17} /> Search All Institutes{" "}
-                      <ArrowRight size={15} />
-                    </>
-                  )}
-                </button>
-              </div>
+
 
               {/* Loading */}
               {searched && loading && (
@@ -1030,8 +1021,9 @@ export default function IndustryLandingPage() {
                             {[
                               "Institute Name",
                               "District",
-                              "Students",
-                              "Placement Officer",
+                              "Courses",
+                              "Total Enrolled Students",
+                              "Final Year Students",
                               "Actions",
                             ].map((h) => (
                               <th
@@ -1044,7 +1036,7 @@ export default function IndustryLandingPage() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-base-200 dark:divide-base-800">
-                          {institutes.map((inst, idx) => (
+                          {pagedInstitutes.map((inst, idx) => (
                             <tr key={inst.institute_id} className="transition-colors duration-150 hover:bg-base-200/50 dark:hover:bg-base-800/50">
                               <td className="px-4 py-3 align-top">
                                 <span className="text-sm font-semibold text-base-content block">
@@ -1055,33 +1047,32 @@ export default function IndustryLandingPage() {
                                 {inst.district || "—"}
                               </td>
                               <td className="px-4 py-3 align-top">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentInstitute(inst);
+                                    setViewCourses(true);
+                                  }}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-base-200 border border-base-300 dark:border-base-700 hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all text-xs font-semibold text-base-content/70"
+                                >
+                                  <BookOpen size={14} /> View
+                                </button>
+                              </td>
+                              <td className="px-4 py-3 align-top">
                                 <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-primary/10 text-primary text-xs font-bold">
                                   <Users size={12} />
                                   {inst.student_count.toLocaleString()}
                                 </span>
                               </td>
                               <td className="px-4 py-3 align-top">
-                                {inst.contactperson ? (
-                                  <div>
-                                    <div className="text-sm font-medium text-base-content">{inst.contactperson}</div>
-                                  </div>
-                                ) : (
-                                  <span className="text-sm text-base-content/40">—</span>
-                                )}
+                                <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-secondary/10 text-secondary text-xs font-bold">
+                                  <Users size={12} />
+                                  {inst.final_year_student_count?.toLocaleString() || '0'}
+                                </span>
                               </td>
                               <td className="px-4 py-3 align-top">
                                 <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (inst.po_email) window.location.href = `mailto:${inst.po_email}`;
-                                    }}
-                                    disabled={!inst.po_email}
-                                    title="Email Placement Officer"
-                                    className="h-8 w-8 rounded-md bg-base-200 text-base-content/60 hover:text-primary hover:bg-primary/10 flex items-center justify-center transition-all disabled:opacity-40"
-                                  >
-                                    <Mail size={14} />
-                                  </button>
+
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -1112,28 +1103,22 @@ export default function IndustryLandingPage() {
 
                       {/* Mobile Cards */}
                       <div className="md:hidden flex flex-col divide-y divide-base-200 dark:divide-base-800">
-                        {institutes.map((inst, idx) => (
+                        {pagedInstitutes.map((inst, idx) => (
                           <div key={inst.institute_id} className="p-4 bg-base-100 flex flex-col gap-3 ilp-card-anim" style={{ animationDelay: `${idx * 35}ms` }}>
                             <div>
                               <h3 className="text-sm font-bold text-base-content leading-snug mb-1.5">{inst.institute_name}</h3>
                               <div className="flex flex-wrap items-center gap-3 text-xs text-base-content/60">
                                 <span className="flex items-center gap-1"><MapPin size={11} /> {inst.district || "—"}</span>
-                                <span className="flex items-center gap-1 font-semibold text-primary"><Users size={11} /> {inst.student_count.toLocaleString()} Students</span>
+                                <span className="flex items-center gap-1 font-semibold text-primary"><Users size={11} /> {inst.student_count.toLocaleString()} Total Enrolled</span>
+                                <span className="flex items-center gap-1 font-semibold text-secondary"><Users size={11} /> {inst.final_year_student_count?.toLocaleString() || '0'} Final Year</span>
                               </div>
-                            </div>
-                            <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-base-200/50 dark:bg-base-800/50 text-xs">
-                              <span className="font-semibold text-base-content/80 uppercase tracking-wide text-[10px]">Placement Officer</span>
-                              {inst.contactperson ? (
-                                <span className="font-medium text-base-content">{inst.contactperson}</span>
-                              ) : <span className="text-base-content/40 text-[10px]">—</span>}
                             </div>
                             <div className="flex items-center gap-2 mt-1">
                               <button
-                                onClick={() => inst.po_email && (window.location.href = `mailto:${inst.po_email}`)}
-                                disabled={!inst.po_email}
-                                className="flex-1 py-1.5 rounded bg-base-200 flex items-center justify-center disabled:opacity-50 text-base-content/70 hover:text-primary"
+                                onClick={() => { setCurrentInstitute(inst); setViewCourses(true); }}
+                                className="flex-[1.5] py-1.5 rounded bg-base-200 border border-base-300 flex items-center justify-center text-xs font-bold gap-1.5 text-base-content/80 hover:border-primary hover:text-primary transition-all"
                               >
-                                <Mail size={14} />
+                                <BookOpen size={14} /> View Courses
                               </button>
                               <button
                                 onClick={() => { setCurrentInstitute(inst); setViewInstitute(true); }}
@@ -1151,6 +1136,35 @@ export default function IndustryLandingPage() {
                           </div>
                         ))}
                       </div>
+
+                      {/* Pagination */}
+                      {totalPages > 1 && (
+                        <div className="flex items-center justify-between bg-base-100 dark:bg-base-900 border-t border-base-300 dark:border-base-700 px-4 py-3">
+                          <button
+                            onClick={() => setCurrentPage(prev => prev - 1)}
+                            disabled={currentPage === 1}
+                            className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
+                          >
+                            <ChevronLeft size={14} /> Previous
+                          </button>
+
+                          <span className="text-xs font-medium text-base-content/60">
+                            Page {currentPage} of {totalPages}
+                            <span className="hidden sm:inline">
+                              {" "}
+                              · {institutes.length} institutes
+                            </span>
+                          </span>
+
+                          <button
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            disabled={currentPage === totalPages}
+                            className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
+                          >
+                            Next <ChevronRight size={14} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1226,6 +1240,13 @@ export default function IndustryLandingPage() {
         open={viewInstitute}
         setOpen={setViewInstitute}
         institute={currentInstitute}
+      />
+      <InstituteCoursesModal
+        open={viewCourses}
+        setOpen={setViewCourses}
+        instituteId={currentInstitute?.institute_id ?? null}
+        instituteName={currentInstitute?.institute_name ?? ""}
+        filters={filters}
       />
     </>
   );

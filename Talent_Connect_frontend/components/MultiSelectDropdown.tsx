@@ -37,7 +37,7 @@ export default function MultiSelectDropdown({ label, options, selected, onChange
     const clear = (e: React.MouseEvent) => { e.stopPropagation(); onChange([]); };
 
     return (
-        <div className="relative" ref={ref}>
+        <div className={clsx("relative", open && "z-50")} ref={ref}>
             <div className="text-[10px] font-semibold text-base-content/50 uppercase tracking-widest mb-1">{label}</div>
             <button
                 type="button"
