@@ -538,18 +538,17 @@ export default function IndustryLandingPage() {
       v.length > 0,
   ).length;
 
-  useEffect(() => {
-    // On every mount / reload
-    const target = document.getElementById("find-institute");
-    if (target) {
-      setTimeout(() => {
-        target.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }, 100);
-    }
-  }, []);
+  //   useEffect(() => {
+  //     const target = document.getElementById("find-institute");
+  //     if (target) {
+  //       setTimeout(() => {
+  //         target.scrollIntoView({
+  //           behavior: "smooth",
+  //           block: "start",
+  //         });
+  //       }, 100);
+  //     }
+  //   }, []);
   return (
     <>
       <style>{STYLES}</style>
