@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { GraduationCap, Loader2, Eye, EyeOff, X } from "lucide-react";
+import { GraduationCap, Loader2, Eye, EyeOff, X, LogIn } from "lucide-react";
 import api from "@/lib/api";
 import { clearAuthCache } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components2/ThemeToggle";
+import { fa } from "zod/locales";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,6 +42,22 @@ export default function LoginPage() {
       router.push(getDashboardRoute(res?.data?.user?.role));
     } catch (err: any) {
       setError(err?.response?.data?.message || "Invalid username or password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFastTrackLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await api.get(
+        "https://fasttrack.punjab.gov.in/testportalnode/api/talent-portal/getSSOLoginUrl?returnUrl=http://localhost:3000/",
+      );
+      console.log("FastTrack SSO URL response:", res);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "FastTrack login failed");
     } finally {
       setLoading(false);
     }
@@ -138,37 +155,199 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* RIGHT SIDE — unchanged */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-16 bg-base-100 dark:bg-base-900">
-        <div className="w-full max-w-[400px]">
-          {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-5 shadow-lg shadow-primary/30">
-              <GraduationCap
-                size={36}
-                className="text-primary-content"
-                strokeWidth={1.5}
-              />
+      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-16 bg-base-100">
+        {/* ── Scoped styles ── */}
+        <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    .lp-root { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    @keyframes lp-in {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes lp-shimmer {
+      from { transform: translateX(-100%); }
+      to   { transform: translateX(100%); }
+    }
+    @keyframes lp-shake {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-5px); }
+      40%     { transform: translateX(5px); }
+      60%     { transform: translateX(-3px); }
+      80%     { transform: translateX(3px); }
+    }
+
+    .lp-in    { animation: lp-in .5s cubic-bezier(.22,1,.36,1) both; }
+    .lp-d1    { animation-delay: .06s; }
+    .lp-d2    { animation-delay: .12s; }
+    .lp-d3    { animation-delay: .18s; }
+    .lp-d4    { animation-delay: .24s; }
+    .lp-d5    { animation-delay: .30s; }
+
+    .lp-error-shake { animation: lp-shake .4s ease; }
+
+    /* ── input focus ring uses primary ── */
+    .lp-input {
+      width: 100%;
+      background: hsl(var(--b1));
+      border: 1.5px solid hsl(var(--bc) / 0.22);
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-size: 14px;
+      color: hsl(var(--bc));
+      outline: none;
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .lp-input::placeholder { color: hsl(var(--bc) / 0.3); }
+    .lp-input:hover:not(:focus) {
+      border-color: hsl(var(--bc) / 0.38);
+    }
+    .lp-input:focus {
+      border-color: #605dff;
+      background: hsl(var(--b1));
+      box-shadow: 0 0 0 3px rgba(96,93,255,0.15), 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    /* ── Primary button ── */
+    .lp-btn-primary {
+      position: relative; overflow: hidden;
+      height: 48px;
+      background: #605dff;
+      color: #fff;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      border: none; cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+      box-shadow: 0 4px 16px rgba(96,93,255,0.35);
+    }
+    .lp-btn-primary:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(96,93,255,0.45);
+    }
+    .lp-btn-primary:not(:disabled):active { transform: translateY(0); }
+    .lp-btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+    .lp-btn-primary .lp-sheen {
+      position:absolute; inset:0;
+      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.22) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform .65s ease;
+    }
+    .lp-btn-primary:not(:disabled):hover .lp-sheen { transform: translateX(100%); }
+
+    /* ── FastTrack button ── */
+    .lp-btn-ft {
+      position: relative; overflow: hidden;
+      height: 48px;
+      background: #d62c27;
+      color: #fff;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      border: none; cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+      box-shadow: 0 4px 16px rgba(214,44,39,0.32);
+    }
+    .lp-btn-ft:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(214,44,39,0.42);
+    }
+    .lp-btn-ft:not(:disabled):active { transform: translateY(0); }
+    .lp-btn-ft:disabled { opacity: .55; cursor: not-allowed; }
+    .lp-btn-ft .lp-sheen {
+      position:absolute; inset:0;
+      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform .65s ease;
+    }
+    .lp-btn-ft:not(:disabled):hover .lp-sheen { transform: translateX(100%); }
+
+    /* eye btn */
+    .lp-eye {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: hsl(var(--bc) / 0.35);
+      transition: color .15s ease;
+      display: flex; align-items: center;
+      padding: 0;
+    }
+    .lp-eye:hover { color: #605dff; }
+
+    /* divider */
+    .lp-divider {
+      display: flex; align-items: center; gap: 12px;
+      color: hsl(var(--bc) / 0.25);
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+    .lp-divider::before,
+    .lp-divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: hsl(var(--bc) / 0.1);
+    }
+  `}</style>
+
+        <div className="lp-root w-full max-w-[400px]">
+          {/* ── Mobile logo ── */}
+          <div className="lp-in lg:hidden text-center mb-10">
+            <div
+              className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
+              style={{
+                background: "#605dff",
+                boxShadow: "0 8px 24px rgba(96,93,255,0.35)",
+              }}
+            >
+              <GraduationCap size={30} color="#fff" strokeWidth={1.75} />
             </div>
-            <h1 className="text-3xl font-black text-base-content">
+            <h1
+              className="text-2xl font-extrabold"
+              style={{ color: "hsl(var(--bc))" }}
+            >
               HUNAR Punjab
             </h1>
           </div>
 
-          {/* Heading */}
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-base-content tracking-tight">
-              Sign in
+          {/* ── Heading ── */}
+          <div className="lp-in lp-d1 mb-8">
+            {/* Colored accent line */}
+            <div className="flex items-center gap-2.5 mb-3">
+              <div
+                className="w-6 h-[3px] rounded-full"
+                style={{ background: "#605dff" }}
+              />
+              <span
+                className="text-xs font-bold uppercase tracking-[.14em]"
+                style={{ color: "#605dff" }}
+              >
+                Welcome back
+              </span>
+            </div>
+            <h2
+              className="text-[28px] font-extrabold tracking-tight"
+              style={{ color: "hsl(var(--bc))" }}
+            >
+              Sign In
             </h2>
-            <p className="mt-1.5 text-base-content/50 text-sm">
-              Welcome back — let's pick up where you left off.
+            <p
+              className="mt-1 text-sm"
+              style={{ color: "hsl(var(--bc) / 0.45)" }}
+            >
+              Let's pick up where you left off.
             </p>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div className="relative group">
-              <label className="block text-xs font-semibold text-base-content/60 mb-1.5 ml-1 tracking-wide uppercase">
+          {/* ── Form ── */}
+          <form onSubmit={handleLogin} className="space-y-4">
+            {/* Username */}
+            <div className="lp-in lp-d2">
+              <label
+                className="block text-[11px] font-bold uppercase tracking-[.12em] mb-1.5 ml-0.5"
+                style={{ color: "hsl(var(--bc) / 0.5)" }}
+              >
                 Username
               </label>
               <input
@@ -178,12 +357,16 @@ export default function LoginPage() {
                 placeholder="Enter your username"
                 required
                 autoFocus
-                className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-4 py-3.5 text-sm text-base-content placeholder:text-base-content/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                className="lp-input"
               />
             </div>
 
-            <div className="relative group">
-              <label className="block text-xs font-semibold text-base-content/60 mb-1.5 ml-1 tracking-wide uppercase">
+            {/* Password */}
+            <div className="lp-in lp-d3">
+              <label
+                className="block text-[11px] font-bold uppercase tracking-[.12em] mb-1.5 ml-0.5"
+                style={{ color: "hsl(var(--bc) / 0.5)" }}
+              >
                 Password
               </label>
               <div className="relative">
@@ -193,81 +376,96 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-4 py-3.5 pr-12 text-sm text-base-content placeholder:text-base-content/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                  className="lp-input"
+                  style={{ paddingRight: "44px" }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-primary transition-colors"
+                  className="lp-eye"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
             </div>
 
+            {/* Error */}
             {error && (
-              <div className="flex items-center gap-2.5 bg-error/10 border border-error/25 text-error text-sm px-4 py-3 rounded-xl animate-pulse">
-                <X size={16} className="shrink-0" />
+              <div
+                className="lp-error-shake flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm"
+                style={{
+                  background: "rgba(214,44,39,0.07)",
+                  border: "1px solid rgba(214,44,39,0.22)",
+                  color: "#d62c27",
+                }}
+              >
+                <X size={15} className="shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="relative w-full h-12 bg-primary hover:brightness-110 text-primary-content font-semibold text-sm rounded-xl shadow-lg shadow-primary/25 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden mt-2"
-            >
-              <span className="relative z-10 flex items-center justify-center gap-2.5">
-                {loading && <Loader2 size={18} className="animate-spin" />}
-                {loading ? "Signing in..." : "Sign In"}
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700" />
-            </button>
-          </form>
-          {/* 
-          <div className="flex items-center gap-3 my-8">
-            <div className="flex-1 h-px bg-base-300 dark:bg-base-700" />
-            <span className="text-xs text-base-content/40 font-medium">
-              DEMO ACCESS
-            </span>
-            <div className="flex-1 h-px bg-base-300 dark:bg-base-700" />
-          </div>
-
-          <div className="space-y-2.5">
-            {[
-              {
-                creds: "admin / admin123",
-                role: "Admin",
-                color: "text-primary bg-primary/10",
-              },
-              {
-                creds: "institute_pit / institute123",
-                role: "Institute",
-                color: "text-success bg-success/10",
-              },
-              {
-                creds: "industry_ts / industry123",
-                role: "Industry",
-                color: "text-secondary bg-secondary/10",
-              },
-            ].map(({ creds, role, color }) => (
-              <div
-                key={role}
-                className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700"
+            {/* Buttons */}
+            <div className="lp-in lp-d4 pt-1 space-y-3">
+              {/* Sign In */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="lp-btn-primary w-full"
               >
-                <span className="font-mono text-xs text-base-content/70">
-                  {creds}
+                <div className="lp-sheen" />
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  {loading ? (
+                    <>
+                      <Loader2 size={17} className="animate-spin" /> Signing in…
+                    </>
+                  ) : (
+                    <>
+                      <LogIn size={17} /> Sign In
+                    </>
+                  )}
                 </span>
-                <span
-                  className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 ml-2 ${color}`}
-                >
-                  {role}
-                </span>
-              </div>
-            ))}
-          </div> */}
+              </button>
 
-          <p className="text-center text-base-content/30 text-xs mt-10">
+              {/* Divider */}
+              <div className="lp-divider">or</div>
+
+              {/* FastTrack */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={handleFastTrackLogin}
+                className="lp-btn-ft w-full"
+              >
+                <div className="lp-sheen" />
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  {loading ? (
+                    <>
+                      <Loader2 size={17} className="animate-spin" /> Processing…
+                    </>
+                  ) : (
+                    <>
+                      {/* Lightning bolt icon for FastTrack */}
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                      </svg>
+                      Login with FastTrack
+                    </>
+                  )}
+                </span>
+              </button>
+            </div>
+          </form>
+
+          {/* ── Footer ── */}
+          <p
+            className="lp-in lp-d5 text-center text-[11px] mt-10"
+            style={{ color: "hsl(var(--bc) / 0.28)" }}
+          >
             © {new Date().getFullYear()} HUNAR Punjab • All Rights Reserved
           </p>
         </div>
