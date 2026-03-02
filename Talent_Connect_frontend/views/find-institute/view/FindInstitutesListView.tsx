@@ -149,18 +149,30 @@ export default function FindInstitutesPage() {
         const qId = filters.qualification_ids[0];
         const [masterRes, inUseRes] = await Promise.all([
           api.get(`/stream-branch?qualification_id=${qId}`),
-          api.get('/institute-qualification-mapping/streams-in-use'),
+          api.get("/institute-qualification-mapping/streams-in-use"),
         ]);
-        const inUseIds = new Set(inUseRes.data.map((s: any) => s.stream_branch_Id));
-        const filtered = masterRes.data.filter((s: any) => inUseIds.has(s.stream_branch_Id));
+        const inUseIds = new Set(
+          inUseRes.data.map((s: any) => s.stream_branch_Id),
+        );
+        const filtered = masterRes.data.filter((s: any) =>
+          inUseIds.has(s.stream_branch_Id),
+        );
         setStreamOpts(
-          filtered.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })),
+          filtered.map((s: any) => ({
+            value: s.stream_branch_Id,
+            label: s.stream_branch_name,
+          })),
         );
       } else {
         // No qualification selected: show only streams that have institute mappings
-        const res = await api.get('/institute-qualification-mapping/streams-in-use');
+        const res = await api.get(
+          "/institute-qualification-mapping/streams-in-use",
+        );
         setStreamOpts(
-          res.data.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })),
+          res.data.map((s: any) => ({
+            value: s.stream_branch_Id,
+            label: s.stream_branch_name,
+          })),
         );
       }
     };
@@ -389,17 +401,26 @@ export default function FindInstitutesPage() {
               {/* Right: Search + Sort + Send */}
               <div className="flex items-center gap-2 flex-wrap">
                 {/* Search Input - NOW WORKS */}
-                <div className="relative flex-1 min-w-[200px] max-w-xs">
+                <div className="relative flex-1 min-w-[240px] max-w-sm group">
                   <input
                     type="text"
                     placeholder="Search institutes..."
-                    className="input input-bordered input-sm w-full pl-10 pr-4 text-sm"
+                    className={`
+      input input-bordered w-full pl-11 pr-5 text-sm
+      transition-all duration-200
+      hover:border-primary hover:ring-1 hover:ring-primary/20 hover:shadow-sm
+      focus:border-primary focus:ring-2 focus:ring-primary/30 focus:outline-none
+    `}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                   <Search
-                    size={14}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40 pointer-events-none"
+                    size={16}
+                    className={`
+      absolute left-3.5 top-1/2 -translate-y-1/2 
+      text-base-content/50 transition-colors duration-200
+      group-hover:text-primary
+    `}
                   />
                 </div>
 
@@ -699,7 +720,7 @@ export default function FindInstitutesPage() {
 
       {/* ── Bulk Offer Modal ── */}
       <OfferModalV2
-        onClose={() => { }}
+        onClose={() => {}}
         isOpen={findInstituteUi?.bulkOffer?.open ?? false}
         selectedIds={Array.from(selected)}
         institutesMap={institutesMap}

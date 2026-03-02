@@ -432,7 +432,9 @@ export default function IndustryLandingPage() {
   const [loginModal, setLoginModal] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [viewInstitute, setViewInstitute] = useState(false);
-  const [currentInstitute, setCurrentInstitute] = useState<InstituteRow | null>(null);
+  const [currentInstitute, setCurrentInstitute] = useState<InstituteRow | null>(
+    null,
+  );
 
   const [districtOpts, setDistrictOpts] = useState<Option[]>([]);
   const [qualOpts, setQualOpts] = useState<Option[]>([]);
@@ -442,7 +444,15 @@ export default function IndustryLandingPage() {
   useEffect(() => {
     const load = async () => {
       const [qual] = await Promise.all([
-        api.get("/qualification").then(r => r.data.map((q: any) => ({ value: q.qualificationid, label: q.qualification }))).catch(() => []),
+        api
+          .get("/qualification")
+          .then((r) =>
+            r.data.map((q: any) => ({
+              value: q.qualificationid,
+              label: q.qualification,
+            })),
+          )
+          .catch(() => []),
       ]);
       setQualOpts(qual);
     };
@@ -455,7 +465,9 @@ export default function IndustryLandingPage() {
       try {
         const res = await api.get(`/district?state_id=3`);
         setDistrictOpts(
-          res.data.map((d: any) => ({ value: d.districtid, label: d.districtname })).sort((a: Option, b: Option) => a.label.localeCompare(b.label))
+          res.data
+            .map((d: any) => ({ value: d.districtid, label: d.districtname }))
+            .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
         );
       } catch {
         setDistrictOpts([]);
@@ -471,14 +483,30 @@ export default function IndustryLandingPage() {
         const qId = filters.qualification_ids[0];
         const [masterRes, inUseRes] = await Promise.all([
           api.get(`/stream-branch?qualification_id=${qId}`),
-          api.get('/institute-qualification-mapping/streams-in-use'),
+          api.get("/institute-qualification-mapping/streams-in-use"),
         ]);
-        const inUseIds = new Set(inUseRes.data.map((s: any) => s.stream_branch_Id));
-        const filtered = masterRes.data.filter((s: any) => inUseIds.has(s.stream_branch_Id));
-        setStreamOpts(filtered.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })));
+        const inUseIds = new Set(
+          inUseRes.data.map((s: any) => s.stream_branch_Id),
+        );
+        const filtered = masterRes.data.filter((s: any) =>
+          inUseIds.has(s.stream_branch_Id),
+        );
+        setStreamOpts(
+          filtered.map((s: any) => ({
+            value: s.stream_branch_Id,
+            label: s.stream_branch_name,
+          })),
+        );
       } else {
-        const res = await api.get('/institute-qualification-mapping/streams-in-use');
-        setStreamOpts(res.data.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })));
+        const res = await api.get(
+          "/institute-qualification-mapping/streams-in-use",
+        );
+        setStreamOpts(
+          res.data.map((s: any) => ({
+            value: s.stream_branch_Id,
+            label: s.stream_branch_name,
+          })),
+        );
       }
     };
     loadStreams();
@@ -504,9 +532,24 @@ export default function IndustryLandingPage() {
   }, [filters]);
 
   const activeFilterCount = Object.values(filters).filter(
-    (v, i) => Object.keys(filters)[i] !== 'state_ids' && Array.isArray(v) && v.length > 0,
+    (v, i) =>
+      Object.keys(filters)[i] !== "state_ids" &&
+      Array.isArray(v) &&
+      v.length > 0,
   ).length;
 
+  useEffect(() => {
+    // On every mount / reload
+    const target = document.getElementById("find-institute");
+    if (target) {
+      setTimeout(() => {
+        target.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100);
+    }
+  }, []);
   return (
     <>
       <style>{STYLES}</style>
@@ -651,11 +694,13 @@ export default function IndustryLandingPage() {
               <span className="text-white">Connect with </span>
               <span className="ilp-shine">Top Institutes</span>
               <br />
-              <span className="text-white/90">across Punjab</span>
+              <span className="text-white/90">Across Punjab</span>
             </h1>
 
             <p className="ilp-rise ilp-d2 text-base sm:text-[17px] max-w-2xl mx-auto leading-relaxed mb-11 text-white/65">
-              Search institutes by location and course offerings - connect directly with their placement teams to meet your workforce requirements.
+              Search institutes by location and course offerings - connect
+              directly with their placement teams to meet your workforce
+              requirements.
             </p>
 
             {/* CTA row */}
@@ -770,7 +815,11 @@ export default function IndustryLandingPage() {
         {/* ══════════════════════════════════════════════════════
             SEARCH CARD
         ══════════════════════════════════════════════════════ */}
-        <div className="w-full pb-14" style={{ background: "hsl(var(--b1))" }}>
+        <div
+          id="find-institute"
+          className="w-full pb-14"
+          style={{ background: "hsl(var(--b1))" }}
+        >
           <div
             ref={searchRef}
             className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
@@ -823,15 +872,15 @@ export default function IndustryLandingPage() {
                   style={
                     filtersOpen
                       ? {
-                        background: P_ALPHA(0.09),
-                        color: P,
-                        border: `1px solid ${P_ALPHA(0.25)}`,
-                      }
+                          background: P_ALPHA(0.09),
+                          color: P,
+                          border: `1px solid ${P_ALPHA(0.25)}`,
+                        }
                       : {
-                        background: "hsl(var(--bc) / 0.05)",
-                        color: "hsl(var(--bc) / 0.45)",
-                        border: "1px solid hsl(var(--bc) / 0.09)",
-                      }
+                          background: "hsl(var(--bc) / 0.05)",
+                          color: "hsl(var(--bc) / 0.45)",
+                          border: "1px solid hsl(var(--bc) / 0.09)",
+                        }
                   }
                 >
                   <Filter size={11} />
@@ -899,7 +948,8 @@ export default function IndustryLandingPage() {
                         className="text-xs"
                         style={{ color: "hsl(var(--bc) / 0.33)" }}
                       >
-                        {activeFilterCount} filter{activeFilterCount !== 1 ? "s" : ""} active
+                        {activeFilterCount} filter
+                        {activeFilterCount !== 1 ? "s" : ""} active
                       </span>
                       <button
                         onClick={() => setFilters(EMPTY_FILTERS)}
@@ -1045,7 +1095,10 @@ export default function IndustryLandingPage() {
                         </thead>
                         <tbody className="divide-y divide-base-200 dark:divide-base-800">
                           {institutes.map((inst, idx) => (
-                            <tr key={inst.institute_id} className="transition-colors duration-150 hover:bg-base-200/50 dark:hover:bg-base-800/50">
+                            <tr
+                              key={inst.institute_id}
+                              className="transition-colors duration-150 hover:bg-base-200/50 dark:hover:bg-base-800/50"
+                            >
                               <td className="px-4 py-3 align-top">
                                 <span className="text-sm font-semibold text-base-content block">
                                   {inst.institute_name}
@@ -1063,10 +1116,14 @@ export default function IndustryLandingPage() {
                               <td className="px-4 py-3 align-top">
                                 {inst.contactperson ? (
                                   <div>
-                                    <div className="text-sm font-medium text-base-content">{inst.contactperson}</div>
+                                    <div className="text-sm font-medium text-base-content">
+                                      {inst.contactperson}
+                                    </div>
                                   </div>
                                 ) : (
-                                  <span className="text-sm text-base-content/40">—</span>
+                                  <span className="text-sm text-base-content/40">
+                                    —
+                                  </span>
                                 )}
                               </td>
                               <td className="px-4 py-3 align-top">
@@ -1074,7 +1131,8 @@ export default function IndustryLandingPage() {
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      if (inst.po_email) window.location.href = `mailto:${inst.po_email}`;
+                                      if (inst.po_email)
+                                        window.location.href = `mailto:${inst.po_email}`;
                                     }}
                                     disabled={!inst.po_email}
                                     title="Email Placement Officer"
@@ -1113,30 +1171,55 @@ export default function IndustryLandingPage() {
                       {/* Mobile Cards */}
                       <div className="md:hidden flex flex-col divide-y divide-base-200 dark:divide-base-800">
                         {institutes.map((inst, idx) => (
-                          <div key={inst.institute_id} className="p-4 bg-base-100 flex flex-col gap-3 ilp-card-anim" style={{ animationDelay: `${idx * 35}ms` }}>
+                          <div
+                            key={inst.institute_id}
+                            className="p-4 bg-base-100 flex flex-col gap-3 ilp-card-anim"
+                            style={{ animationDelay: `${idx * 35}ms` }}
+                          >
                             <div>
-                              <h3 className="text-sm font-bold text-base-content leading-snug mb-1.5">{inst.institute_name}</h3>
+                              <h3 className="text-sm font-bold text-base-content leading-snug mb-1.5">
+                                {inst.institute_name}
+                              </h3>
                               <div className="flex flex-wrap items-center gap-3 text-xs text-base-content/60">
-                                <span className="flex items-center gap-1"><MapPin size={11} /> {inst.district || "—"}</span>
-                                <span className="flex items-center gap-1 font-semibold text-primary"><Users size={11} /> {inst.student_count.toLocaleString()} Students</span>
+                                <span className="flex items-center gap-1">
+                                  <MapPin size={11} /> {inst.district || "—"}
+                                </span>
+                                <span className="flex items-center gap-1 font-semibold text-primary">
+                                  <Users size={11} />{" "}
+                                  {inst.student_count.toLocaleString()} Students
+                                </span>
                               </div>
                             </div>
                             <div className="flex flex-col gap-1 p-2.5 rounded-lg bg-base-200/50 dark:bg-base-800/50 text-xs">
-                              <span className="font-semibold text-base-content/80 uppercase tracking-wide text-[10px]">Placement Officer</span>
+                              <span className="font-semibold text-base-content/80 uppercase tracking-wide text-[10px]">
+                                Placement Officer
+                              </span>
                               {inst.contactperson ? (
-                                <span className="font-medium text-base-content">{inst.contactperson}</span>
-                              ) : <span className="text-base-content/40 text-[10px]">—</span>}
+                                <span className="font-medium text-base-content">
+                                  {inst.contactperson}
+                                </span>
+                              ) : (
+                                <span className="text-base-content/40 text-[10px]">
+                                  —
+                                </span>
+                              )}
                             </div>
                             <div className="flex items-center gap-2 mt-1">
                               <button
-                                onClick={() => inst.po_email && (window.location.href = `mailto:${inst.po_email}`)}
+                                onClick={() =>
+                                  inst.po_email &&
+                                  (window.location.href = `mailto:${inst.po_email}`)
+                                }
                                 disabled={!inst.po_email}
                                 className="flex-1 py-1.5 rounded bg-base-200 flex items-center justify-center disabled:opacity-50 text-base-content/70 hover:text-primary"
                               >
                                 <Mail size={14} />
                               </button>
                               <button
-                                onClick={() => { setCurrentInstitute(inst); setViewInstitute(true); }}
+                                onClick={() => {
+                                  setCurrentInstitute(inst);
+                                  setViewInstitute(true);
+                                }}
                                 className="flex-1 py-1.5 rounded bg-base-200 flex items-center justify-center text-base-content/70 hover:text-primary"
                               >
                                 <Eye size={14} />
