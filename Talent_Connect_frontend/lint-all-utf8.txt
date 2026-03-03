@@ -1,0 +1,637 @@
+﻿
+> frontend@0.1.0 lint
+> eslint
+
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\admin\dashboard\page.tsx
+  8:17  warning  'role' is assigned a value but never used                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  8:23  warning  'loading' is assigned a value but never used                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  8:35  error    React Hook "useAuth" is called in function "page" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"  react-hooks/rules-of-hooks
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\all-requests\page.tsx
+   15:3   warning  'Briefcase' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  104:12  warning  'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  117:31  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-explicit-any
+  127:19  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\all-requests\page.tsx:127:19
+  125 | function usePagination<T>(items: T[], perPage = ITEMS_PER_PAGE) {
+  126 |   const [page, setPage] = useState(1);
+> 127 |   useEffect(() => setPage(1), [items.length]);
+      |                   ^^^^^^^ Avoid calling setState() directly within an effect
+  128 |   const totalPages = Math.max(1, Math.ceil(items.length / perPage));
+  129 |   const slice = items.slice((page - 1) * perPage, page * perPage);
+  130 |   return { page, setPage, totalPages, slice, total: items.length };  react-hooks/set-state-in-effect
+  173:11  warning  'isIndustry' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  178:10  warning  'loadingReq' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  180:10  warning  'errorReq' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  187:21  warning  'setReqSearch' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  188:21  warning  'setReqStatus' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  208:17  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-explicit-any
+  221:17  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-explicit-any
+  316:9   warning  'reqPag' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  348:49  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-explicit-any
+  408:9   warning  'exportRequestsToExcel' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\industries\page.tsx
+  46:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\industry-requests\page.tsx
+    6:8   warning  'JobDetailModal' is defined but never used     @typescript-eslint/no-unused-vars
+   69:7   warning  'dummyJob' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   97:44  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  100:10  warning  'open' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  100:16  warning  'setOpen' is assigned a value but never used   @typescript-eslint/no-unused-vars
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\industry\dashboard\page.tsx
+   8:17  warning  'role' is assigned a value but never used                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+   8:23  warning  'loading' is assigned a value but never used                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   8:35  error    React Hook "useAuth" is called in function "page" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"    react-hooks/rules-of-hooks
+  10:43  error    React Hook "useState" is called in function "page" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"   react-hooks/rules-of-hooks
+  12:3   error    React Hook "useEffect" is called in function "page" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"  react-hooks/rules-of-hooks
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\institute\dashboard\page.tsx
+   8:17  warning  'role' is assigned a value but never used                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+   8:23  warning  'loading' is assigned a value but never used                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   8:35  error    React Hook "useAuth" is called in function "page" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"    react-hooks/rules-of-hooks
+  10:45  error    React Hook "useState" is called in function "page" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"   react-hooks/rules-of-hooks
+  12:3   error    React Hook "useEffect" is called in function "page" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"  react-hooks/rules-of-hooks
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\institute\profile\page.tsx
+   16:26  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+   20:6   warning  React Hook useEffect has missing dependencies: 'labelKey' and 'valueKey'. Either include them or remove the dependency array. If 'setOpts' needs the current value of 'valueKey', you can also switch to useReducer instead of useState and read 'valueKey' in the reducer  react-hooks/exhaustive-deps
+   52:10  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+   53:17  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+   74:3   warning  'label' is defined but never used                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+  112:36  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+  156:9   warning  'trainingTypeOpts' is assigned a value but never used                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  169:26  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+  189:38  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+  190:20  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+  195:22  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+  237:17  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\institutes\page.tsx
+    8:8   warning  'axios' is defined but never used         @typescript-eslint/no-unused-vars
+   89:26  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   94:22  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+  118:25  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  128:26  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  163:46  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\login\page.tsx
+   42:19  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  164:33  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\mappings\institute-program\page.tsx
+  10:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\mappings\institute-qualification\page.tsx
+  10:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\mappings\job-role-program\page.tsx
+  10:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\mappings\program-qualification\page.tsx
+  10:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\mappings\stream-branch-qualification\page.tsx
+   8:13  warning  'isInstitute' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  10:46  error    Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  16:27  error    Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  16:37  error    Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  20:27  error    Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  20:37  error    Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\affiliations\page.tsx
+  43:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\boards\page.tsx
+  64:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\districts\page.tsx
+  25:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\identifier-types\page.tsx
+  42:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\industry-scales\page.tsx
+  43:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\industry-sectors\page.tsx
+  43:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\institute-enrollments\page.tsx
+  35:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\institute-ownership-types\page.tsx
+  43:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\institute-sub-types\page.tsx
+  26:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\institute-types\page.tsx
+  43:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\job-roles\page.tsx
+  40:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  43:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\legal-entities\page.tsx
+  43:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\programs\page.tsx
+  43:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\qualifications\page.tsx
+  35:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\regulatory\page.tsx
+  43:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\request-statuses\page.tsx
+  35:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\request-types\page.tsx
+  35:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\states\page.tsx
+  45:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  48:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\stream-branches\page.tsx
+  12:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\masters\training-types\page.tsx
+  35:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\placements\page.tsx
+  47:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\received-offers\page.tsx
+   72:50  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  106:77  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  149:31  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  173:29  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\received-offers\page.tsx:173:29
+  171 |
+  172 |   /* ΓöÇΓöÇ Counters ΓöÇΓöÇ */
+> 173 |   const now = useMemo(() => Date.now(), []);
+      |                             ^^^^^^^^^^ Cannot call impure function
+  174 |   const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+  175 |   const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  176 |  react-hooks/purity
+  175:9   warning  'SEVEN_DAYS_MS' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\app\students\page.tsx
+  50:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\Footer.tsx
+   6:3   warning  'Users' is defined but never used                                @typescript-eslint/no-unused-vars
+  34:25  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  39:77  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\Hero.tsx
+  10:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  10:17  warning  img elements must have an alt prop, either with meaningful text, or an empty string for decorative images                                                                                                                                                                                jsx-a11y/alt-text
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\HeroSection.tsx
+  32:21  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  45:74  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\JobListView.tsx
+  14:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\JobView.tsx
+  10:3   warning  'MapPin' is defined but never used         @typescript-eslint/no-unused-vars
+  13:11  warning  'Job' is defined but never used            @typescript-eslint/no-unused-vars
+  29:9   warning  'jobs' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\JobwithMap.tsx
+   16:9   warning  'router' is assigned a value but never used                      @typescript-eslint/no-unused-vars
+  152:69  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\ThemeToggle.tsx
+  12:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\ThemeToggle.tsx:12:7
+  10 |
+  11 |     if (saved === "mytheme-dark") {
+> 12 |       setIsDark(true);
+     |       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  13 |       document.documentElement.setAttribute("data-theme", "mytheme-dark");
+  14 |     } else {
+  15 |       document.documentElement.setAttribute("data-theme", "mytheme");  react-hooks/set-state-in-effect
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\common\CommonModal.tsx
+  31:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\common\CommonModal.tsx:31:13
+  29 |     useEffect(() => {
+  30 |         if (isOpen) {
+> 31 |             setIsVisible(true);
+     |             ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  32 |         } else {
+  33 |             const timer = setTimeout(() => setIsVisible(false), 300);
+  34 |             return () => clearTimeout(timer);  react-hooks/set-state-in-effect
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\common\ConfirmDialog.tsx
+  8:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\common\YesNoToggle.tsx
+   6:24  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:3   warning  'onBlur' is defined but never used        @typescript-eslint/no-unused-vars
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\forms\CommonInputField.tsx
+  11:15  warning  'className' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\forms\CommonToggleField.tsx
+  6:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\ui\DataTable.tsx
+  8:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\ui\InfiniteSelect.tsx
+  86:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components2\ui\InfiniteSelect.tsx:86:5
+  84 |   /* ---------------- Reset on Search ---------------- */
+  85 |   useEffect(() => {
+> 86 |     setVisibleItems(pageSize);
+     |     ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  87 |   }, [search, pageSize]);
+  88 |
+  89 |   /* ---------------- Close on Outside Click ---------------- */  react-hooks/set-state-in-effect
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components\CrudModal.tsx
+    6:3   warning  'Building2' is defined but never used                                                                     @typescript-eslint/no-unused-vars
+    7:3   warning  'MapPin' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+    8:3   warning  'Phone' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+    9:3   warning  'Users' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+   22:22  error    Unexpected any. Specify a different type                                                                  @typescript-eslint/no-explicit-any
+   37:14  error    Unexpected any. Specify a different type                                                                  @typescript-eslint/no-explicit-any
+   41:77  error    Unexpected any. Specify a different type                                                                  @typescript-eslint/no-explicit-any
+   41:89  error    Unexpected any. Specify a different type                                                                  @typescript-eslint/no-explicit-any
+  116:18  warning  'errors' is assigned a value but never used                                                               @typescript-eslint/no-unused-vars
+  119:42  warning  React Hook useEffect has a missing dependency: 'reset'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  122:24  error    Unexpected any. Specify a different type                                                                  @typescript-eslint/no-explicit-any
+  132:27  error    Unexpected any. Specify a different type                                                                  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components\CrudTable.tsx
+   5:10  warning  'getAll' is defined but never used        @typescript-eslint/no-unused-vars
+  20:18  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:28  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:10  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:17  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:70  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  62:29  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:15  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components\IndustryLanding.tsx
+   18:3   warning  'TrendingUp' is defined but never used                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   19:3   warning  'Award' is defined but never used                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   21:3   warning  'Mail' is defined but never used                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+   27:3   warning  'ShieldCheck' is defined but never used                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   28:3   warning  'Zap' is defined but never used                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   29:3   warning  'Globe2' is defined but never used                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+   44:37  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+   64:16  warning  'calculatePathDistance' is defined but never used                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+  389:10  warning  'InstituteCard' is defined but never used                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  511:28  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  530:22  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  550:33  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  552:52  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  556:28  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  566:28  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  622:6   warning  React Hook useEffect has a missing dependency: 'institutes.length'. Either include it or remove the dependency array                                                                                                                          react-hooks/exhaustive-deps
+  641:16  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  648:8   warning  React Hook useEffect has an unnecessary dependency: 'userLocation'. Either exclude it or remove the dependency array. Outer scope values like 'userLocation' aren't valid dependencies because mutating them doesn't re-render the component  react-hooks/exhaustive-deps
+  999:55  warning  'idx' is defined but never used                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components\PublicLandingPage.tsx
+    5:10  warning  'Search' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+    7:8   warning  'clsx' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   83:65  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+   84:73  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+   85:88  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+   86:72  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+   88:42  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+   94:42  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components\PublicLandingPage.tsx:94:42
+  92 |     // Load districts when state changes
+  93 |     useEffect(() => {
+> 94 |         if (!filters.state_ids.length) { setDistrictOpts([]); return; }
+     |                                          ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  95 |         pub.get(`/district?state_id=${filters.state_ids[0]}`).then(r =>
+  96 |             setDistrictOpts(r.data.map((d: any) => ({ value: d.districtid ?? d.lgddistrictId, label: d.districtname })))
+  97 |         );  react-hooks/set-state-in-effect
+   96:44  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  108:64  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  109:60  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  110:48  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  114:46  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  140:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components\PublicLandingPage.tsx:140:9
+  138 |
+  139 |     useEffect(() => {
+> 140 |         handleSearch();
+      |         ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  141 |     }, [handleSearch]);
+  142 |
+  143 |     const reset = () => setFilters(EMPTY);                                                                                                                                                                                                                                                                 react-hooks/set-state-in-effect
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components\Sidebar.tsx
+  132:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  168:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  170:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  210:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  225:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  333:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components\dashboards\AdminDashboard.tsx
+  7:3  warning  'Users' is defined but never used      @typescript-eslint/no-unused-vars
+  8:3  warning  'Briefcase' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\components\dashboards\InstituteDashboard.tsx
+    3:8   warning  'Link' is defined but never used                    @typescript-eslint/no-unused-vars
+    9:3   warning  'ArrowRight' is defined but never used              @typescript-eslint/no-unused-vars
+   20:10  warning  'setCurrentOffer' is defined but never used         @typescript-eslint/no-unused-vars
+   36:7   warning  'statusConfig' is assigned a value but never used   @typescript-eslint/no-unused-vars
+   38:26  error    Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+   47:7   warning  'salaryStr' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   73:10  warning  'recentOffers' is assigned a value but never used   @typescript-eslint/no-unused-vars
+   74:10  warning  'loadingStats' is assigned a value but never used   @typescript-eslint/no-unused-vars
+   75:10  warning  'loadingOffers' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   77:9   warning  'dispatch' is assigned a value but never used       @typescript-eslint/no-unused-vars
+   78:9   warning  'router' is assigned a value but never used         @typescript-eslint/no-unused-vars
+  111:9   warning  'statCards' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  146:9   warning  'actions' is assigned a value but never used        @typescript-eslint/no-unused-vars
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\generate-pages.js
+  1:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\hooks\useAuth.ts
+  31:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\hooks\useAuth.ts:31:7
+  29 |     // If we already have user synchronously, no need to re-check
+  30 |     if (_cachedUser !== undefined) {
+> 31 |       setUser(_cachedUser);
+     |       ^^^^^^^ Avoid calling setState() directly within an effect
+  32 |       setLoading(false);
+  33 |       return;
+  34 |     }  react-hooks/set-state-in-effect
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\hooks\useOptions.ts
+  25:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\lib\AuthWrapper.tsx
+  34:19  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\lib\AuthWrapper.tsx:34:19
+  32 |
+  33 |   const [mounted, setMounted] = useState(false);
+> 34 |   useEffect(() => setMounted(true), []);
+     |                   ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  35 |
+  36 |   useEffect(() => {
+  37 |     if (!mounted || loading) return;  react-hooks/set-state-in-effect
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\lib\api.ts
+  41:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  43:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\store\common\confirmSlice.ts
+  23:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\store\industry\index.ts
+   26:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   41:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   52:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   58:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   68:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   76:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   93:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  148:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  162:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  176:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  190:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  203:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\store\institute\index.ts
+    4:10  warning  'any' is defined but never used           @typescript-eslint/no-unused-vars
+   25:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   40:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   51:16  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   57:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:39  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   75:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   92:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  131:52  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  147:60  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:61  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  175:55  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  189:58  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  202:58  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\views\find-institute\list\InstituteViewModal.tsx
+    7:3   warning  'GraduationCap' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+    8:3   warning  'Mail' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+    9:3   warning  'Phone' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+   11:3   warning  'Building2' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+   12:3   warning  'Users' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+   13:3   warning  'Landmark' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+   14:3   warning  'ShieldCheck' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   15:3   warning  'Hash' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   17:3   warning  'Send' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   48:10  warning  'InfoRow' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+   55:9   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-explicit-any
+  121:3   warning  'onSendOffer' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  136:31  error    Error: Cannot access variable before it is declared
+
+`handleClose` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\views\find-institute\list\InstituteViewModal.tsx:136:31
+  134 |     if (!open) return;
+  135 |     const handler = (e: KeyboardEvent) => {
+> 136 |       if (e.key === "Escape") handleClose();
+      |                               ^^^^^^^^^^^ `handleClose` accessed before it is declared
+  137 |     };
+  138 |     window.addEventListener("keydown", handler);
+  139 |     return () => window.removeEventListener("keydown", handler);
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\views\find-institute\list\InstituteViewModal.tsx:142:3
+  140 |   }, [open]);
+  141 |
+> 142 |   const handleClose = () => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 143 |     setVisible(false);
+      | ^^^^^^^^^^^^^^^^^^^^^^
+> 144 |     setTimeout(() => setOpen(false), 200);
+      | ^^^^^^^^^^^^^^^^^^^^^^
+> 145 |   };
+      | ^^^^^ `handleClose` is declared here
+  146 |
+  147 |   if (!mounted || !open || !institute) return null;
+  148 |  react-hooks/immutability
+  140:6   warning  React Hook useEffect has a missing dependency: 'handleClose'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/exhaustive-deps
+  150:9   warning  'initials' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  158:9   warning  'emailHref' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  159:9   warning  'phoneHref' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  162:9   warning  'websiteHref' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  174:9   warning  'location' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\views\find-institute\view\FindInstitutesListView.tsx
+   19:3   warning  'Mail' is defined but never used                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+   27:10  warning  'setCurrentOffer' is defined but never used                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   43:37  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+   63:16  warning  'calculatePathDistance' is defined but never used                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+  120:11  warning  'user' is assigned a value but never used                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+  120:17  warning  'isIndustry' is assigned a value but never used                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  130:10  warning  'stateOpts' is assigned a value but never used                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  130:21  warning  'setStateOpts' is assigned a value but never used                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+  132:10  warning  'typeOpts' is assigned a value but never used                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  132:20  warning  'setTypeOpts' is assigned a value but never used                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+  133:10  warning  'ownershipOpts' is assigned a value but never used                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+  133:25  warning  'setOwnershipOpts' is assigned a value but never used                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  156:17  warning  'setOrder' is assigned a value but never used                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  172:28  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  190:22  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  211:33  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  213:52  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  217:28  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  228:28  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  298:6   warning  React Hook useEffect has a missing dependency: 'institutes.length'. Either include it or remove the dependency array                                                                                                                          react-hooks/exhaustive-deps
+  317:16  error    Unexpected any. Specify a different type                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  324:8   warning  React Hook useEffect has an unnecessary dependency: 'userLocation'. Either exclude it or remove the dependency array. Outer scope values like 'userLocation' aren't valid dependencies because mutating them doesn't re-render the component  react-hooks/exhaustive-deps
+  331:7   warning  Expected an assignment or function call and instead saw an expression                                                                                                                                                                         @typescript-eslint/no-unused-expressions
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\views\find-institute\view\InstituteCoursesModal.tsx
+  3:8  warning  'api' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\views\find-institute\view\OfferModalView.tsx
+   58:3   warning  'value' is defined but never used                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  164:6   warning  React Hook useEffect has missing dependencies: 'prefilledQualIds' and 'prefilledStreamIds'. Either include them or remove the dependency array. If 'setQualIds' needs the current value of 'prefilledQualIds', you can also switch to useReducer instead of useState and read 'prefilledQualIds' in the reducer  react-hooks/exhaustive-deps
+  164:15  warning  React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked                                                                                                                                                                         react-hooks/exhaustive-deps
+  164:43  warning  React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked                                                                                                                                                                         react-hooks/exhaustive-deps
+  171:6   warning  React Hook useEffect has a missing dependency: 'handleClose'. Either include it or remove the dependency array                                                                                                                                                                                                   react-hooks/exhaustive-deps
+  230:17  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\views\received-offers\view\OfferViewModal.tsx
+  123:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\views\sent-offer\view\JobDetailModal.tsx
+  19:9  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\projects\Talent Connect Dev\Talent_Connect\Talent_Connect_frontend\views\sent-offer\view\Sentofferslistview.tsx
+     5:3   warning  'Loader2' is defined but never used                              @typescript-eslint/no-unused-vars
+    18:3   warning  'XCircle' is defined but never used                              @typescript-eslint/no-unused-vars
+    27:10  warning  'setCurrentIndustry' is defined but never used                   @typescript-eslint/no-unused-vars
+   652:50  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   686:9   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   724:10  warning  'withdrawing' is assigned a value but never used                 @typescript-eslint/no-unused-vars
+   726:9   warning  'handleWithdraw' is assigned a value but never used              @typescript-eslint/no-unused-vars
+   949:7   warning  'getStatus' is assigned a value but never used                   @typescript-eslint/no-unused-vars
+  1025:11  warning  'isIndustry' is assigned a value but never used                  @typescript-eslint/no-unused-vars
+  1034:26  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  1037:78  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  1040:33  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  1084:9   warning  'SEVEN_DAYS_MS' is assigned a value but never used               @typescript-eslint/no-unused-vars
+  1158:53  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+Γ£û 327 problems (210 errors, 117 warnings)
+
