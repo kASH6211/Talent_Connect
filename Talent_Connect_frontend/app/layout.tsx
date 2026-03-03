@@ -11,6 +11,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "HUNAR Punjab | Hub for Upskilling, Networking & Access to Rozgar",
   description: "Placement & Training Management Portal",
+  icons: {
+    icon: "/Gov Logo.png",
+    shortcut: "/Gov Logo.png",
+    apple: "/Gov Logo.png",
+  },
 };
 
 export default function RootLayout({
