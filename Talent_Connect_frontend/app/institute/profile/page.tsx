@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+// import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/api";
 import { Save, Loader2, CheckCircle } from "lucide-react";
+import { useAuth } from "@/lib/AuthProvider";
 
 type Option = { value: number | string; label: string };
 

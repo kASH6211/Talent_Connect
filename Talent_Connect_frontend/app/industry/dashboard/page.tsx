@@ -1,8 +1,9 @@
 "use client";
 import IndustryDashboard from "@/components/dashboards/IndustryDashboard";
-import { useAuth } from "@/hooks/useAuth";
+// import { useAuth } from "@/hooks/useAuth";
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api";
+import { useAuth } from "@/lib/AuthProvider";
 
 const page = () => {
   const { user, role, loading } = useAuth();
@@ -11,8 +12,9 @@ const page = () => {
 
   useEffect(() => {
     if (user?.industry_id) {
-      api.get(`/industry/${user.industry_id}`)
-        .then(res => {
+      api
+        .get(`/industry/${user.industry_id}`)
+        .then((res) => {
           if (res.data?.industry_name) {
             setIndustryName(res.data.industry_name);
           }

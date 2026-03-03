@@ -4,11 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { GraduationCap, Loader2, Eye, EyeOff, X } from "lucide-react";
 import api from "@/lib/api";
-import { clearAuthCache } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components2/ThemeToggle";
+import { useAuth } from "@/lib/AuthProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setUser } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -30,15 +31,17 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     try {
       const res = await api.post("/auth/login", { username, password });
 
-      clearAuthCache();
       localStorage.setItem("tc_token", res.data.access_token);
-      router.push(getDashboardRoute(res?.data?.user?.role));
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
+      setUser(res.data.user); // ✅ updates context immediately
+
+      router.replace(getDashboardRoute(res.data.user.role));
     } catch (err: any) {
       setError(err?.response?.data?.message || "Invalid username or password");
     } finally {

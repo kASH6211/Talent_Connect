@@ -15,39 +15,33 @@ export default function AppShell({
   const pathname = usePathname();
   const isLoginPage = pathname === "/login";
   const home = pathname === "/";
-
-  if (isLoginPage || home) {
-    return <>{children}</>;
-  }
-
   return (
     <AuthWrapper>
-      <div className="flex h-screen w-screen overflow-hidden">
-        {showSidebar && (
-          <Sidebar
-            collapsed={sidebarCollapsed}
-            setCollapsed={setSidebarCollapsed}
-          />
-        )}
+      {isLoginPage || home ? (
+        <>{children}</>
+      ) : (
+        <div className="flex h-screen w-screen overflow-hidden">
+          {showSidebar && (
+            <Sidebar
+              collapsed={sidebarCollapsed}
+              setCollapsed={setSidebarCollapsed}
+            />
+          )}
 
-        <main
-          className={`
-        flex-1 transition-all duration-500 ease-in-out overflow-auto
-        bg-gray-50
-        pt-6 sm:pt-8 lg:pt-10               // ← top padding (responsive)
-        px-4 sm:px-6 lg:px-8 xl:px-10       // ← left/right padding (responsive)
-      `}
-          style={{
-            marginLeft: showSidebar
-              ? sidebarCollapsed
-                ? "88px"
-                : "260px"
-              : "0px",
-          }}
-        >
-          {children}
-        </main>
-      </div>
+          <main
+            className="flex-1 transition-all duration-500 ease-in-out overflow-auto bg-gray-50 pt-6 sm:pt-8 lg:pt-10 px-4 sm:px-6 lg:px-8 xl:px-10"
+            style={{
+              marginLeft: showSidebar
+                ? sidebarCollapsed
+                  ? "88px"
+                  : "260px"
+                : "0px",
+            }}
+          >
+            {children}
+          </main>
+        </div>
+      )}
     </AuthWrapper>
   );
 }

@@ -14,7 +14,7 @@ export default function AuthWrapper({ children }: Props) {
   const { user, role, loading } = useAuth();
 
   // Prevent multiple redirects in the same effect run
-  const hasRedirected = useRef(false);
+  // const hasRedirected = useRef(false);
 
   const getDashboardRoute = (userRole: string = "") => {
     const r = userRole.toLowerCase();
@@ -36,34 +36,24 @@ export default function AuthWrapper({ children }: Props) {
   useEffect(() => {
     if (!mounted || loading) return;
 
-    if (hasRedirected.current) return;
-
     const token = localStorage.getItem("tc_token");
 
-    // Public routes that authenticated users should not access
     const publicRoutes = ["/", "/login", "/signup", "/forgot-password"];
-    const isPublicRoute = publicRoutes.some(
-      (route) => pathname === route || pathname.startsWith(`${route}/`),
-    );
+    const isPublicRoute = publicRoutes.includes(pathname);
 
-    if (token && user) {
-      // ── User is logged in ───────────────────────────────────────────────
+    if (token) {
       if (isPublicRoute) {
-        const target = getDashboardRoute(role || "");
-
-        // Prevent redirect loop if already on correct dashboard
+        const target = getDashboardRoute(role || user?.role || "");
         if (pathname !== target) {
-          hasRedirected.current = true;
           router.replace(target);
         }
       }
     } else {
       if (!isPublicRoute) {
-        sessionStorage.setItem("redirectAfterLogin", pathname);
         router.replace("/login");
       }
     }
-  }, [router, pathname, user, role, loading, mounted]);
+  }, [pathname, user, role, loading, mounted]);
 
   // ── Render logic ───────────────────────────────────────────────────────
 

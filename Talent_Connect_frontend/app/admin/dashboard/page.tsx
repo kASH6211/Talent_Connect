@@ -1,6 +1,7 @@
 "use client";
 import AdminDashboard from "@/components/dashboards/AdminDashboard";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/AuthProvider";
+// import { useAuth } from "@/hooks/useAuth";
 
 export const dynamic = "force-dynamic";
 

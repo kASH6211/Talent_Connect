@@ -1,8 +1,9 @@
 "use client";
 import InstituteDashboard from "@/components/dashboards/InstituteDashboard";
-import { useAuth } from "@/hooks/useAuth";
+// import { useAuth } from "@/hooks/useAuth";
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api";
+import { useAuth } from "@/lib/AuthProvider";
 
 const page = () => {
   const { user, role, loading } = useAuth();
@@ -11,8 +12,9 @@ const page = () => {
 
   useEffect(() => {
     if (user?.institute_id) {
-      api.get(`/institute/${user.institute_id}`)
-        .then(res => {
+      api
+        .get(`/institute/${user.institute_id}`)
+        .then((res) => {
           if (res.data?.institute_name) {
             setInstituteName(res.data.institute_name);
           }

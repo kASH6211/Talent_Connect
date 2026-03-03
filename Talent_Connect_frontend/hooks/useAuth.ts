@@ -43,6 +43,7 @@ export function useAuth() {
   const logout = () => {
     _cachedUser = null;
     localStorage.removeItem("tc_token");
+    localStorage.removeItem("user");
     clearAuthCache();
     router.replace("/");
   };
@@ -55,5 +56,6 @@ export function useAuth() {
     isInstitute: user?.role === "institute",
     isIndustry: user?.role === "industry",
     logout,
+    setUser,
   };
 }
