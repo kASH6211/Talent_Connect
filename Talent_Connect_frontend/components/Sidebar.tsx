@@ -27,7 +27,6 @@ import api from "@/lib/api";
 import { ThemeToggle } from "@/components2/ThemeToggle";
 import { useAuth } from "@/lib/AuthProvider";
 
-// ── Nav definitions per role (unchanged) ───────────────────────────────────
 const adminNav = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
   {
@@ -83,14 +82,12 @@ const adminNav = [
     ],
   },
   { icon: Briefcase, label: "Industry Requests", href: "/industry-requests" },
-  { icon: Mail, label: "All Requestes", href: "/all-requests" },
+  { icon: Mail, label: "All Requests", href: "/all-requests" },
 ];
 
 const instituteNav = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/institute/dashboard" },
   { icon: Inbox, label: "Received EOI", href: "/received-offers" },
-  /* { icon: Users, label: "Students", href: "/students" },
-  { icon: Briefcase, label: "Placements", href: "/placements" }, */
   {
     icon: ClipboardList,
     label: "Mappings",
@@ -105,11 +102,6 @@ const instituteNav = [
       },
     ],
   },
-  /* {
-    icon: ClipboardList,
-    label: "Industry Requests",
-    href: "/industry-requests",
-  }, */
   { icon: UserCircle, label: "My Profile", href: "/institute/profile" },
 ];
 
@@ -117,12 +109,6 @@ const industryNav = [
   { icon: Search, label: "Find Institutes", href: "/find-institutes" },
   { icon: LayoutDashboard, label: "Dashboard", href: "/industry/dashboard" },
   { icon: Send, label: "Sent EOI", href: "/sent-offers" },
-  /* { icon: Briefcase, label: "Placements", href: "/placements" },
-  {
-    icon: ClipboardList,
-    label: "Industry Requests",
-    href: "/industry-requests",
-  }, */
 ];
 
 const roleBadge: Record<string, { label: string; color: string }> = {
@@ -143,7 +129,6 @@ const roleBadge: Record<string, { label: string; color: string }> = {
   },
 };
 
-// ── Individual Link ────────────────────────────────────────────────────────
 function NavLink({ href, label, icon: Icon, collapsed }: any) {
   const pathname = usePathname();
   const active = pathname === href;
@@ -152,13 +137,14 @@ function NavLink({ href, label, icon: Icon, collapsed }: any) {
     <Link
       href={href}
       className={clsx(
-        "group flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 relative",
+        "group flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 relative select-none",
         active
-          ? "bg-primary text-primary-content font-medium shadow-md"
+          ? "bg-primary text-primary-content font-semibold shadow-md"
           : "text-base-content/80 dark:text-base-content/70 hover:bg-base-200 dark:hover:bg-base-800",
         collapsed ? "justify-center p-3" : "justify-start",
       )}
       title={collapsed ? label : undefined}
+      tabIndex={0}
     >
       {Icon && (
         <Icon
@@ -167,6 +153,7 @@ function NavLink({ href, label, icon: Icon, collapsed }: any) {
             "flex-shrink-0 transition-transform duration-200",
             active && "group-hover:scale-105",
           )}
+          aria-hidden="true"
         />
       )}
       {!collapsed && (
@@ -179,7 +166,6 @@ function NavLink({ href, label, icon: Icon, collapsed }: any) {
   );
 }
 
-// ── Group with Children ────────────────────────────────────────────────────
 function NavGroup({ item, collapsed }: any) {
   const pathname = usePathname();
   const isOpen = item.children?.some((c: any) => pathname.startsWith(c.href));
@@ -191,15 +177,23 @@ function NavGroup({ item, collapsed }: any) {
       <button
         onClick={() => setOpen(!open)}
         className={clsx(
-          "group flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-all duration-200 relative",
+          "group flex items-center gap-3 w-full px-3 py-3 rounded-lg transition-all duration-200 relative select-none",
           open
-            ? "bg-base-200 dark:bg-base-800 text-base-content font-medium"
+            ? "bg-base-200 dark:bg-base-800 text-base-content font-semibold"
             : "text-base-content/80 dark:text-base-content/70 hover:bg-base-200 dark:hover:bg-base-800",
           collapsed ? "justify-center p-3" : "justify-start",
         )}
         title={collapsed ? item.label : undefined}
+        aria-expanded={open}
+        aria-controls={`${item.label.replace(/\s+/g, "-").toLowerCase()}-submenu`}
       >
-        {Icon && <Icon size={collapsed ? 20 : 18} className="flex-shrink-0" />}
+        {Icon && (
+          <Icon
+            size={collapsed ? 20 : 18}
+            className="flex-shrink-0"
+            aria-hidden="true"
+          />
+        )}
         {!collapsed && (
           <>
             <span className="flex-1 text-sm font-medium">{item.label}</span>
@@ -209,6 +203,7 @@ function NavGroup({ item, collapsed }: any) {
                 "transition-transform duration-300",
                 open ? "rotate-180" : "",
               )}
+              aria-hidden="true"
             />
           </>
         )}
@@ -216,9 +211,10 @@ function NavGroup({ item, collapsed }: any) {
 
       {!collapsed && (
         <div
+          id={`${item.label.replace(/\s+/g, "-").toLowerCase()}-submenu`}
           className={clsx(
             "ml-4 mt-2 flex flex-col gap-2",
-            open ? "block" : "hidden", // ← no height tricks
+            open ? "block" : "hidden",
             "transition-opacity duration-300",
           )}
         >
@@ -236,7 +232,6 @@ function NavGroup({ item, collapsed }: any) {
   );
 }
 
-// ── Sidebar Component ──────────────────────────────────────────────────────
 export default function Sidebar({ collapsed, setCollapsed }: any) {
   const { user, role, logout, loading } = useAuth();
   const [orgName, setOrgName] = useState<string | null>(null);
@@ -261,9 +256,7 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
       : role === "industry"
         ? industryNav
         : adminNav;
-  const badge = role
-    ? (roleBadge[role] ?? roleBadge["admin"])
-    : roleBadge["admin"];
+  const badge = role ? (roleBadge[role] ?? roleBadge.admin) : roleBadge.admin;
 
   return (
     <>
@@ -271,6 +264,7 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
         <div
           className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setCollapsed(false)}
+          aria-hidden="true"
         />
       )}
 
@@ -282,12 +276,17 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
           "shadow-lg z-50 transition-all duration-300",
           collapsed ? "w-20" : "w-72 lg:w-64",
         )}
+        aria-label="Sidebar navigation"
       >
         {/* Logo Section */}
         <div className="flex items-center justify-between p-4 border-b border-base-200 dark:border-base-800">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-md">
-              <GraduationCap size={20} className="text-primary-content" />
+              <GraduationCap
+                size={20}
+                className="text-primary-content"
+                aria-hidden="true"
+              />
             </div>
             {!collapsed && (
               <div className="flex flex-col">
@@ -312,7 +311,11 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
             )}
           >
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-base-300 to-base-200 dark:from-base-700 dark:to-base-800 flex items-center justify-center shadow-md flex-shrink-0">
-              <UserCircle size={18} className="text-base-content/70" />
+              <UserCircle
+                size={18}
+                className="text-base-content/70"
+                aria-hidden="true"
+              />
             </div>
 
             {!collapsed && (
@@ -332,7 +335,6 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
                   </div>
                 )}
 
-                {/* Smaller, Attractive Badge */}
                 <div
                   className={clsx(
                     "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide shadow-sm transition-all duration-300",
@@ -351,7 +353,7 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
           </div>
         )}
 
-        {/* Navigation - Increased spacing */}
+        {/* Navigation */}
         <nav className="flex-1 px-2 py-6 space-y-2.5 overflow-y-auto scrollbar-thin scrollbar-thumb-base-300 dark:scrollbar-thumb-base-700 scrollbar-track-transparent">
           {navItems.map((item: any) =>
             item.children ? (
@@ -382,20 +384,20 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
             )}
           >
             <div className="relative flex items-center justify-center">
-              {/* Background Circle */}
               <div className="absolute w-9 h-9 rounded-full bg-primary/15 group-hover:bg-primary/25 transition-all duration-300" />
-              {/* Arrow Icon */}
               {collapsed ? (
                 <ChevronRight
                   size={26}
                   strokeWidth={3}
                   className="relative text-primary transition-transform duration-300 group-hover:translate-x-1"
+                  aria-hidden="true"
                 />
               ) : (
                 <ChevronLeft
                   size={26}
                   strokeWidth={3}
                   className="relative text-primary transition-transform duration-300 group-hover:-translate-x-1"
+                  aria-hidden="true"
                 />
               )}
             </div>
@@ -412,10 +414,10 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
             )}
           >
             {collapsed ? (
-              <LogOut size={18} />
+              <LogOut size={18} aria-hidden="true" />
             ) : (
               <>
-                <LogOut size={18} />
+                <LogOut size={18} aria-hidden="true" />
                 <span className="text-sm">Sign Out</span>
               </>
             )}

@@ -41,13 +41,14 @@ export default function AdminDashboard({ username }: { username: string }) {
           api.get("/student"),
           api.get("/student-placement"),
         ]);
+
         setCounts({
           institutes: instRes.data?.length || 0,
           industries: indRes.data?.length || 0,
           students: stuRes.data?.length || 0,
           placements: placeRes.data?.length || 0,
-          sentOffers: 0, // replace with actual count from API
-          acceptedOffers: 0, // replace with actual count from API
+          sentOffers: 0, // replace with actual API count
+          acceptedOffers: 0, // replace with actual API count
         });
       } catch (error) {
         console.error("Failed to fetch dashboard counts", error);
@@ -71,55 +72,40 @@ export default function AdminDashboard({ username }: { username: string }) {
       color: "from-secondary to-secondary/70",
       href: "/industries",
     },
-    // {
-    //   label: "Students",
-    //   count: counts.students,
-    //   icon: Users,
-    //   color: "from-success to-success/70",
-    //   href: "/students",
-    // },
-    // {
-    //   label: "Placements",
-    //   count: counts.placements,
-    //   icon: Briefcase,
-    //   color: "from-warning to-warning/70",
-    //   href: "/placements",
-    // },
     {
       label: "Sent Requests",
-      count: counts.sentOffers || 0, // use your actual count key
+      count: counts.sentOffers || 0,
       icon: Send,
       color: "from-indigo-500 to-indigo-600",
-      href: "/all-requests", // adjust path if needed
+      href: "/all-requests",
     },
     {
       label: "Accepted Requests",
-      count: counts.acceptedOffers || 0, // use your actual count key
+      count: counts.acceptedOffers || 0,
       icon: CheckCircle2,
       color: "from-emerald-500 to-emerald-600",
-      href: "/all-requests", // adjust path if needed
+      href: "/all-requests",
     },
   ];
 
   return (
     <div className="space-y-8">
       {/* Hero */}
-      <div className="relative overflow-hidden p-7 rounded-2xl bg-gradient-to-br from-primary/10 via-base-200 to-base-200 border border-primary/20">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+      {/* Hero */}
+      <div className="relative overflow-hidden p-7 rounded-2xl bg-blue-900 text-white border border-blue-800">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-800/30 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-xl">
-            <GraduationCap size={28} className="text-primary-content" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-700 to-blue-500 flex items-center justify-center shadow-xl">
+            <GraduationCap size={28} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-base-content">
-              Welcome back, {username} 👋
-            </h1>
-            <p className="text-primary/80 text-sm mt-0.5">
+            <h1 className="text-2xl font-bold">Welcome back, {username} 👋</h1>
+            <p className="text-blue-200 text-sm mt-0.5">
               Administrator · Talent Connect Portal
             </p>
           </div>
         </div>
-        <p className="mt-4 text-base-content/60 text-sm leading-relaxed max-w-2xl">
+        <p className="mt-4 text-blue-200/70 text-sm leading-relaxed max-w-2xl">
           Full access to all modules — manage institutes, industries, students,
           placements, and master data from here.
         </p>

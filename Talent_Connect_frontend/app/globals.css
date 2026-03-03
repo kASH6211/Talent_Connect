@@ -1,197 +1,141 @@
 @import "tailwindcss";
+
 @plugin "daisyui" {
-  themes: mytheme, mytheme-dark;
+  themes: hunar, hunar-dark;
 }
 
+/* ===============================
+   LIGHT THEME (Matches Screenshot)
+================================== */
 @plugin "daisyui/theme" {
-  name: "mytheme";
+  name: "hunar";
   default: true;
   color-scheme: light;
-  --color-primary: oklch(58% 0.233 277);
-  --color-primary-content: oklch(98% 0.01 277);
-  --color-secondary: oklch(60% 0.2 310);
-  --color-secondary-content: oklch(98% 0.01 310);
-  --color-accent: oklch(65% 0.2 200);
-  --color-accent-content: oklch(98% 0.01 200);
-  --color-neutral: oklch(35% 0.02 270);
-  --color-neutral-content: oklch(95% 0.01 270);
-  --color-base-100: oklch(100% 0 0);
-  --color-base-200: oklch(96% 0.005 270);
-  --color-base-300: oklch(92% 0.01 270);
-  --color-base-content: oklch(20% 0.02 270);
-  --color-info: oklch(65% 0.18 220);
-  --color-success: oklch(60% 0.18 150);
-  --color-warning: oklch(75% 0.18 75);
-  --color-error: oklch(58% 0.22 27);
+
+  /* 🔵 Deep Government Blue */
+  --color-primary: #1c398e;
+  --color-primary-content: #ffffff;
+
+  /* 🟠 Orange Accent (Buttons) */
+  --color-secondary: #f98c1f;
+  --color-secondary-content: #ffffff;
+
+  --color-accent: #f98c1f;
+  --color-accent-content: #ffffff;
+
+  /* Layout colors */
+  --color-base-100: #ffffff;
+  --color-base-200: #f4f6f9; /* section background */
+  --color-base-300: #e5e7eb; /* borders */
+  --color-base-content: #1f2937;
+
+  --color-neutral: #1c398e;
+  --color-neutral-content: #ffffff;
+
+  --color-info: #2563eb;
+  --color-success: #16a34a;
+  --color-warning: #facc15;
+  --color-error: #dc2626;
+
+  --radius-box: 0.75rem;
+  --radius-field: 0.5rem;
   --radius-selector: 0.5rem;
-  --radius-field: 0.75rem;
-  --radius-box: 1rem;
+
   --border: 1px;
 }
 
+/* ===============================
+   DARK THEME
+================================== */
 @plugin "daisyui/theme" {
-  name: "mytheme-dark";
+  name: "hunar-dark";
   color-scheme: dark;
-  --color-primary: oklch(65% 0.233 277);
-  --color-primary-content: oklch(98% 0.01 277);
-  --color-secondary: oklch(65% 0.2 310);
-  --color-secondary-content: oklch(98% 0.01 310);
-  --color-accent: oklch(68% 0.2 200);
-  --color-accent-content: oklch(98% 0.01 200);
-  --color-neutral: oklch(22% 0.02 270);
-  --color-neutral-content: oklch(85% 0.01 270);
-  --color-base-100: oklch(17% 0.015 270);
-  --color-base-200: oklch(20% 0.018 270);
-  --color-base-300: oklch(24% 0.02 270);
-  --color-base-content: oklch(90% 0.01 270);
-  --color-info: oklch(68% 0.18 220);
-  --color-success: oklch(65% 0.18 150);
-  --color-warning: oklch(78% 0.18 75);
-  --color-error: oklch(62% 0.22 27);
+
+  --color-primary: #3b82f6;
+  --color-primary-content: #ffffff;
+
+  --color-secondary: #f98c1f;
+  --color-secondary-content: #ffffff;
+
+  --color-accent: #f98c1f;
+  --color-accent-content: #ffffff;
+
+  --color-base-100: #0f172a;
+  --color-base-200: #1e293b;
+  --color-base-300: #334155;
+  --color-base-content: #f1f5f9;
+
+  --color-neutral: #1e40af;
+  --color-neutral-content: #ffffff;
+
+  --color-info: #60a5fa;
+  --color-success: #22c55e;
+  --color-warning: #facc15;
+  --color-error: #ef4444;
+
+  --radius-box: 0.75rem;
+  --radius-field: 0.5rem;
   --radius-selector: 0.5rem;
-  --radius-field: 0.75rem;
-  --radius-box: 1rem;
+
   --border: 1px;
 }
+
+/* ===============================
+   GLOBAL STYLING
+================================== */
 
 :root {
   --sidebar-width: 260px;
 }
 
 html {
-  color-scheme: light;
-}
-
-html[data-theme="mytheme-dark"] {
-  color-scheme: dark;
+  scroll-behavior: smooth;
 }
 
 body {
   @apply bg-base-100 text-base-content antialiased;
+  font-family: "Inter", sans-serif;
 }
 
-/* Scrollbar styling */
+/* Navbar styling */
+.navbar-custom {
+  @apply bg-primary text-primary-content shadow-md;
+}
+
+/* Section background like screenshot */
+.section-alt {
+  @apply bg-base-200;
+}
+
+/* Card style (matches screenshot boxes) */
+.card-custom {
+  @apply bg-white border border-base-300 rounded-xl shadow-sm hover:shadow-md transition;
+}
+
+/* Orange button */
+.btn-orange {
+  @apply bg-secondary text-secondary-content hover:brightness-110 transition;
+}
+
+/* Blue heading */
+.heading-primary {
+  @apply text-primary font-bold;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  @apply bg-base-200;
+  background: #f4f6f9;
 }
+
 ::-webkit-scrollbar-thumb {
-  @apply bg-base-300 rounded-full;
+  background: #d1d5db;
+  border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary/40 rounded-full;
-}
-
-/* Taost Animations */
-
-@keyframes slide-up-fade {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse-slow {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.6;
-  }
-  50% {
-    transform: scale(1.15);
-    opacity: 1;
-  }
-}
-
-@keyframes ping-slow {
-  0% {
-    transform: scale(1);
-    opacity: 0.4;
-  }
-  50% {
-    transform: scale(1.8);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1.8);
-    opacity: 0;
-  }
-}
-
-.animate-slide-up-fade {
-  animation: slide-up-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 2.5s ease-in-out infinite;
-}
-
-.animate-ping-slow {
-  animation: ping-slow 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-/* login style */
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-20px) scale(1.05);
-  }
-}
-.animate-float {
-  animation: float 8s ease-in-out infinite;
-}
-
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.animate-fade-in-up {
-  animation: fade-in-up 0.9s ease-out forwards;
-}
-
-@keyframes slow-pulse {
-  0%,
-  100% {
-    opacity: 0.15;
-  }
-  50% {
-    opacity: 0.4;
-  }
-}
-.animate-slow-pulse {
-  animation: slow-pulse 14s ease-in-out infinite;
-}
-
-@keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  20%,
-  60% {
-    transform: translateX(-8px);
-  }
-  40%,
-  80% {
-    transform: translateX(8px);
-  }
-}
-.animate-shake {
-  animation: shake 0.6s ease-in-out;
+  background: #1c398e40;
 }
