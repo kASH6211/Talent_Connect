@@ -37,9 +37,9 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen flex overflow-hidden bg-base-200 dark:bg-base-950">
       {/* Theme Toggle */}
-      <div className="fixed top-5 right-5 z-50">
+      {/* <div className="fixed top-5 right-5 z-50">
         <ThemeToggle />
-      </div>
+      </div> */}
 
       {/* LEFT SIDE — fixed leftover gray edges */}
       <div className="hidden lg:block lg:w-[52%] relative overflow-hidden">

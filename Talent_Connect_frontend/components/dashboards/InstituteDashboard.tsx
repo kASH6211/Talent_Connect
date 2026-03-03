@@ -6,52 +6,13 @@ import {
   Briefcase,
   ClipboardList,
   Building2,
-  ArrowRight,
-  CheckCircle2,
-  XCircle,
-  Clock,
   Send,
   TrendingUp,
   Inbox,
 } from "lucide-react";
 import api from "@/lib/api";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/store/store";
-import { setCurrentOffer } from "@/store/institute";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ReceivedOffersPage from "@/app/received-offers/page";
-
-interface Offer {
-  offer_id: number;
-  job_title: string;
-  salary_min?: number;
-  salary_max?: number;
-  offer_date?: string;
-  last_date?: string;
-  status: string;
-  industry?: { industry_name?: string };
-}
-
-const statusConfig: Record<
-  string,
-  { badge: string; icon: any; label: string }
-> = {
-  Pending: { badge: "badge-warning", icon: Clock, label: "Pending" },
-  Accepted: { badge: "badge-success", icon: CheckCircle2, label: "Accepted" },
-  Rejected: { badge: "badge-error", icon: XCircle, label: "Rejected" },
-  Withdrawn: { badge: "badge-neutral", icon: XCircle, label: "Withdrawn" },
-};
-
-const fmt = (n?: number) => (n ? `₹${(n / 100000).toFixed(1)}L` : null);
-const salaryStr = (min?: number, max?: number) => {
-  const mn = fmt(min);
-  const mx = fmt(max);
-  if (mn && mx) return `${mn} – ${mx}`;
-  if (mn) return `From ${mn}`;
-  if (mx) return `Up to ${mx}`;
-  return null;
-};
 
 interface Stats {
   students: number;
@@ -70,142 +31,78 @@ export default function InstituteDashboard({
   instituteName?: string;
 }) {
   const [stats, setStats] = useState<Stats | null>(null);
-  const [recentOffers, setRecentOffers] = useState<Offer[]>([]);
-  const [loadingStats, setLoadingStats] = useState(true);
-  const [loadingOffers, setLoadingOffers] = useState(true);
 
-  const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
-
-  // ─── ALL LOGIC 100% UNCHANGED ──────────────────────────────────────────────
+  // ─── FETCH DATA ─────────────────────────────────────────────────────────────
   useEffect(() => {
     Promise.all([
       api.get("/student/count").catch(() => ({ data: 0 })),
       api.get("/student-placement/count").catch(() => ({ data: 0 })),
       api.get("/industry-request/count").catch(() => ({ data: 0 })),
       api.get("/job-offer/received").catch(() => ({ data: [] })),
-    ])
-      .then(([studRes, placRes, reqRes, offerRes]) => {
-        const students = typeof studRes.data === "number" ? studRes.data : 0;
-        const placements = typeof placRes.data === "number" ? placRes.data : 0;
-        const requests = typeof reqRes.data === "number" ? reqRes.data : 0;
-        const offers: Offer[] = Array.isArray(offerRes.data)
-          ? offerRes.data
-          : [];
-        setStats({
-          students,
-          placements,
-          pendingRequests: requests,
-          receivedOffers: offers.length,
-          pendingOffers: offers.filter((o) => o.status === "Pending").length,
-          acceptedOffers: offers.filter((o) => o.status === "Accepted").length,
-        });
-        setRecentOffers(offers.slice(0, 5));
-      })
-      .finally(() => {
-        setLoadingStats(false);
-        setLoadingOffers(false);
+    ]).then(([studRes, placRes, reqRes, offerRes]) => {
+      const students = typeof studRes.data === "number" ? studRes.data : 0;
+      const placements = typeof placRes.data === "number" ? placRes.data : 0;
+      const requests = typeof reqRes.data === "number" ? reqRes.data : 0;
+      const offers: any[] = Array.isArray(offerRes.data) ? offerRes.data : [];
+
+      setStats({
+        students,
+        placements,
+        pendingRequests: requests,
+        receivedOffers: offers.length,
+        pendingOffers: offers.filter((o) => o.status === "Pending").length,
+        acceptedOffers: offers.filter((o) => o.status === "Accepted").length,
       });
+    });
   }, []);
 
-  const statCards = [
-    {
-      label: "My Students",
-      value: stats?.students,
-      icon: Users,
-      color: "from-indigo-600 to-[#7976ff]/90",
-      note: "enrolled students",
-      href: "/students",
-    },
-    {
-      label: "Placements",
-      value: stats?.placements,
-      icon: TrendingUp,
-      color: "from-[#7976ff] to-indigo-600",
-      note: "placed students",
-      href: "/placements",
-    },
-    {
-      label: "Industry Requests",
-      value: stats?.pendingRequests,
-      icon: ClipboardList,
-      color: "from-amber-500 to-amber-600",
-      note: "pending requests",
-      href: "/industry-requests",
-    },
-    {
-      label: "Received Offers",
-      value: stats?.receivedOffers,
-      icon: Inbox,
-      color: "from-purple-600 to-[#7976ff]/90",
-      note: "job offers received",
-      href: "/received-offers",
-    },
-  ];
-
-  const actions = [
-    {
-      icon: Users,
-      label: "View My Students",
-      description: "Browse students enrolled at your institute",
-      href: "/students",
-      color: "from-indigo-600 to-[#7976ff]/90",
-    },
-    {
-      icon: Briefcase,
-      label: "View Placements",
-      description: "Track placement records for your students",
-      href: "/placements",
-      color: "from-[#7976ff] to-indigo-600",
-    },
-    {
-      icon: ClipboardList,
-      label: "Industry Requests",
-      description: "Manage campus placement & internship requests",
-      href: "/industry-requests",
-      color: "from-amber-500 to-amber-600",
-    },
-    {
-      icon: Send,
-      label: "Received Offers",
-      description: "Accept or reject job offers from industries",
-      href: "/received-offers",
-      color: "from-purple-600 to-[#7976ff]/90",
-    },
-  ];
-
-  // ─── RENDER ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-base-200/30">
       <div className="w-full mx-auto">
-        {/* Hero Section */}
-        <div className="relative overflow-hidden p-6 lg:p-8 rounded-2xl bg-base-100 border border-base-200 shadow-xl mb-10">
-          {/* Subtle accent orb */}
-          <div className="absolute -top-16 -right-16 w-64 h-64 bg-[#7976ff]/10 rounded-full blur-3xl pointer-events-none" />
+        {/* ─── Hero Section ─── */}
+        <div className="relative overflow-hidden p-6 lg:p-8 rounded-2xl bg-primary border border-primary/80 shadow-xl mb-10 text-primary-content">
+          {/* Accent orb */}
+          <div className="absolute -top-16 -right-16 w-64 h-64 bg-primary/30 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative flex items-center justify-between gap-6">
+          <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex items-center gap-4 flex-1 min-w-0">
-              <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-gradient-to-br from-[#7976ff] to-indigo-600 flex items-center justify-center shadow-md flex-shrink-0">
-                <Building2 size={26} className="text-white" />
+              <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-md flex-shrink-0">
+                <Building2 size={26} className="text-primary-content" />
               </div>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-base-content">
+                <h1 className="text-2xl lg:text-3xl font-bold tracking-tight leading-tight text-primary-content">
                   Welcome, {instituteName ?? "Institute Name"} 👋
                 </h1>
-                <p className="text-[#7976ff] font-medium text-base lg:text-lg mt-1">
+                <p className="text-secondary text-sm font-medium mt-1">
                   Institute Portal · {username}
                 </p>
               </div>
             </div>
+
+            <Link
+              href="/students"
+              className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full
+                         border-2 border-secondary text-secondary font-semibold text-sm
+                         hover:bg-secondary hover:text-secondary-content
+                         hover:shadow-[0_0_20px_rgba(var(--color-secondary),0.4)]
+                         transition-all duration-300 ease-in-out
+                         active:scale-95"
+            >
+              <Users
+                size={17}
+                className="group-hover:scale-110 transition-transform"
+              />
+              View My Students
+            </Link>
           </div>
 
-          <p className="mt-5 text-base-content/70 max-w-3xl text-base lg:text-lg">
+          <p className="mt-5 text-primary-content/70 text-base lg:text-lg max-w-3xl">
             Manage students, track placements, handle industry requests
             seamlessly.
           </p>
         </div>
 
-        {/* Received Offers Content directly on Dashboard */}
+        {/* ─── Received Offers Section ─── */}
         <div className="mt-8">
           <ReceivedOffersPage />
         </div>
