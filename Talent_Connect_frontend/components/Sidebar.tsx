@@ -300,12 +300,12 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
 
             {!collapsed && (
               <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                <div className="text-sm font-semibold text-base-content truncate">
-                  {user.username}
+                <div className="text-sm font-semibold text-base-content truncate" title={orgName || ""}>
+                  {orgName || "Organization"}
                 </div>
-                {orgName && (
-                  <div className="text-xs font-medium text-base-content/70 truncate" title={orgName}>
-                    {orgName}
+                {user.username && (
+                  <div className="text-xs font-medium text-base-content/70 truncate" title={user.username}>
+                    {user.username}
                   </div>
                 )}
 

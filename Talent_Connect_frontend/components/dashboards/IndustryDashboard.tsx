@@ -29,10 +29,10 @@ export default function IndustryDashboard({
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-base-content tracking-tight leading-tight">
-                Welcome, {username} 👋
+                Welcome, {industryName} 👋
               </h1>
               <p className="text-sm text-primary font-semibold mt-0.5">
-                Industry Dashboard · {industryName}
+                Industry Account · {username}
               </p>
             </div>
           </div>

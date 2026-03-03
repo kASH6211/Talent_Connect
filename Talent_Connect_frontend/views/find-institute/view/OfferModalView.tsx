@@ -72,15 +72,15 @@ function EoiTypeCard({
       type="button"
       onClick={onClick}
       className={`flex-1 rounded-xl border-2 p-4 text-left transition-all duration-150 ${selected
-          ? "border-primary bg-primary/10 shadow"
-          : "border-base-300 dark:border-base-700 hover:border-primary/40"
+        ? "border-primary bg-primary/10 shadow"
+        : "border-base-300 dark:border-base-700 hover:border-primary/40"
         }`}
     >
       <div className="flex items-center gap-2.5 mb-1">
         <span
           className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selected
-              ? "border-primary bg-primary"
-              : "border-base-400 dark:border-base-500"
+            ? "border-primary bg-primary"
+            : "border-base-400 dark:border-base-500"
             }`}
         >
           {selected && (
@@ -242,6 +242,16 @@ export function OfferModalV2({
 
   const isHiringOrTraining = eoiType === "Placement" || eoiType === "Industrial Training";
 
+  // Calculate disabled qualification IDs (disable everything except ITI and Diploma for Hiring/Training)
+  const disabledQualIds = isHiringOrTraining
+    ? qualOptions
+      .filter((q) => {
+        const lbl = q.label.toLowerCase();
+        return !lbl.includes("iti") && !lbl.includes("diploma");
+      })
+      .map((q) => q.value)
+    : [];
+
   return createPortal(
     <div
       className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-opacity duration-200 ${visible ? "opacity-100" : "opacity-0"}`}
@@ -362,20 +372,23 @@ export function OfferModalV2({
               </div>
 
               {/* Nature of Engagement */}
-              <div>
-                <label className={fieldLabelCls}>Nature of Engagement</label>
-                <select value={natureOfEngagement} onChange={(e) => setNatureOfEngagement(e.target.value)}
-                  className={inputCls}>
-                  <option value="">Select nature…</option>
-                  {NATURE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </div>
+              {eoiType === "Placement" && (
+                <div>
+                  <label className={fieldLabelCls}>Nature of Engagement</label>
+                  <select value={natureOfEngagement} onChange={(e) => setNatureOfEngagement(e.target.value)}
+                    className={inputCls}>
+                    <option value="">Select nature…</option>
+                    {NATURE_OPTIONS.filter(o => !(eoiType === "Placement" && o === "Industrial traineeship"))
+                      .map((o) => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+              )}
 
               {/* Qualification */}
               <div>
                 <label className={fieldLabelCls}>Qualification</label>
                 <MultiSelectDropdown label="Qualification" options={qualOptions} selected={qualIds}
-                  onChange={setQualIds} placeholder="Any qualification" />
+                  onChange={setQualIds} placeholder="Any qualification" disabledOptions={disabledQualIds} />
               </div>
 
               {/* Relevant Course / Stream */}
@@ -419,7 +432,9 @@ export function OfferModalV2({
               {/* Salary / Stipend */}
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className={fieldLabelCls}>Min Salary / Stipend</label>
+                  <label className={fieldLabelCls}>
+                    {eoiType === "Placement" ? "Min Salary" : "Min Stipend"}
+                  </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-base-content/50 pointer-events-none">₹</span>
                     <input type="number" value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)}
@@ -427,7 +442,9 @@ export function OfferModalV2({
                   </div>
                 </div>
                 <div>
-                  <label className={fieldLabelCls}>Max Salary / Stipend</label>
+                  <label className={fieldLabelCls}>
+                    {eoiType === "Placement" ? "Max Salary" : "Max Stipend"}
+                  </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-base-content/50 pointer-events-none">₹</span>
                     <input type="number" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)}

@@ -465,61 +465,6 @@ export default function FindInstitutesPage() {
       {searched && (
         <div className="space-y-4">
 
-          {/* Interactive Map Section */}
-          <div className="flex flex-col gap-3 bg-base-100 p-4 rounded-xl shadow-sm border border-base-300">
-            <h3 className="font-semibold text-base-content flex items-center gap-2">
-              <MapPin size={16} className="text-secondary" /> Mark Your Location for Distances
-            </h3>
-            <div className="flex flex-col sm:flex-row gap-3 items-end">
-              <div className="flex-1 w-full relative">
-                <input
-                  type="text"
-                  placeholder="Format: 'Sector 5, Kolkata'..."
-                  className="input input-sm input-bordered w-full pl-9 pr-3"
-                  value={searchGeoTerm}
-                  onChange={(e) => setSearchGeoTerm(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleGeoSearch()}
-                />
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
-              </div>
-              <div className="flex gap-2">
-                <button onClick={handleGeoSearch} className="btn btn-sm btn-secondary shadow-sm">
-                  Search Map
-                </button>
-                <button onClick={() => { setUserLocation(null); setSearchGeoTerm(""); }} className="btn btn-sm btn-outline shadow-sm text-base-content/60">
-                  Reset
-                </button>
-              </div>
-            </div>
-
-            {/* Map Container - Must have explicit height! */}
-            <div className="w-full h-[300px] sm:h-[400px] mt-2 rounded-xl overflow-hidden border border-base-200 shadow-inner z-0 relative z-0">
-              <MapContainer
-                center={userLocation || [20.5937, 78.9629]}
-                zoom={userLocation ? 14 : 4}
-                scrollWheelZoom={true}
-                style={{ height: '100%', width: '100%' }}
-                className="z-0"
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                />
-                {userLocation && <Marker position={userLocation} />}
-                <MapClickEvent />
-              </MapContainer>
-            </div>
-
-            {!userLocation ? (
-              <p className="text-xs text-base-content/50 italic text-center">Search for your city or click on the map to place a pin and calculate distances.</p>
-            ) : (
-              <div className="flex flex-col gap-0.5 items-center">
-                <p className="text-sm font-semibold text-secondary text-center">Location marked! Institutes are now showing calculated distances.</p>
-                <p className="text-xs text-secondary/70">Air distance (Haversine) and Path distance (OSRM Route)</p>
-              </div>
-            )}
-          </div>
-
           {/* Controls bar */}
           {/* Controls bar */}
           {!loading && institutes.length > 0 && (
@@ -580,18 +525,7 @@ export default function FindInstitutesPage() {
                   </select>
                 </div>
 
-                {/* Send to selected */}
-                {selected.size > 0 && (
-                  <button
-                    onClick={() =>
-                      dispatch(updateUiInstitute({ bulkOffer: { open: true } }))
-                    }
-                    className="btn btn-primary btn-sm gap-2 text-xs shadow-md"
-                  >
-                    <Send size={14} />
-                    Send to {selected.size}
-                  </button>
-                )}
+
               </div>
             </div>
           )}
@@ -639,7 +573,6 @@ export default function FindInstitutesPage() {
                         {[
                           "Institute Name",
                           "District",
-                          "Distance",
                           "Courses",
                           "Total Enrolled Students",
                           "Final Year Students",
@@ -692,41 +625,7 @@ export default function FindInstitutesPage() {
                                 {inst.district || "—"}
                               </span>
                             </td>
-                            {/* Distance Column for Table */}
-                            <td className="px-4 py-3 align-top min-w-[140px]">
-                              {userLocation ? (
-                                <div className="flex flex-col gap-1.5">
-                                  <div className="flex items-center justify-between text-xs bg-base-200/60 px-2 py-1 rounded">
-                                    <span className="font-semibold text-base-content/60">Air dist:</span>
-                                    <span className="font-bold text-base-content">
-                                      {inst.air_distance ? `${inst.air_distance?.toFixed(1)} km` : "N/A"}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center justify-between text-xs bg-base-200/60 px-2 py-1 rounded">
-                                    <span className="font-semibold text-base-content/60">Path dist:</span>
-                                    <span className="font-bold text-base-content flex items-center gap-1">
-                                      {inst.path_distance ? (
-                                        `${inst.path_distance?.toFixed(1)} km`
-                                      ) : (
-                                        <button
-                                          onClick={async (e) => {
-                                            e.stopPropagation();
-                                            if (!inst.latitude || !inst.longitude) return;
-                                            const res = await calculatePathDistance(userLocation[0], userLocation[1], parseFloat(inst.latitude), parseFloat(inst.longitude));
-                                            setInstitutes(prev => prev.map(item => item.institute_id === inst.institute_id ? { ...item, path_distance: res ?? undefined } : item));
-                                          }}
-                                          className="text-primary hover:underline"
-                                        >
-                                          Fetch path
-                                        </button>
-                                      )}
-                                    </span>
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-base-content/40 italic">Pin location to<br />see distance</span>
-                              )}
-                            </td>
+
                             <td className="px-4 py-3 align-top">
                               <button
                                 onClick={(e) => {
@@ -802,27 +701,6 @@ export default function FindInstitutesPage() {
                               <span className="flex items-center gap-1 font-semibold text-secondary"><Users size={11} /> {inst.final_year_student_count?.toLocaleString() || '0'} Final Year</span>
                             </div>
 
-                            {/* Mobile Distance Row */}
-                            {userLocation && (
-                              <div className="flex flex-wrap gap-2 text-[11px] mb-2 p-1.5 rounded bg-base-200/40">
-                                <span className="font-medium bg-base-300/40 px-1.5 py-0.5 rounded text-base-content/80">Air: {inst.air_distance ? `${inst.air_distance.toFixed(1)} km` : "N/A"}</span>
-                                <div className="font-medium bg-base-300/40 px-1.5 py-0.5 rounded text-base-content/80 flex items-center gap-1">
-                                  Path: {inst.path_distance ? `${inst.path_distance.toFixed(1)} km` : (
-                                    <button
-                                      onClick={async (e) => {
-                                        e.stopPropagation();
-                                        if (!inst.latitude || !inst.longitude) return;
-                                        const res = await calculatePathDistance(userLocation[0], userLocation[1], parseFloat(inst.latitude), parseFloat(inst.longitude));
-                                        setInstitutes(prev => prev.map(item => item.institute_id === inst.institute_id ? { ...item, path_distance: res ?? undefined } : item));
-                                      }}
-                                      className="text-primary hover:underline"
-                                    >
-                                      Fetch
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            )}
 
                           </div>
                         </div>
@@ -874,6 +752,61 @@ export default function FindInstitutesPage() {
                   </button>
                 </div>
               )}
+
+              {/* Interactive Map Section (Moved to Bottom) */}
+              <div className="flex flex-col gap-3 bg-base-100 p-4 rounded-xl shadow-sm border border-base-300 mt-6">
+                <h3 className="font-semibold text-base-content flex items-center gap-2">
+                  <MapPin size={16} className="text-secondary" /> Mark Your Location for Distances
+                </h3>
+                <div className="flex flex-col sm:flex-row gap-3 items-end">
+                  <div className="flex-1 w-full relative">
+                    <input
+                      type="text"
+                      placeholder="Format: 'Sector 5, Kolkata'..."
+                      className="input input-sm input-bordered w-full pl-9 pr-3"
+                      value={searchGeoTerm}
+                      onChange={(e) => setSearchGeoTerm(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleGeoSearch()}
+                    />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={handleGeoSearch} className="btn btn-sm btn-secondary shadow-sm">
+                      Search Map
+                    </button>
+                    <button onClick={() => { setUserLocation(null); setSearchGeoTerm(""); }} className="btn btn-sm btn-outline shadow-sm text-base-content/60">
+                      Reset
+                    </button>
+                  </div>
+                </div>
+
+                {/* Map Container - Must have explicit height! */}
+                <div className="w-full h-[300px] sm:h-[400px] mt-2 rounded-xl overflow-hidden border border-base-200 shadow-inner z-0 relative z-0">
+                  <MapContainer
+                    center={userLocation || [20.5937, 78.9629]}
+                    zoom={userLocation ? 14 : 4}
+                    scrollWheelZoom={true}
+                    style={{ height: '100%', width: '100%' }}
+                    className="z-0"
+                  >
+                    <TileLayer
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    />
+                    {userLocation && <Marker position={userLocation} />}
+                    <MapClickEvent />
+                  </MapContainer>
+                </div>
+
+                {!userLocation ? (
+                  <p className="text-xs text-base-content/50 italic text-center">Search for your city or click on the map to place a pin and calculate distances.</p>
+                ) : (
+                  <div className="flex flex-col gap-0.5 items-center">
+                    <p className="text-sm font-semibold text-secondary text-center">Location marked! See calculated distances.</p>
+                    <p className="text-xs text-secondary/70">Air distance (Haversine) and Path distance (OSRM Route)</p>
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
@@ -897,6 +830,21 @@ export default function FindInstitutesPage() {
           </div>
         )
       }
+
+      {/* ── Floating Action Button (Send Job Offers) ── */}
+      {selected.size > 0 && (
+        <div className="fixed bottom-10 right-10 z-40 transition-all duration-300 animate-in slide-in-from-bottom-5 fade-in">
+          <button
+            onClick={() =>
+              dispatch(updateUiInstitute({ bulkOffer: { open: true } }))
+            }
+            className="flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-primary text-primary-content font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all outline outline-4 outline-base-100 dark:outline-base-900"
+          >
+            <Send size={18} />
+            Send EOI to {selected.size} institute{selected.size !== 1 ? 's' : ''}
+          </button>
+        </div>
+      )}
 
       {/* ── Bulk Offer Modal ── */}
       <OfferModalV2

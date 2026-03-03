@@ -12,9 +12,10 @@ interface Props {
     selected: number[];
     onChange: (vals: number[]) => void;
     placeholder?: string;
+    disabledOptions?: number[];
 }
 
-export default function MultiSelectDropdown({ label, options, selected, onChange, placeholder }: Props) {
+export default function MultiSelectDropdown({ label, options, selected, onChange, placeholder, disabledOptions = [] }: Props) {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
     const ref = useRef<HTMLDivElement>(null);
@@ -85,21 +86,23 @@ export default function MultiSelectDropdown({ label, options, selected, onChange
                             ? <div className="px-3 py-3 text-xs text-base-content/40 text-center">No results</div>
                             : filtered.map(opt => {
                                 const checked = selected.includes(opt.value);
+                                const disabled = disabledOptions.includes(opt.value);
                                 return (
                                     <button
                                         key={opt.value}
                                         type="button"
-                                        onClick={() => toggle(opt.value)}
+                                        onClick={() => !disabled && toggle(opt.value)}
+                                        disabled={disabled}
                                         className={clsx(
                                             'w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors',
-                                            checked ? 'bg-primary/10 text-base-content' : 'text-base-content/70 hover:bg-base-300'
+                                            disabled ? 'opacity-50 cursor-not-allowed' : checked ? 'bg-primary/10 text-base-content' : 'text-base-content/70 hover:bg-base-300'
                                         )}
                                     >
                                         <span className={clsx(
                                             'w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all',
-                                            checked ? 'bg-primary border-primary' : 'border-base-content/30'
+                                            disabled ? 'border-base-content/20' : checked ? 'bg-primary border-primary' : 'border-base-content/30'
                                         )}>
-                                            {checked && <Check size={10} className="text-primary-content" />}
+                                            {checked && <Check size={10} className={clsx(disabled ? "text-base-content/40" : "text-primary-content")} />}
                                         </span>
                                         {opt.label}
                                     </button>

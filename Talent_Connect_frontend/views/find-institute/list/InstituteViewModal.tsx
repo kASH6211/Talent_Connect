@@ -175,9 +175,8 @@ export function InstituteViewModal({
 
   return createPortal(
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-opacity duration-200 ${
-        visible ? "opacity-100" : "opacity-0 pointer-events-none"
-      }`}
+      className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-opacity duration-200 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
       style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)" }}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) handleClose();
@@ -199,11 +198,7 @@ export function InstituteViewModal({
         <div className="h-1 w-full bg-gradient-to-r from-primary via-secondary to-accent flex-shrink-0" />
 
         {/* ── Header ── */}
-        <div className="relative px-6 pt-6 pb-5 border-b border-base-200 dark:border-base-800 overflow-hidden">
-          {/* Subtle background blob */}
-          <div className="absolute -top-8 -right-8 w-40 h-40 bg-primary/6 rounded-full blur-2xl pointer-events-none" />
-
-          {/* Close */}
+        <div className="relative px-6 pt-6 pb-4 border-b border-base-200 dark:border-base-800 bg-base-100 dark:bg-base-900">
           <button
             onClick={handleClose}
             className="absolute top-4 right-4 w-8 h-8 rounded-lg border border-base-300 dark:border-base-700 bg-base-200 dark:bg-base-800 text-base-content/50 hover:border-error/40 hover:bg-error/10 hover:text-error flex items-center justify-center transition-all duration-200 z-10"
@@ -212,159 +207,83 @@ export function InstituteViewModal({
             <X size={14} />
           </button>
 
-          <div className="flex items-start gap-4 relative">
-            {/* Avatar */}
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/25 flex-shrink-0 select-none">
-              <span className="text-xl font-black text-white tracking-tight">
-                {initials}
-              </span>
-            </div>
-
-            <div className="flex-1 min-w-0 pt-0.5">
-              <h2 className="text-lg font-bold text-base-content leading-tight pr-8">
-                {institute.institute_name}
-              </h2>
-
-              {/* Badges row */}
-              <div className="flex flex-wrap gap-2 mt-2.5">
-                {institute.type && (
-                  <Badge label={institute.type} color="primary" />
-                )}
-                {institute.ownership && (
-                  <Badge label={institute.ownership} color="secondary" />
-                )}
-                {institute.naac_grade && (
-                  <Badge
-                    label={`NAAC ${institute.naac_grade}`}
-                    color="success"
-                  />
-                )}
-                {institute.affiliation && (
-                  <Badge label={institute.affiliation} color="warning" />
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Student count pill + ID */}
-          <div className="flex items-center gap-3 mt-4">
-            {institute.student_count !== undefined &&
-              institute.student_count !== null && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700">
-                  <Users size={13} className="text-primary" />
-                  <span className="text-xs font-bold text-base-content/80">
-                    {institute.student_count.toLocaleString()} students
-                  </span>
-                </div>
-              )}
-            {institute.established_year && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700">
-                <Landmark size={13} className="text-secondary" />
-                <span className="text-xs font-bold text-base-content/80">
-                  Est. {institute.established_year}
-                </span>
-              </div>
-            )}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 ml-auto">
-              <Hash size={12} className="text-base-content/40" />
-              <span className="text-xs font-mono text-base-content/50">
-                {institute.institute_id}
-              </span>
-            </div>
+          <h2 className="text-xl font-bold text-base-content pr-8 mb-2.5">
+            {institute.institute_name}
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {institute.type && <Badge label={institute.type} color="primary" />}
+            {institute.ownership && <Badge label={institute.ownership} color="primary" />}
           </div>
         </div>
 
         {/* ── Body ── */}
-        <div className="px-6 py-2 flex-1 overflow-y-auto">
-          {/* Contact section */}
-          <div className="pt-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-base-content/40 py-2">
-              Contact
-            </p>
-            <InfoRow
-              icon={Mail}
-              label="Email"
-              value={institute.email}
-              href={emailHref}
-              mono
-            />
-            <InfoRow
-              icon={Phone}
-              label="Mobile"
-              value={institute.mobileno}
-              href={phoneHref}
-              mono
-            />
+        <div className="px-6 py-6 flex-1 overflow-y-auto bg-base-200/30 dark:bg-base-900">
+
+          {/* Stats Row */}
+          <div className="flex gap-3 mb-7">
+            <div className="flex-1 bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-800 shadow-sm rounded-xl p-3 text-center">
+              <p className="text-[11px] font-bold text-base-content/50 uppercase tracking-wider mb-1">Students</p>
+              <p className="text-lg font-black text-base-content">{institute.student_count?.toLocaleString() || 'N/A'}</p>
+            </div>
+            <div className="flex-1 bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-800 shadow-sm rounded-xl p-3 text-center">
+              <p className="text-[11px] font-bold text-base-content/50 uppercase tracking-wider mb-1">Courses</p>
+              <p className="text-lg font-black text-base-content">15</p>
+            </div>
+            <div className="flex-1 bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-800 shadow-sm rounded-xl p-3 text-center">
+              <p className="text-[11px] font-bold text-secondary uppercase tracking-wider mb-1">Rank</p>
+              <p className="text-lg font-black text-secondary">#12</p>
+            </div>
           </div>
 
-          {/* Location section */}
-          {(location || institute.address) && (
-            <div className="pt-1">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-base-content/40 py-2">
-                Location
-              </p>
-              <InfoRow
-                icon={MapPin}
-                label="District / State"
-                value={location}
-              />
-              <InfoRow
-                icon={Building2}
-                label="Address"
-                value={institute.address}
-              />
-            </div>
-          )}
+          {/* Email */}
+          <div className="mb-7 flex items-center border-b border-base-300 dark:border-base-800 pb-5">
+            <span className="text-sm font-bold text-base-content/60 w-24">Email ID:</span>
+            <span className="text-sm font-medium text-base-content">{institute.email || 'N/A'}</span>
+          </div>
 
-          {/* Details section */}
-          {(institute.website ||
-            institute.affiliation ||
-            institute.naac_grade) && (
-            <div className="pt-1">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-base-content/40 py-2">
-                Details
-              </p>
-              <InfoRow
-                icon={ExternalLink}
-                label="Website"
-                value={institute.website}
-                href={websiteHref}
-              />
-              <InfoRow
-                icon={ShieldCheck}
-                label="NAAC Grade"
-                value={institute.naac_grade}
-              />
-              <InfoRow
-                icon={GraduationCap}
-                label="Affiliated To"
-                value={institute.affiliation}
-              />
+          {/* Location */}
+          <div>
+            <h3 className="text-sm font-bold text-base-content/60 mb-3.5">Location</h3>
+            <div className="flex gap-4 items-stretch">
+              <div className="flex-1 space-y-3.5">
+                <div className="flex items-start">
+                  <span className="text-sm font-bold text-base-content/60 w-24 pt-1.5">District</span>
+                  <div className="flex-1 bg-base-100 dark:bg-base-900 shadow-inner border border-base-300 dark:border-base-800 rounded-lg px-3 py-2 text-sm font-medium min-h-[38px] text-base-content/90">
+                    {institute.district || 'N/A'}
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <span className="text-sm font-bold text-base-content/60 w-24 pt-1.5">Address</span>
+                  <div className="flex-1 bg-base-100 dark:bg-base-900 shadow-inner border border-base-300 dark:border-base-800 rounded-lg px-3 py-2 text-sm font-medium min-h-[58px] text-base-content/90">
+                    {institute.address || 'N/A'}
+                  </div>
+                </div>
+              </div>
+
+              <button className="flex flex-col items-center justify-center gap-2 w-28 rounded-xl border-2 border-base-300 dark:border-base-800 bg-base-100 dark:bg-base-900 hover:border-primary/50 text-base-content/70 hover:text-primary transition-all shadow-sm">
+                <MapPin size={24} className="mb-1" />
+                <span className="text-[11px] font-bold text-center leading-tight">Map<br />Location</span>
+              </button>
             </div>
-          )}
+          </div>
+
         </div>
 
         {/* ── Footer ── */}
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-base-200 dark:border-base-800 bg-base-200/40 dark:bg-base-800/40 flex-shrink-0">
           <button
             onClick={handleClose}
-            className="px-4 h-9 rounded-lg border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 text-sm font-medium text-base-content hover:bg-base-200 dark:hover:bg-base-800 transition-colors"
+            className="px-5 h-10 rounded-xl border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 text-sm font-bold text-base-content hover:bg-base-200 dark:hover:bg-base-800 transition-colors shadow-sm"
           >
             Close
           </button>
 
-          {onSendOffer && (
-            <button
-              onClick={() => {
-                onSendOffer(institute);
-                handleClose();
-              }}
-              className="h-9 px-5 rounded-lg bg-primary hover:brightness-110 text-primary-content text-sm font-semibold flex items-center gap-2 shadow-md shadow-primary/25 transition-all"
-            >
-              <Send size={14} />
-              Send Job Offer
-            </button>
-          )}
+          <button
+            onClick={() => { }}
+            className="h-10 px-6 rounded-xl bg-base-content text-base-100 text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity shadow-md"
+          >
+            View full profile
+          </button>
         </div>
       </div>
     </div>,

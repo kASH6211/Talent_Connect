@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   GraduationCap,
@@ -26,8 +26,54 @@ import {
   ShieldCheck,
   Zap,
   Globe2,
+  ArrowUpDown,
 } from "lucide-react";
 import api from "@/lib/api";
+import dynamic from 'next/dynamic';
+import 'leaflet/dist/leaflet.css';
+
+// Dynamically load UI elements to avoid SSR issues with Leaflet
+const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then((m) => m.Marker), { ssr: false });
+import { useMapEvents, useMap } from 'react-leaflet';
+
+import L from 'leaflet';
+// Fix Leaflet marker missing images in Next.js
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+// Helper for 'in air' distance (Haversine formula in km)
+function calculateAirDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Helper for 'in path' distance using OSRM
+async function calculatePathDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  try {
+    const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`);
+    const data = await res.json();
+    if (data.routes && data.routes.length > 0) {
+      return data.routes[0].distance / 1000; // convert meters to km
+    }
+    return null;
+  } catch (e) {
+    console.warn("OSRM error:", e);
+    return null;
+  }
+}
+
 import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
 import { InstituteViewModal } from "@/views/find-institute/list/InstituteViewModal";
 import InstituteCoursesModal from "@/views/find-institute/view/InstituteCoursesModal";
@@ -49,6 +95,10 @@ interface InstituteRow {
   contactperson: string;
   po_mobile: string;
   po_email: string;
+  latitude?: string;
+  longitude?: string;
+  air_distance?: number;
+  path_distance?: number;
 }
 interface Filters {
   state_ids: number[];
@@ -305,7 +355,7 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
             <span style={{ color: "hsl(var(--bc) / 0.85)", fontWeight: 600 }}>
               Industry Partner
             </span>{" "}
-            to send job offers to placement cells.
+            to collaborate with institute.
           </p>
 
           <button
@@ -434,12 +484,17 @@ export default function IndustryLandingPage() {
   const [institutes, setInstitutes] = useState<InstituteRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [sort, setSort] = useState<"name" | "name-rev" | "student_count">("student_count");
   const [loginModal, setLoginModal] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [viewInstitute, setViewInstitute] = useState(false);
   const [viewCourses, setViewCourses] = useState(false);
   const [currentInstitute, setCurrentInstitute] = useState<InstituteRow | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Map state
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [searchGeoTerm, setSearchGeoTerm] = useState("");
 
   const [districtOpts, setDistrictOpts] = useState<Option[]>([]);
   const [qualOpts, setQualOpts] = useState<Option[]>([]);
@@ -504,24 +559,90 @@ export default function IndustryLandingPage() {
     });
     try {
       const res = await api.get(`/institute/search?${params}`);
-      setInstitutes(res.data ?? []);
+      let data = res.data ?? [];
+
+      if (userLocation) {
+        data = data.map((inst: InstituteRow) => {
+          if (inst.latitude && inst.longitude) {
+            const air = calculateAirDistance(userLocation[0], userLocation[1], parseFloat(inst.latitude), parseFloat(inst.longitude));
+            return { ...inst, air_distance: air };
+          }
+          return inst;
+        });
+      }
+
+      setInstitutes(data);
     } catch {
       setInstitutes([]);
     }
     setLoading(false);
-  }, [filters]);
+  }, [filters, userLocation]);
 
   useEffect(() => {
     handleSearch();
   }, [handleSearch]);
 
+  // Effect to recalculate Air Distances dynamically if userLocation changes
+  useEffect(() => {
+    if (!userLocation || institutes.length === 0) return;
+    setInstitutes(prev => prev.map(inst => {
+      if (inst.latitude && inst.longitude) {
+        const air = calculateAirDistance(userLocation[0], userLocation[1], parseFloat(inst.latitude), parseFloat(inst.longitude));
+        return { ...inst, air_distance: air };
+      }
+      return inst;
+    }));
+  }, [userLocation]);
+
+  // Handle Geocoding Search (Nominatim)
+  const handleGeoSearch = async () => {
+    if (!searchGeoTerm.trim()) return;
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchGeoTerm)}`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        setUserLocation([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+      }
+    } catch (e) {
+      console.warn("Geocoding failed", e);
+    }
+  };
+
+  // Leaflet Component Hook
+  const MapClickEvent = () => {
+    useMapEvents({
+      click(e: any) {
+        setUserLocation([e.latlng.lat, e.latlng.lng]);
+      }
+    });
+    const map = useMap();
+    useEffect(() => {
+      if (userLocation) map.flyTo(userLocation, map.getZoom());
+    }, [userLocation, map]);
+    return null;
+  };
+
   const activeFilterCount = Object.values(filters).filter(
     (v, i) => Object.keys(filters)[i] !== 'state_ids' && Array.isArray(v) && v.length > 0,
   ).length;
 
+  const filteredInstitutes = useMemo(() => {
+    let list = [...institutes];
+
+    // sort
+    if (sort === "name") {
+      list.sort((a, b) => a.institute_name.localeCompare(b.institute_name));
+    } else if (sort === "name-rev") {
+      list.sort((a, b) => b.institute_name.localeCompare(a.institute_name));
+    } else if (sort === "student_count") {
+      list.sort((a, b) => (b.student_count || 0) - (a.student_count || 0));
+    }
+    return list;
+  }, [institutes, sort]);
+
   const PAGE_SIZE = 10;
-  const totalPages = Math.ceil(institutes.length / PAGE_SIZE);
-  const pagedInstitutes = institutes.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const totalPages = Math.ceil(filteredInstitutes.length / PAGE_SIZE);
+  const pagedInstitutes = filteredInstitutes.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <>
@@ -529,257 +650,45 @@ export default function IndustryLandingPage() {
       <LoginModal open={loginModal} onClose={() => setLoginModal(false)} />
 
       <div
-        className="ilp min-h-screen"
+        className="ilp min-h-screen flex flex-col"
         style={{ background: "hsl(var(--b1))" }}
       >
         {/* ══════════════════════════════════════════════════════
-            HERO — solid #605dff with morphing blobs & wave
+            TOP HEADER
         ══════════════════════════════════════════════════════ */}
-        <div
-          className="relative w-full overflow-hidden"
-          style={{ background: P }}
-        >
-          {/* ── Morphing blob decorations ── */}
-          <div
-            className="ilp-blob"
-            style={{
-              width: 560,
-              height: 560,
-              top: -200,
-              right: -140,
-              background: "rgba(255,255,255,0.07)",
-              animationDuration: "18s",
-            }}
-          />
-          <div
-            className="ilp-blob2"
-            style={{
-              width: 380,
-              height: 380,
-              bottom: -160,
-              left: -80,
-              background: "rgba(255,255,255,0.055)",
-              animationDuration: "14s",
-            }}
-          />
-          <div
-            className="ilp-blob3"
-            style={{
-              width: 220,
-              height: 220,
-              top: "28%",
-              left: "44%",
-              background: "rgba(255,255,255,0.045)",
-              animationDuration: "20s",
-            }}
-          />
-
-          {/* Glow orbs */}
-          <div
-            className="absolute pointer-events-none"
-            style={{
-              width: 700,
-              height: 700,
-              top: -300,
-              left: -200,
-              borderRadius: "50%",
-              background:
-                "radial-gradient(circle, rgba(255,255,255,0.1), transparent 65%)",
-              filter: "blur(10px)",
-            }}
-          />
-          <div
-            className="absolute pointer-events-none"
-            style={{
-              width: 500,
-              height: 500,
-              bottom: -180,
-              right: -100,
-              borderRadius: "50%",
-              background: `radial-gradient(circle, ${P_DARK}88, transparent 65%)`,
-              filter: "blur(10px)",
-            }}
-          />
-
-          {/* Fine dot grid */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              backgroundImage:
-                "radial-gradient(rgba(255,255,255,0.13) 1px, transparent 1px)",
-              backgroundSize: "22px 22px",
-            }}
-          />
-
-          {/* ── Navbar ── */}
-          <header
-            className="relative z-10 w-full"
-            style={{ borderBottom: "1px solid rgba(255,255,255,0.13)" }}
-          >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-              {/* Logo */}
-              <div className="flex items-center gap-2.5">
-                <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: "rgba(255,255,255,0.18)",
-                    border: "1px solid rgba(255,255,255,0.25)",
-                  }}
-                >
-                  <GraduationCap size={16} color="#fff" strokeWidth={2.5} />
-                </div>
-                <div>
-                  <span className="font-bold text-[15px] leading-none block text-white">
-                    HUNAR Punjab
-                  </span>
-                  <span className="text-[9px] font-semibold uppercase tracking-[0.05em] text-white/50">
-                    Hub for Upskilling, Networking & Access to Rozgar
-                  </span>
-                </div>
-              </div>
-
-              {/* Login */}
-              <button
-                onClick={() => router.push("/login")}
-                className="ilp-nav-btn flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm text-white"
-                style={{
-                  background: "rgba(255,255,255,0.13)",
-                  border: "1px solid rgba(255,255,255,0.22)",
-                }}
-              >
-                <LogIn size={14} strokeWidth={2.5} />
-                Industry Login
-                <span
-                  className="ilp-dot-live w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style={{
-                    background: "#4ade80",
-                    boxShadow: "0 0 6px #4ade80",
-                  }}
-                />
-              </button>
-            </div>
-          </header>
-
-          {/* ── Hero content ── */}
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-32 text-center">
-            {/* H1 */}
-            <h1 className="ilp-rise ilp-d1 text-4xl sm:text-5xl lg:text-[64px] font-extrabold leading-[1.07] tracking-tight mb-5">
-              <span className="text-white">Connect with </span>
-              <span className="ilp-shine">Top Institutes</span>
-              <br />
-              <span className="text-white/90">across Punjab</span>
-            </h1>
-
-            <p className="ilp-rise ilp-d2 text-base sm:text-[17px] max-w-2xl mx-auto leading-relaxed mb-11 text-white/65">
-              Search institutes by location and course offerings - connect directly with their placement teams to meet your workforce requirements.
-            </p>
-
-            {/* CTA row */}
-            <div className="ilp-rise ilp-d3 flex flex-wrap items-center justify-center gap-3 mb-16">
-              <button
-                onClick={() =>
-                  searchRef.current?.scrollIntoView({ behavior: "smooth" })
-                }
-                className="ilp-btn-white flex items-center gap-2 px-7 py-3 rounded-xl font-bold text-sm"
-                style={{
-                  background: "#fff",
-                  color: P,
-                  boxShadow: "0 4px 18px rgba(0,0,0,0.22)",
-                }}
-              >
-                <Search size={15} /> Start Searching <ArrowRight size={14} />
-              </button>
-              <button
-                onClick={() => router.push("/login")}
-                className="ilp-btn-ghost flex items-center gap-2 px-7 py-3 rounded-xl font-bold text-sm text-white"
-                style={{
-                  background: "rgba(255,255,255,0.11)",
-                  border: "1px solid rgba(255,255,255,0.24)",
-                }}
-              >
-                <LogIn size={14} /> Partner Login
-              </button>
-            </div>
-
-            {/* Stats */}
-            <div className="ilp-rise ilp-d4 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto">
-              {[
-                { value: "1,200+", label: "Institutes", icon: Building2 },
-                { value: "85,000+", label: "Students", icon: Users },
-                { value: "340+", label: "Companies", icon: TrendingUp },
-                { value: "92%", label: "Placement Rate", icon: Award },
-              ].map(({ value, label, icon: Icon }) => (
-                <div
-                  key={label}
-                  className="ilp-stat text-center px-4 py-5 rounded-2xl"
-                  style={{
-                    background: "rgba(255,255,255,0.12)",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    backdropFilter: "blur(8px)",
-                  }}
-                >
-                  <Icon
-                    size={16}
-                    color="rgba(255,255,255,0.7)"
-                    className="mx-auto mb-2"
-                  />
-                  <p className="text-[23px] font-extrabold text-white">
-                    {value}
-                  </p>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest mt-0.5 text-white/50">
-                    {label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ── Curved SVG wave — fills from hero color (#605dff) into page bg ── */}
-          <div
-            className="relative z-10 w-full"
-            style={{ marginBottom: "-2px" }}
-          >
-            <svg
-              viewBox="0 0 1440 90"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-full block"
-              preserveAspectRatio="none"
-              style={{ display: "block" }}
-            >
-              {/* Two layered paths for depth */}
-              <path
-                d="M0,50 C200,90 400,20 600,55 C800,90 1100,15 1440,50 L1440,90 L0,90 Z"
-                fill="hsl(var(--b1))"
-                opacity="0.4"
-              />
-              <path
-                d="M0,65 C300,20 600,85 900,40 C1100,10 1300,60 1440,45 L1440,90 L0,90 Z"
-                fill="hsl(var(--b1))"
-              />
-            </svg>
-          </div>
-        </div>
-
-        {/* ── Feature chips (float below wave, still on page bg) ── */}
-        <div className="w-full" style={{ background: "hsl(var(--b1))" }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-8 flex flex-wrap justify-center gap-2.5">
-            {[
-              { icon: ShieldCheck, text: "Verified Institutes" },
-            ].map(({ icon: Icon, text }) => (
+        <header className="w-full bg-base-100 dark:bg-base-900 border-b border-base-200 dark:border-base-800 sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
               <div
-                key={text}
-                className="ilp-chip flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold"
-                style={{
-                  background: P_ALPHA(0.08),
-                  color: P,
-                  border: `1px solid ${P_ALPHA(0.18)}`,
-                }}
+                className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => router.push("/")}
+                style={{ background: P }}
               >
-                <Icon size={12} /> {text}
+                <GraduationCap size={20} className="text-primary-content" />
               </div>
-            ))}
+              <div className="flex flex-col cursor-pointer" onClick={() => router.push("/")}>
+                <span className="text-sm font-bold text-base-content leading-tight">
+                  HUNAR Punjab
+                </span>
+                <span className="text-[9px] text-base-content/60 leading-tight hidden sm:block">
+                  Hub for Upskilling, Networking & Access to Rozgar
+                </span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push("/login")}
+                className="btn btn-sm text-primary-content border-none shadow-md hover:-translate-y-0.5 transition-transform"
+                style={{ background: P_DARK }}
+              >
+                <LogIn size={14} /> Login
+              </button>
+            </div>
           </div>
-        </div>
+        </header>
 
         {/* ══════════════════════════════════════════════════════
             SEARCH CARD
@@ -965,7 +874,7 @@ export default function IndustryLandingPage() {
                   className="px-6 sm:px-8 pb-8"
                   style={{ borderTop: "1px solid hsl(var(--bc) / 0.06)" }}
                 >
-                  <div className="flex items-center justify-between pt-5 mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-5 mb-4 gap-4">
                     <p
                       className="text-sm"
                       style={{ color: "hsl(var(--bc) / 0.45)" }}
@@ -974,18 +883,29 @@ export default function IndustryLandingPage() {
                         className="font-bold text-base"
                         style={{ color: "hsl(var(--bc))" }}
                       >
-                        {institutes.length}
+                        {filteredInstitutes.length}
                       </span>{" "}
                       institutes found
                     </p>
-                    {institutes.length > 0 && (
-                      <span
-                        className="text-xs"
-                        style={{ color: "hsl(var(--bc) / 0.28)" }}
+
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-base-300 dark:border-base-700 bg-base-200/50 dark:bg-base-900/50 text-xs self-start sm:self-auto">
+                      <ArrowUpDown size={12} style={{ color: P }} />
+                      <select
+                        className="bg-transparent border-0 outline-none font-medium cursor-pointer text-xs"
+                        style={{ color: "hsl(var(--bc) / 0.8)" }}
+                        value={sort}
+                        onChange={(e) => {
+                          setSort(
+                            e.target.value as "name" | "name-rev" | "student_count",
+                          );
+                          setCurrentPage(1);
+                        }}
                       >
-                        Click "Send Job Offer" to connect
-                      </span>
-                    )}
+                        <option value="student_count" style={{ color: "var(--fallback-bc,oklch(var(--bc)/1))", background: "var(--fallback-b1,oklch(var(--b1)/1))" }}>Students</option>
+                        <option value="name" style={{ color: "var(--fallback-bc,oklch(var(--bc)/1))", background: "var(--fallback-b1,oklch(var(--b1)/1))" }}>A–Z</option>
+                        <option value="name-rev" style={{ color: "var(--fallback-bc,oklch(var(--bc)/1))", background: "var(--fallback-b1,oklch(var(--b1)/1))" }}>Z–A</option>
+                      </select>
+                    </div>
                   </div>
 
                   {institutes.length === 0 ? (
@@ -1179,6 +1099,65 @@ export default function IndustryLandingPage() {
                   Select filters above then hit Search to discover institutes
                 </div>
               )}
+              {/* Interactive Map Section (Moved to Bottom) */}
+              <div className="flex flex-col gap-3 p-5 sm:p-8"
+                style={{
+                  borderTop: "1px solid hsl(var(--bc) / 0.08)",
+                }}>
+                <h3 className="font-semibold text-base-content flex items-center gap-2">
+                  <MapPin size={16} className="text-secondary" /> Mark Your Location for Distances
+                </h3>
+                <div className="flex flex-col sm:flex-row gap-3 items-end">
+                  <div className="flex-1 w-full relative">
+                    <input
+                      type="text"
+                      placeholder="Format: 'Sector 5, Kolkata'..."
+                      className="input input-sm border-base-300 w-full pl-9 pr-3"
+                      style={{ background: "hsl(var(--b1))" }}
+                      value={searchGeoTerm}
+                      onChange={(e) => setSearchGeoTerm(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleGeoSearch()}
+                    />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40 pointer-events-none" />
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={handleGeoSearch} className="btn btn-sm btn-secondary shadow-sm">
+                      Search Map
+                    </button>
+                    <button onClick={() => { setUserLocation(null); setSearchGeoTerm(""); }} className="btn btn-sm btn-outline shadow-sm text-base-content/60 border-base-300 hover:bg-base-100 bg-transparent">
+                      Reset
+                    </button>
+                  </div>
+                </div>
+
+                {/* Map Container */}
+                <div className="w-full h-[300px] sm:h-[400px] mt-2 rounded-xl overflow-hidden border border-base-200 shadow-inner z-0 relative">
+                  <MapContainer
+                    center={userLocation || [20.5937, 78.9629]}
+                    zoom={userLocation ? 14 : 4}
+                    scrollWheelZoom={true}
+                    style={{ height: '100%', width: '100%' }}
+                    className="z-0"
+                  >
+                    <TileLayer
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    />
+                    {userLocation && <Marker position={userLocation} />}
+                    <MapClickEvent />
+                  </MapContainer>
+                </div>
+
+                {!userLocation ? (
+                  <p className="text-xs text-base-content/50 italic text-center">Search for your city or click on the map to place a pin and calculate distances.</p>
+                ) : (
+                  <div className="flex flex-col gap-0.5 items-center">
+                    <p className="text-sm font-semibold text-secondary text-center">Location marked! See calculated distances.</p>
+                    <p className="text-xs text-secondary/70">Air distance (Haversine) and Path distance (OSRM Route)</p>
+                  </div>
+                )}
+              </div>
+
             </div>
 
             {/* ── CTA banner below card ── */}
@@ -1203,8 +1182,7 @@ export default function IndustryLandingPage() {
                   className="text-sm"
                   style={{ color: "hsl(var(--bc) / 0.5)" }}
                 >
-                  Register as an Industry Partner to unlock direct placement
-                  offers.
+                  Register as an Industry Partner to Collaborate with institutes
                 </span>
               </div>
               <button
@@ -1218,23 +1196,6 @@ export default function IndustryLandingPage() {
           </div>
         </div>
 
-        {/* ══════════ FOOTER ══════════ */}
-        <footer
-          className="w-full py-7 text-center text-sm"
-          style={{
-            borderTop: "1px solid hsl(var(--bc) / 0.07)",
-            color: "hsl(var(--bc) / 0.33)",
-          }}
-        >
-          Already have an account?{" "}
-          <button
-            onClick={() => router.push("/login")}
-            className="font-semibold hover:opacity-75 transition-opacity"
-            style={{ color: P }}
-          >
-            Sign in as Industry Partner →
-          </button>
-        </footer>
       </div>
       <InstituteViewModal
         open={viewInstitute}

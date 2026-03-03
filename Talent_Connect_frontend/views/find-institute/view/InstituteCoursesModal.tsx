@@ -3,11 +3,18 @@ import { X, GraduationCap, Users } from "lucide-react";
 import api from "@/lib/api";
 
 interface CourseRow {
-    qualification: string;
     course: string;
     student_count: number;
     final_year_student_count: number;
 }
+
+const DUMMY_COURSES: CourseRow[] = [
+    { course: "ITI (Electrician)", student_count: 0, final_year_student_count: 0 },
+    { course: "ITI (Fitter)", student_count: 0, final_year_student_count: 0 },
+    { course: "ITI (Welder)", student_count: 0, final_year_student_count: 0 },
+    { course: "ITI (Machinist)", student_count: 0, final_year_student_count: 0 },
+    { course: "ITI (Computer Operator and Programming Assistant)", student_count: 0, final_year_student_count: 0 },
+];
 
 interface Props {
     open: boolean;
@@ -33,19 +40,14 @@ export default function InstituteCoursesModal({
     useEffect(() => {
         if (!open || !instituteId) return;
 
-        const fetchCourses = async () => {
+        const fetchCourses = () => {
             setLoading(true);
-            const params = new URLSearchParams();
-            if (filters.qualification_ids.length) params.set("qualification_ids", filters.qualification_ids.join(","));
-            if (filters.stream_ids.length) params.set("stream_ids", filters.stream_ids.join(","));
 
-            try {
-                const res = await api.get(`/institute/${instituteId}/filtered-courses?${params}`);
-                setCourses(res.data || []);
-            } catch (err) {
-                setCourses([]);
-            }
-            setLoading(false);
+            // Simulate network request
+            setTimeout(() => {
+                setCourses(DUMMY_COURSES);
+                setLoading(false);
+            }, 600);
         };
 
         fetchCourses();
@@ -94,19 +96,15 @@ export default function InstituteCoursesModal({
                             <table className="w-full text-left text-sm whitespace-nowrap">
                                 <thead className="bg-base-200/60 dark:bg-base-800/60">
                                     <tr>
-                                        <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Qualification</th>
-                                        <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Course / Trade</th>
-                                        <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Total Enrolled</th>
-                                        <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Final Year</th>
+                                        <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Course</th>
+                                        <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Total Students on Roll</th>
+                                        <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Final Year Student ready for placement</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-base-200 dark:divide-base-800">
                                     {courses.map((row, idx) => (
                                         <tr key={idx} className="hover:bg-base-200/50 transition-colors">
                                             <td className="px-4 py-3 font-medium text-base-content/80">
-                                                {row.qualification}
-                                            </td>
-                                            <td className="px-4 py-3 text-base-content/80">
                                                 {row.course}
                                             </td>
                                             <td className="px-4 py-3">

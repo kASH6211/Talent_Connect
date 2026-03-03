@@ -190,10 +190,10 @@ export default function InstituteDashboard({
               </div>
               <div>
                 <h1 className="text-2xl lg:text-3xl font-bold text-base-content">
-                  Welcome, {username} 👋
+                  Welcome, {instituteName ?? "Institute Name"} 👋
                 </h1>
                 <p className="text-[#7976ff] font-medium text-base lg:text-lg mt-1">
-                  Institute Portal · {instituteName ?? "Institute Account"}
+                  Institute Portal · {username}
                 </p>
               </div>
             </div>
