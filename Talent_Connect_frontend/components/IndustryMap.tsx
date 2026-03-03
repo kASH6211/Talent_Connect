@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import dynamic from 'next/dynamic';
+
+const GeoJSON = dynamic(() => import('react-leaflet').then(mod => mod.GeoJSON), {
+    ssr: false
+});
 
 // Fix Leaflet marker missing images in Next.js
 if (typeof window !== 'undefined') {
@@ -44,10 +49,19 @@ export default function IndustryMap({
     userLocation: [number, number] | null;
     onLocationSelect: (latlng: [number, number]) => void;
 }) {
+    const [punjabGeoJson, setPunjabGeoJson] = useState<any>(null);
+
+    useEffect(() => {
+        fetch('/punjab_state.geojson')
+            .then(res => res.json())
+            .then(data => setPunjabGeoJson(data))
+            .catch(err => console.error("Error loading Punjab GeoJSON:", err));
+    }, []);
+
     return (
         <MapContainer
-            center={userLocation || [20.5937, 78.9629]}
-            zoom={userLocation ? 14 : 4}
+            center={userLocation || [31.1471, 75.3412]}
+            zoom={userLocation ? 14 : 7}
             scrollWheelZoom={true}
             style={{ height: '100%', width: '100%' }}
             className="z-0"
@@ -56,6 +70,18 @@ export default function IndustryMap({
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             />
+            {/* Outline Punjab with GeoJSON */}
+            {punjabGeoJson && (
+                <GeoJSON
+                    data={punjabGeoJson}
+                    style={() => ({
+                        color: '#605dff',
+                        weight: 2,
+                        fillColor: '#605dff',
+                        fillOpacity: 0.1,
+                    })}
+                />
+            )}
             {userLocation && <Marker position={userLocation} />}
             <MapClickEvent userLocation={userLocation} onLocationSelect={onLocationSelect} />
         </MapContainer>

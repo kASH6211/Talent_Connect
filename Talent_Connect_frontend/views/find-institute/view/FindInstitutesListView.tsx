@@ -43,6 +43,9 @@ const TileLayer = dynamic(
 const Marker = dynamic(() => import("react-leaflet").then((m) => m.Marker), {
   ssr: false,
 });
+const GeoJSON = dynamic(() => import("react-leaflet").then((m) => m.GeoJSON), {
+  ssr: false,
+});
 import { useMapEvents, useMap } from "react-leaflet";
 
 import L from "leaflet";
@@ -69,9 +72,9 @@ function calculateAirDistance(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -173,6 +176,14 @@ export default function FindInstitutesPage() {
     null,
   );
   const [searchGeoTerm, setSearchGeoTerm] = useState("");
+  const [punjabGeoJson, setPunjabGeoJson] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/punjab_state.geojson')
+      .then(res => res.json())
+      .then(data => setPunjabGeoJson(data))
+      .catch(err => console.error("Error loading Punjab GeoJSON:", err));
+  }, []);
 
   //table right side fitler
   const [searchTerm, setSearchTerm] = useState("");
@@ -877,8 +888,8 @@ export default function FindInstitutesPage() {
                 {/* Map Container - Must have explicit height! */}
                 <div className="w-full h-[300px] sm:h-[400px] mt-2 rounded-xl overflow-hidden border border-base-200 shadow-inner z-0 relative z-0">
                   <MapContainer
-                    center={userLocation || [20.5937, 78.9629]}
-                    zoom={userLocation ? 14 : 4}
+                    center={userLocation || [31.1471, 75.3412]}
+                    zoom={userLocation ? 14 : 7}
                     scrollWheelZoom={true}
                     style={{ height: "100%", width: "100%" }}
                     className="z-0"
@@ -887,6 +898,17 @@ export default function FindInstitutesPage() {
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                     />
+                    {punjabGeoJson && (
+                      <GeoJSON
+                        data={punjabGeoJson}
+                        style={() => ({
+                          color: '#605dff',
+                          weight: 2,
+                          fillColor: '#605dff',
+                          fillOpacity: 0.1,
+                        })}
+                      />
+                    )}
                     {userLocation && <Marker position={userLocation} />}
                     <MapClickEvent />
                   </MapContainer>
@@ -947,7 +969,7 @@ export default function FindInstitutesPage() {
 
       {/* ── Bulk Offer Modal ── */}
       <OfferModalV2
-        onClose={() => {}}
+        onClose={() => { }}
         isOpen={findInstituteUi?.bulkOffer?.open ?? false}
         selectedIds={Array.from(selected)}
         institutesMap={institutesMap}
