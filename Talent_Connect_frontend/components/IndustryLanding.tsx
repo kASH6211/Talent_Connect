@@ -504,7 +504,15 @@ export default function IndustryLandingPage() {
   useEffect(() => {
     const load = async () => {
       const [qual] = await Promise.all([
-        api.get("/qualification").then(r => r.data.map((q: any) => ({ value: q.qualificationid, label: q.qualification }))).catch(() => []),
+        api
+          .get("/qualification")
+          .then((r) =>
+            r.data.map((q: any) => ({
+              value: q.qualificationid,
+              label: q.qualification,
+            })),
+          )
+          .catch(() => []),
       ]);
       setQualOpts(qual);
     };
@@ -517,7 +525,9 @@ export default function IndustryLandingPage() {
       try {
         const res = await api.get(`/district?state_id=3`);
         setDistrictOpts(
-          res.data.map((d: any) => ({ value: d.districtid, label: d.districtname })).sort((a: Option, b: Option) => a.label.localeCompare(b.label))
+          res.data
+            .map((d: any) => ({ value: d.districtid, label: d.districtname }))
+            .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
         );
       } catch {
         setDistrictOpts([]);
@@ -533,14 +543,30 @@ export default function IndustryLandingPage() {
         const qId = filters.qualification_ids[0];
         const [masterRes, inUseRes] = await Promise.all([
           api.get(`/stream-branch?qualification_id=${qId}`),
-          api.get('/institute-qualification-mapping/streams-in-use'),
+          api.get("/institute-qualification-mapping/streams-in-use"),
         ]);
-        const inUseIds = new Set(inUseRes.data.map((s: any) => s.stream_branch_Id));
-        const filtered = masterRes.data.filter((s: any) => inUseIds.has(s.stream_branch_Id));
-        setStreamOpts(filtered.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })));
+        const inUseIds = new Set(
+          inUseRes.data.map((s: any) => s.stream_branch_Id),
+        );
+        const filtered = masterRes.data.filter((s: any) =>
+          inUseIds.has(s.stream_branch_Id),
+        );
+        setStreamOpts(
+          filtered.map((s: any) => ({
+            value: s.stream_branch_Id,
+            label: s.stream_branch_name,
+          })),
+        );
       } else {
-        const res = await api.get('/institute-qualification-mapping/streams-in-use');
-        setStreamOpts(res.data.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })));
+        const res = await api.get(
+          "/institute-qualification-mapping/streams-in-use",
+        );
+        setStreamOpts(
+          res.data.map((s: any) => ({
+            value: s.stream_branch_Id,
+            label: s.stream_branch_name,
+          })),
+        );
       }
     };
     loadStreams();
@@ -623,7 +649,10 @@ export default function IndustryLandingPage() {
   };
 
   const activeFilterCount = Object.values(filters).filter(
-    (v, i) => Object.keys(filters)[i] !== 'state_ids' && Array.isArray(v) && v.length > 0,
+    (v, i) =>
+      Object.keys(filters)[i] !== "state_ids" &&
+      Array.isArray(v) &&
+      v.length > 0,
   ).length;
 
   const filteredInstitutes = useMemo(() => {
@@ -693,7 +722,11 @@ export default function IndustryLandingPage() {
         {/* ══════════════════════════════════════════════════════
             SEARCH CARD
         ══════════════════════════════════════════════════════ */}
-        <div className="w-full pb-14" style={{ background: "hsl(var(--b1))" }}>
+        <div
+          id="find-institute"
+          className="w-full pb-14"
+          style={{ background: "hsl(var(--b1))" }}
+        >
           <div
             ref={searchRef}
             className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
@@ -822,7 +855,8 @@ export default function IndustryLandingPage() {
                         className="text-xs"
                         style={{ color: "hsl(var(--bc) / 0.33)" }}
                       >
-                        {activeFilterCount} filter{activeFilterCount !== 1 ? "s" : ""} active
+                        {activeFilterCount} filter
+                        {activeFilterCount !== 1 ? "s" : ""} active
                       </span>
                       <button
                         onClick={() => setFilters(EMPTY_FILTERS)}
@@ -1026,7 +1060,9 @@ export default function IndustryLandingPage() {
                         {pagedInstitutes.map((inst, idx) => (
                           <div key={inst.institute_id} className="p-4 bg-base-100 flex flex-col gap-3 ilp-card-anim" style={{ animationDelay: `${idx * 35}ms` }}>
                             <div>
-                              <h3 className="text-sm font-bold text-base-content leading-snug mb-1.5">{inst.institute_name}</h3>
+                              <h3 className="text-sm font-bold text-base-content leading-snug mb-1.5">
+                                {inst.institute_name}
+                              </h3>
                               <div className="flex flex-wrap items-center gap-3 text-xs text-base-content/60">
                                 <span className="flex items-center gap-1"><MapPin size={11} /> {inst.district || "—"}</span>
                                 <span className="flex items-center gap-1 font-semibold text-primary"><Users size={11} /> {inst.student_count.toLocaleString()} Total Enrolled</span>
@@ -1041,7 +1077,10 @@ export default function IndustryLandingPage() {
                                 <BookOpen size={14} /> View Courses
                               </button>
                               <button
-                                onClick={() => { setCurrentInstitute(inst); setViewInstitute(true); }}
+                                onClick={() => {
+                                  setCurrentInstitute(inst);
+                                  setViewInstitute(true);
+                                }}
                                 className="flex-1 py-1.5 rounded bg-base-200 flex items-center justify-center text-base-content/70 hover:text-primary"
                               >
                                 <Eye size={14} />

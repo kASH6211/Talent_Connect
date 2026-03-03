@@ -73,12 +73,12 @@ export default function CrudTable({
 
   const filtered = search
     ? rows.filter((r) =>
-      columns.some((c) =>
-        String(r[c.key] ?? "")
-          .toLowerCase()
-          .includes(search.toLowerCase()),
-      ),
-    )
+        columns.some((c) =>
+          String(r[c.key] ?? "")
+            .toLowerCase()
+            .includes(search.toLowerCase()),
+        ),
+      )
     : rows;
 
   return (
@@ -180,10 +180,10 @@ export default function CrudTable({
                             ) : c.key === "is_active" ? (
                               <span
                                 className={clsx(
-                                  "badge badge-sm",
+                                  "badge badge-sm font-medium px-3 py-1.5 text-xs shadow-sm",
                                   row[c.key] === "Y"
-                                    ? "badge-success"
-                                    : "badge-error",
+                                    ? "bg-green-100 text-green-800 border border-green-300"
+                                    : "bg-red-100 text-red-800 border border-red-300",
                                 )}
                               >
                                 {row[c.key] === "Y" ? "Active" : "Inactive"}
