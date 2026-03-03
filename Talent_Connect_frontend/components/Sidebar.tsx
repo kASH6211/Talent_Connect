@@ -24,8 +24,8 @@ import {
 import { useState, useEffect } from "react";
 import { clsx } from "clsx";
 import api from "@/lib/api";
-import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components2/ThemeToggle";
+import { useAuth } from "@/lib/AuthProvider";
 
 // ── Nav definitions per role (unchanged) ───────────────────────────────────
 const adminNav = [
@@ -67,10 +67,19 @@ const adminNav = [
     icon: ClipboardList,
     label: "Mappings",
     children: [
-      { label: "Program ↔ Qualification", href: "/mappings/program-qualification" },
-      { label: "Institute Qualification", href: "/mappings/institute-qualification" },
+      {
+        label: "Program ↔ Qualification",
+        href: "/mappings/program-qualification",
+      },
+      {
+        label: "Institute Qualification",
+        href: "/mappings/institute-qualification",
+      },
       { label: "Job Role ↔ Program", href: "/mappings/job-role-program" },
-      { label: "Qualification ↔ Stream/Branch", href: "/mappings/stream-branch-qualification" },
+      {
+        label: "Qualification ↔ Stream/Branch",
+        href: "/mappings/stream-branch-qualification",
+      },
     ],
   },
   { icon: Briefcase, label: "Industry Requests", href: "/industry-requests" },
@@ -86,8 +95,14 @@ const instituteNav = [
     icon: ClipboardList,
     label: "Mappings",
     children: [
-      { label: "Institute Qualification", href: "/mappings/institute-qualification" },
-      { label: "Qualification ↔ Stream/Branch", href: "/mappings/stream-branch-qualification" },
+      {
+        label: "Institute Qualification",
+        href: "/mappings/institute-qualification",
+      },
+      {
+        label: "Qualification ↔ Stream/Branch",
+        href: "/mappings/stream-branch-qualification",
+      },
     ],
   },
   /* {
@@ -228,12 +243,14 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
 
   useEffect(() => {
     if (user?.institute_id && role === "institute") {
-      api.get(`/institute/${user.institute_id}`)
-        .then(res => setOrgName(res.data?.institute_name))
+      api
+        .get(`/institute/${user.institute_id}`)
+        .then((res) => setOrgName(res.data?.institute_name))
         .catch(console.error);
     } else if (user?.industry_id && role === "industry") {
-      api.get(`/industry/${user.industry_id}`)
-        .then(res => setOrgName(res.data?.industry_name))
+      api
+        .get(`/industry/${user.industry_id}`)
+        .then((res) => setOrgName(res.data?.industry_name))
         .catch(console.error);
     }
   }, [user, role]);
@@ -300,11 +317,17 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
 
             {!collapsed && (
               <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                <div className="text-sm font-semibold text-base-content truncate" title={orgName || ""}>
+                <div
+                  className="text-sm font-semibold text-base-content truncate"
+                  title={orgName || ""}
+                >
                   {orgName || "Organization"}
                 </div>
                 {user.username && (
-                  <div className="text-xs font-medium text-base-content/70 truncate" title={user.username}>
+                  <div
+                    className="text-xs font-medium text-base-content/70 truncate"
+                    title={user.username}
+                  >
                     {user.username}
                   </div>
                 )}

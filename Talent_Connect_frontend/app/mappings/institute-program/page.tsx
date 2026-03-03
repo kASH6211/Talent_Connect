@@ -2,17 +2,16 @@
 import { useState } from "react";
 import CrudTable from "@/components/CrudTable";
 import CrudModal from "@/components/CrudModal";
-import { useAuth } from "@/hooks/useAuth";
-// import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from "@/lib/AuthProvider";
 
 export default function Page() {
-  const { isInstitute } = useAuth();
+  const { user } = useAuth();
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
 
   const COLUMNS = [
     { key: "institute_qualification_id", label: "ID" },
-    ...(!isInstitute
+    ...(user?.role !== "institute"
       ? [
           {
             key: "instituteId",
@@ -31,7 +30,7 @@ export default function Page() {
   ];
 
   const FIELDS = [
-    ...(!isInstitute
+    ...(user?.role !== "institute"
       ? [
           {
             key: "instituteId",

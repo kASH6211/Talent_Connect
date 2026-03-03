@@ -21,9 +21,10 @@ import {
   Users,
 } from "lucide-react";
 import api from "@/lib/api";
-import { useAuth } from "@/hooks/useAuth";
+// import { useAuth } from "@/hooks/useAuth";
 import clsx from "clsx";
 import * as XLSX from "xlsx";
+import { useAuth } from "@/lib/AuthProvider";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface RequestRow {
@@ -170,7 +171,7 @@ function PaginationBar({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AllRequestsPage() {
-  const { isIndustry } = useAuth();
+  // const { isIndustry } = useAuth();
 
   // ── Data state ──
   const [requests, setRequests] = useState<RequestRow[]>([]);

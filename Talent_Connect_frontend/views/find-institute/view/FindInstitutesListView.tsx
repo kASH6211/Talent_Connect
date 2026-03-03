@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
-import { useAuth } from "@/hooks/useAuth";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { setCurrentOffer, updateUiInstitute } from "@/store/institute";
@@ -29,40 +28,65 @@ import { OfferModalV2 } from "./OfferModalView";
 import clsx from "clsx";
 import { InstituteViewModal } from "../list/InstituteViewModal";
 import InstituteCoursesModal from "./InstituteCoursesModal";
-import dynamic from 'next/dynamic';
-import 'leaflet/dist/leaflet.css';
+import dynamic from "next/dynamic";
+import "leaflet/dist/leaflet.css";
 
 // Dynamically load UI elements to avoid SSR issues with Leaflet
-const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then((m) => m.Marker), { ssr: false });
-import { useMapEvents, useMap } from 'react-leaflet';
+const MapContainer = dynamic(
+  () => import("react-leaflet").then((m) => m.MapContainer),
+  { ssr: false },
+);
+const TileLayer = dynamic(
+  () => import("react-leaflet").then((m) => m.TileLayer),
+  { ssr: false },
+);
+const Marker = dynamic(() => import("react-leaflet").then((m) => m.Marker), {
+  ssr: false,
+});
+import { useMapEvents, useMap } from "react-leaflet";
 
-import L from 'leaflet';
+import L from "leaflet";
+import { useAuth } from "@/lib/AuthProvider";
 // Fix Leaflet marker missing images in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
 // Helper for 'in air' distance (Haversine formula in km)
-function calculateAirDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+function calculateAirDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) {
   const R = 6371; // km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
 // Helper for 'in path' distance using OSRM
-async function calculatePathDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+async function calculatePathDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) {
   try {
-    const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`);
+    const res = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`,
+    );
     const data = await res.json();
     if (data.routes && data.routes.length > 0) {
       return data.routes[0].distance / 1000; // convert meters to km
@@ -117,7 +141,7 @@ export default function FindInstitutesPage() {
   const findInstituteUi = useSelector(
     (state: RootState) => state?.institutes?.ui,
   );
-  const { user, isIndustry } = useAuth();
+  const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
 
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
@@ -145,7 +169,9 @@ export default function FindInstitutesPage() {
   );
 
   // Map state
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(
+    null,
+  );
   const [searchGeoTerm, setSearchGeoTerm] = useState("");
 
   //table right side fitler
@@ -266,7 +292,12 @@ export default function FindInstitutesPage() {
       if (userLocation) {
         data = data.map((inst: InstituteRow) => {
           if (inst.latitude && inst.longitude) {
-            const air = calculateAirDistance(userLocation[0], userLocation[1], parseFloat(inst.latitude), parseFloat(inst.longitude));
+            const air = calculateAirDistance(
+              userLocation[0],
+              userLocation[1],
+              parseFloat(inst.latitude),
+              parseFloat(inst.longitude),
+            );
             return { ...inst, air_distance: air };
           }
           return inst;
@@ -288,20 +319,29 @@ export default function FindInstitutesPage() {
   // Effect to recalculate Air Distances dynamically if userLocation changes
   useEffect(() => {
     if (!userLocation || institutes.length === 0) return;
-    setInstitutes(prev => prev.map(inst => {
-      if (inst.latitude && inst.longitude) {
-        const air = calculateAirDistance(userLocation[0], userLocation[1], parseFloat(inst.latitude), parseFloat(inst.longitude));
-        return { ...inst, air_distance: air };
-      }
-      return inst;
-    }));
+    setInstitutes((prev) =>
+      prev.map((inst) => {
+        if (inst.latitude && inst.longitude) {
+          const air = calculateAirDistance(
+            userLocation[0],
+            userLocation[1],
+            parseFloat(inst.latitude),
+            parseFloat(inst.longitude),
+          );
+          return { ...inst, air_distance: air };
+        }
+        return inst;
+      }),
+    );
   }, [userLocation]);
 
   // Handle Geocoding Search (Nominatim)
   const handleGeoSearch = async () => {
     if (!searchGeoTerm.trim()) return;
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchGeoTerm)}`);
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchGeoTerm)}`,
+      );
       const data = await res.json();
       if (data && data.length > 0) {
         setUserLocation([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
@@ -316,7 +356,7 @@ export default function FindInstitutesPage() {
     useMapEvents({
       click(e: any) {
         setUserLocation([e.latlng.lat, e.latlng.lng]);
-      }
+      },
     });
     const map = useMap();
     useEffect(() => {
@@ -476,7 +516,6 @@ export default function FindInstitutesPage() {
       {/* ── Results ── */}
       {searched && (
         <div className="space-y-4">
-
           {/* Controls bar */}
           {/* Controls bar */}
           {!loading && institutes.length > 0 && (
@@ -545,8 +584,6 @@ export default function FindInstitutesPage() {
                     <option value="name-rev">Z–A</option>
                   </select>
                 </div>
-
-
               </div>
             </div>
           )}
@@ -668,7 +705,8 @@ export default function FindInstitutesPage() {
                             <td className="px-4 py-3 align-top">
                               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-secondary/10 text-secondary text-xs font-bold">
                                 <Users size={12} />
-                                {inst.final_year_student_count?.toLocaleString() || '0'}
+                                {inst.final_year_student_count?.toLocaleString() ||
+                                  "0"}
                               </span>
                             </td>
                             <td className="px-4 py-3 align-top">
@@ -703,7 +741,7 @@ export default function FindInstitutesPage() {
                         onClick={() => toggleSelect(inst.institute_id)}
                         className={clsx(
                           "p-4 bg-base-100 flex flex-col gap-3 cursor-pointer transition-colors",
-                          isSelected ? "bg-primary/5 dark:bg-primary/10" : ""
+                          isSelected ? "bg-primary/5 dark:bg-primary/10" : "",
                         )}
                       >
                         <div className="flex items-start gap-3">
@@ -711,29 +749,51 @@ export default function FindInstitutesPage() {
                             {isSelected ? (
                               <CheckSquare size={16} className="text-primary" />
                             ) : (
-                              <Square size={16} className="text-base-content/30" />
+                              <Square
+                                size={16}
+                                className="text-base-content/30"
+                              />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-bold text-base-content leading-snug mb-1.5">{inst.institute_name}</h3>
+                            <h3 className="text-sm font-bold text-base-content leading-snug mb-1.5">
+                              {inst.institute_name}
+                            </h3>
                             <div className="flex flex-wrap items-center gap-3 text-xs text-base-content/60 mb-2">
-                              <span className="flex items-center gap-1"><MapPin size={11} /> {inst.district || "—"}</span>
-                              <span className="flex items-center gap-1 font-semibold text-primary"><Users size={11} /> {inst.student_count.toLocaleString()} Total Enrolled</span>
-                              <span className="flex items-center gap-1 font-semibold text-secondary"><Users size={11} /> {inst.final_year_student_count?.toLocaleString() || '0'} Final Year</span>
+                              <span className="flex items-center gap-1">
+                                <MapPin size={11} /> {inst.district || "—"}
+                              </span>
+                              <span className="flex items-center gap-1 font-semibold text-primary">
+                                <Users size={11} />{" "}
+                                {inst.student_count.toLocaleString()} Total
+                                Enrolled
+                              </span>
+                              <span className="flex items-center gap-1 font-semibold text-secondary">
+                                <Users size={11} />{" "}
+                                {inst.final_year_student_count?.toLocaleString() ||
+                                  "0"}{" "}
+                                Final Year
+                              </span>
                             </div>
-
-
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mt-1 ml-7">
                           <button
-                            onClick={(e) => { e.stopPropagation(); setCurrentInstitute(inst); setViewCourses(true); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentInstitute(inst);
+                              setViewCourses(true);
+                            }}
                             className="flex-[2] py-1.5 rounded bg-base-200 border border-base-300 flex items-center justify-center text-xs font-bold gap-1.5 text-base-content/80 hover:border-primary hover:text-primary transition-all"
                           >
                             <BookOpen size={14} /> View Courses
                           </button>
                           <button
-                            onClick={(e) => { e.stopPropagation(); setCurrentInstitute(inst); setViewInstitute(true); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentInstitute(inst);
+                              setViewInstitute(true);
+                            }}
                             className="flex-[1] py-1.5 rounded bg-base-200 border border-base-300 flex items-center justify-center text-base-content/70 hover:border-primary hover:text-primary"
                           >
                             <Eye size={14} />
@@ -777,7 +837,8 @@ export default function FindInstitutesPage() {
               {/* Interactive Map Section (Moved to Bottom) */}
               <div className="flex flex-col gap-3 bg-base-100 p-4 rounded-xl shadow-sm border border-base-300 mt-6">
                 <h3 className="font-semibold text-base-content flex items-center gap-2">
-                  <MapPin size={16} className="text-secondary" /> Mark Your Location for Distances
+                  <MapPin size={16} className="text-secondary" /> Mark Your
+                  Location for Distances
                 </h3>
                 <div className="flex flex-col sm:flex-row gap-3 items-end">
                   <div className="flex-1 w-full relative">
@@ -787,15 +848,27 @@ export default function FindInstitutesPage() {
                       className="input input-sm input-bordered w-full pl-9 pr-3"
                       value={searchGeoTerm}
                       onChange={(e) => setSearchGeoTerm(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleGeoSearch()}
+                      onKeyDown={(e) => e.key === "Enter" && handleGeoSearch()}
                     />
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
+                    <Search
+                      size={14}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40"
+                    />
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={handleGeoSearch} className="btn btn-sm btn-secondary shadow-sm">
+                    <button
+                      onClick={handleGeoSearch}
+                      className="btn btn-sm btn-secondary shadow-sm"
+                    >
                       Search Map
                     </button>
-                    <button onClick={() => { setUserLocation(null); setSearchGeoTerm(""); }} className="btn btn-sm btn-outline shadow-sm text-base-content/60">
+                    <button
+                      onClick={() => {
+                        setUserLocation(null);
+                        setSearchGeoTerm("");
+                      }}
+                      className="btn btn-sm btn-outline shadow-sm text-base-content/60"
+                    >
                       Reset
                     </button>
                   </div>
@@ -807,7 +880,7 @@ export default function FindInstitutesPage() {
                     center={userLocation || [20.5937, 78.9629]}
                     zoom={userLocation ? 14 : 4}
                     scrollWheelZoom={true}
-                    style={{ height: '100%', width: '100%' }}
+                    style={{ height: "100%", width: "100%" }}
                     className="z-0"
                   >
                     <TileLayer
@@ -820,37 +893,41 @@ export default function FindInstitutesPage() {
                 </div>
 
                 {!userLocation ? (
-                  <p className="text-xs text-base-content/50 italic text-center">Search for your city or click on the map to place a pin and calculate distances.</p>
+                  <p className="text-xs text-base-content/50 italic text-center">
+                    Search for your city or click on the map to place a pin and
+                    calculate distances.
+                  </p>
                 ) : (
                   <div className="flex flex-col gap-0.5 items-center">
-                    <p className="text-sm font-semibold text-secondary text-center">Location marked! See calculated distances.</p>
-                    <p className="text-xs text-secondary/70">Air distance (Haversine) and Path distance (OSRM Route)</p>
+                    <p className="text-sm font-semibold text-secondary text-center">
+                      Location marked! See calculated distances.
+                    </p>
+                    <p className="text-xs text-secondary/70">
+                      Air distance (Haversine) and Path distance (OSRM Route)
+                    </p>
                   </div>
                 )}
               </div>
             </>
           )}
         </div>
-      )
-      }
+      )}
 
       {/* ── Success Toast ── */}
-      {
-        sentSuccess && (
-          <div className="fixed bottom-6 right-6 z-50">
-            <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-success/10 border border-success/25 text-success shadow-xl shadow-success/10 font-medium text-sm">
-              <Send size={16} className="shrink-0" />
-              <span className="font-semibold">Job offers sent successfully!</span>
-              <button
-                onClick={() => setSentSuccess(false)}
-                className="ml-1 hover:opacity-70 transition-opacity"
-              >
-                <X size={15} />
-              </button>
-            </div>
+      {sentSuccess && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-success/10 border border-success/25 text-success shadow-xl shadow-success/10 font-medium text-sm">
+            <Send size={16} className="shrink-0" />
+            <span className="font-semibold">Job offers sent successfully!</span>
+            <button
+              onClick={() => setSentSuccess(false)}
+              className="ml-1 hover:opacity-70 transition-opacity"
+            >
+              <X size={15} />
+            </button>
           </div>
-        )
-      }
+        </div>
+      )}
 
       {/* ── Floating Action Button (Send Job Offers) ── */}
       {selected.size > 0 && (
@@ -862,7 +939,8 @@ export default function FindInstitutesPage() {
             className="flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-primary text-primary-content font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all outline outline-4 outline-base-100 dark:outline-base-900"
           >
             <Send size={18} />
-            Send EOI to {selected.size} institute{selected.size !== 1 ? 's' : ''}
+            Send EOI to {selected.size} institute
+            {selected.size !== 1 ? "s" : ""}
           </button>
         </div>
       )}
@@ -898,6 +976,6 @@ export default function FindInstitutesPage() {
         instituteName={currentInstitute?.institute_name ?? ""}
         filters={filters}
       />
-    </div >
+    </div>
   );
 }

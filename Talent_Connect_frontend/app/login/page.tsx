@@ -6,28 +6,16 @@ import { GraduationCap, Loader2, Eye, EyeOff, X } from "lucide-react";
 import api from "@/lib/api";
 import { ThemeToggle } from "@/components2/ThemeToggle";
 import { useAuth } from "@/lib/AuthProvider";
+import { getDashboardRoute } from "@/lib/helper";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setUser } = useAuth();
+  const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const getDashboardRoute = (role: string) => {
-    switch (role) {
-      case "superadmin":
-        return "/admin/dashboard";
-      case "institute":
-        return "/institute/dashboard";
-      case "industry":
-        return "/find-institutes";
-      default:
-        return "/";
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,10 +24,7 @@ export default function LoginPage() {
     try {
       const res = await api.post("/auth/login", { username, password });
 
-      localStorage.setItem("tc_token", res.data.access_token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      setUser(res.data.user); // ✅ updates context immediately
+      login(res.data.user, res.data.access_token);
 
       router.replace(getDashboardRoute(res.data.user.role));
     } catch (err: any) {

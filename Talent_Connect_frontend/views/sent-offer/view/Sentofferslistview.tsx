@@ -21,10 +21,10 @@ import {
   ChevronRight,
 } from "lucide-react";
 import api from "@/lib/api";
-import { useAuth } from "@/hooks/useAuth";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { setCurrentIndustry } from "@/store/industry";
+import { useAuth } from "@/lib/AuthProvider";
 
 /* ─── Styles ──────────────────────────────────────────────────────────────── */
 const styles = `
@@ -1119,7 +1119,7 @@ function Pagination({
 
 /* ─── Main Component ─────────────────────────────────────────────────────── */
 export default function SentOffersListView() {
-  const { isIndustry } = useAuth();
+  const { user } = useAuth();
   const [offers, setOffers] = useState<OfferRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
