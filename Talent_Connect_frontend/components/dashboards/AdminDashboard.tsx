@@ -91,21 +91,26 @@ export default function AdminDashboard({ username }: { username: string }) {
   return (
     <div className="space-y-8">
       {/* Hero */}
-      {/* Hero */}
-      <div className="relative overflow-hidden p-7 rounded-2xl bg-blue-900 text-white border border-blue-800">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-800/30 rounded-full -translate-y-1/2 translate-x-1/2" />
+      <div className="relative overflow-hidden p-7 rounded-2xl bg-primary text-primary-content border border-primary/80">
+        {/* Decorative circle */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/30 rounded-full -translate-y-1/2 translate-x-1/2" />
+
+        {/* Main content */}
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-700 to-blue-500 flex items-center justify-center shadow-xl">
-            <GraduationCap size={28} className="text-white" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-xl">
+            <GraduationCap size={28} className="text-primary-content" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Welcome back, {username} 👋</h1>
-            <p className="text-blue-200 text-sm mt-0.5">
+            <h1 className="text-2xl font-bold text-primary-content">
+              Welcome back, {username} 👋
+            </h1>
+            <p className="text-primary-content/80 text-sm mt-0.5">
               Administrator · Talent Connect Portal
             </p>
           </div>
         </div>
-        <p className="mt-4 text-blue-200/70 text-sm leading-relaxed max-w-2xl">
+
+        <p className="mt-4 text-primary-content/70 text-sm leading-relaxed max-w-2xl">
           Full access to all modules — manage institutes, industries, students,
           placements, and master data from here.
         </p>

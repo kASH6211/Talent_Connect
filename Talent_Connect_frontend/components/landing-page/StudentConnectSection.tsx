@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Zap,
   Search,
@@ -45,10 +47,10 @@ const studentCards = [
 
 const StudentConnectSection = () => {
   return (
-    <section className="py-12 bg-section-alt" id="students">
+    <section className="py-12 section-alt" id="students">
       <div className="container px-4 max-w-6xl mx-auto">
         {/* Heading */}
-        <h2 className="text-center text-3xl md:text-4xl font-extrabold mb-12 text-primary">
+        <h2 className="text-center text-3xl md:text-4xl font-extrabold mb-12 heading-primary">
           Get Started
         </h2>
 
@@ -56,7 +58,7 @@ const StudentConnectSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 relative">
           {/* LEFT - INDUSTRIES */}
           <div>
-            <h3 className="text-lg font-bold text-orange-500 mb-6 text-center">
+            <h3 className="text-lg font-bold mb-6 text-center text-secondary">
               For Industries
             </h3>
 
@@ -66,16 +68,18 @@ const StudentConnectSection = () => {
                 return (
                   <div
                     key={card.title}
-                    className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition"
+                    className="card-custom p-6 hover:shadow-lg transition"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <Icon className="w-6 h-6 text-primary" />
-                      <p className="font-semibold">{card.title}</p>
+                      <p className="font-semibold text-base-content">
+                        {card.title}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <p className="text-sm text-base-content/70 mb-4">
                       {card.desc}
                     </p>
-                    <button className="bg-secondary text-secondary-foreground text-xs font-semibold px-4 py-2 rounded hover:opacity-90 transition">
+                    <button className="btn-orange text-xs font-semibold px-4 py-2 rounded">
                       Explore Now →
                     </button>
                   </div>
@@ -86,7 +90,7 @@ const StudentConnectSection = () => {
 
           {/* RIGHT - STUDENTS */}
           <div>
-            <h3 className="text-lg font-bold text-orange-500 mb-6 text-center">
+            <h3 className="text-lg font-bold mb-6 text-center text-secondary">
               For Students
             </h3>
 
@@ -96,16 +100,18 @@ const StudentConnectSection = () => {
                 return (
                   <div
                     key={card.title}
-                    className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition"
+                    className="card-custom p-6 hover:shadow-lg transition"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <Icon className="w-6 h-6 text-primary" />
-                      <p className="font-semibold">{card.title}</p>
+                      <p className="font-semibold text-base-content">
+                        {card.title}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <p className="text-sm text-base-content/70 mb-4">
                       {card.desc}
                     </p>
-                    <button className="bg-secondary text-secondary-foreground text-xs font-semibold px-4 py-2 rounded hover:opacity-90 transition">
+                    <button className="btn-orange text-xs font-semibold px-4 py-2 rounded">
                       Explore Now →
                     </button>
                   </div>
@@ -115,7 +121,7 @@ const StudentConnectSection = () => {
           </div>
 
           {/* Vertical Divider (center) */}
-          <div className="hidden md:block absolute left-1/2 top-0 h-full w-px bg-border -translate-x-1/2"></div>
+          <div className="hidden md:block absolute left-1/2 top-0 h-full w-px border-base-300 -translate-x-1/2"></div>
         </div>
       </div>
     </section>

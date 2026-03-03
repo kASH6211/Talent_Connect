@@ -349,7 +349,7 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
               </div>
             )}
 
-            {!collapsed && <ThemeToggle />}
+            {/* {!collapsed && <ThemeToggle />} */}
           </div>
         )}
 
