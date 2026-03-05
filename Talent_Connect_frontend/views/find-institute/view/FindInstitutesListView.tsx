@@ -72,9 +72,9 @@ function calculateAirDistance(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-    Math.cos((lat2 * Math.PI) / 180) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -179,10 +179,10 @@ export default function FindInstitutesPage() {
   const [punjabGeoJson, setPunjabGeoJson] = useState<any>(null);
 
   useEffect(() => {
-    fetch('/punjab_state.geojson')
-      .then(res => res.json())
-      .then(data => setPunjabGeoJson(data))
-      .catch(err => console.error("Error loading Punjab GeoJSON:", err));
+    fetch("/punjab_state.geojson")
+      .then((res) => res.json())
+      .then((data) => setPunjabGeoJson(data))
+      .catch((err) => console.error("Error loading Punjab GeoJSON:", err));
   }, []);
 
   //table right side fitler
@@ -902,9 +902,9 @@ export default function FindInstitutesPage() {
                       <GeoJSON
                         data={punjabGeoJson}
                         style={() => ({
-                          color: '#605dff',
+                          color: "#605dff",
                           weight: 2,
-                          fillColor: '#605dff',
+                          fillColor: "#605dff",
                           fillOpacity: 0.1,
                         })}
                       />
@@ -969,7 +969,7 @@ export default function FindInstitutesPage() {
 
       {/* ── Bulk Offer Modal ── */}
       <OfferModalV2
-        onClose={() => { }}
+        onClose={() => {}}
         isOpen={findInstituteUi?.bulkOffer?.open ?? false}
         selectedIds={Array.from(selected)}
         institutesMap={institutesMap}

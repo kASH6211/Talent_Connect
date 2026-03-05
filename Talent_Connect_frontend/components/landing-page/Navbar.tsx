@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import logo from "../assets/Gov Logo.png";
@@ -15,7 +16,8 @@ const pageLinks = [
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isActive = (to: string) => location.pathname === to;
+  const isActive = (to: string) =>
+    typeof window !== "undefined" && window.location.pathname === to;
 
   return (
     <nav className="bg-primary text-primary-content sticky top-0 z-50 shadow-md">

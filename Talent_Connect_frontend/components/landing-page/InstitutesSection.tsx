@@ -1,3 +1,4 @@
+"use client";
 import {
   Wrench,
   BookOpen,
@@ -6,6 +7,7 @@ import {
   HeartPulse,
   Award,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const institutes = [
   {
@@ -51,6 +53,7 @@ const institutes = [
 ];
 
 const InstitutesSection = () => {
+  const router = useRouter();
   return (
     <section className="py-12 bg-background" id="institutes">
       <div className="container mx-auto px-4 text-center">
@@ -68,7 +71,7 @@ const InstitutesSection = () => {
                 onClick={
                   inst.name === "ITI" || inst.name === "Polytechnic"
                     ? () => {
-                        window.location.href = "http://localhost:4000/";
+                        router.push("/");
                       }
                     : undefined
                 }

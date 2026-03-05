@@ -1,5 +1,5 @@
-import FindInstitutesPage from "@/views/find-institute/view/FindInstitutesListView";
 import React from "react";
+import FindInstitutesPage from "@/views/find-institute/view/FindInstitutesListView";
 
 const page = () => {
   return (
