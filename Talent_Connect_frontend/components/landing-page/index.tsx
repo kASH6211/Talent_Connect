@@ -15,7 +15,7 @@ const HunarPunjabHome = () => {
       <InstitutesSection />
       <StudentConnectSection />
       <PartnersSection />
-      <ContactSection />
+      {/* <ContactSection /> */}
       <Footer />
     </div>
   );

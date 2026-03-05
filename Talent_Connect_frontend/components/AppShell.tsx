@@ -18,6 +18,7 @@ export default function AppShell({
   const pathname = usePathname();
   const isLoginPage = pathname === "/login";
   const home = pathname === "/";
+  const contact = pathname === "/contact";
 
   // Detect screen width to control mobile vs desktop logic
   const [isMobile, setIsMobile] = useState(false);
@@ -30,7 +31,7 @@ export default function AppShell({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  if (isLoginPage || home) {
+  if (isLoginPage || home || contact) {
     return <>{children}</>;
   }
 

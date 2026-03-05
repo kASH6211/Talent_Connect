@@ -10,7 +10,7 @@ const pageLinks = [
   { label: "Students", to: "/#students" },
   { label: "Industries", to: "/#industries" },
   // { label: "Placements", to: "/placements" },
-  { label: "Contact", to: "#contact" },
+  { label: "Contact", to: "/contact" },
 ];
 
 const Navbar = () => {
