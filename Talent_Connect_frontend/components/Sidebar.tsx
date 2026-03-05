@@ -232,7 +232,13 @@ function NavGroup({ item, collapsed }: any) {
   );
 }
 
-export default function Sidebar({ collapsed, setCollapsed }: any) {
+export default function Sidebar({
+  collapsed,
+  setCollapsed,
+  mobileSidebarOpen,
+  setMobileSidebarOpen,
+  isMobile,
+}: any) {
   const { user, role, logout, loading } = useAuth();
   const [orgName, setOrgName] = useState<string | null>(null);
 
@@ -260,11 +266,11 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
 
   return (
     <>
+      {/* Mobile Overlay */}
       {collapsed && (
         <div
-          className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setCollapsed(false)}
-          aria-hidden="true"
+          className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-40 lg:hidden pointer-events-none"
+          onClick={() => setCollapsed(true)}
         />
       )}
 
@@ -274,9 +280,14 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
           "bg-base-100 dark:bg-base-900",
           "border-r border-base-200 dark:border-base-800",
           "shadow-lg z-50 transition-all duration-300",
-          collapsed ? "w-20" : "w-72 lg:w-64",
+          isMobile
+            ? mobileSidebarOpen
+              ? "translate-x-0 w-72"
+              : "-translate-x-full w-72"
+            : collapsed
+              ? "w-20"
+              : "w-72 lg:w-64",
         )}
-        aria-label="Sidebar navigation"
       >
         {/* Logo Section */}
         <div className="flex items-center justify-between p-4 border-b border-base-200 dark:border-base-800">
@@ -291,7 +302,7 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
             {!collapsed && (
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-base-content leading-tight">
-                  HUNAR Punjab
+                  HUNAR PUNJAB
                 </span>
                 <span className="text-[9px] text-base-content/60 leading-tight pr-2">
                   Hub for Upskilling, Networking & Access to Rozgar
@@ -337,14 +348,25 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
 
                 <div
                   className={clsx(
-                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide shadow-sm transition-all duration-300",
-                    "bg-gradient-to-r from-[#7976ff] to-indigo-600 text-white",
-                    "hover:from-indigo-600 hover:to-[#7976ff] hover:shadow-md hover:shadow-[#7976ff]/30 hover:scale-105",
-                    "border border-[#7976ff]/30",
+                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide shadow-sm transition-all duration-300",
+                    // Yellow theme from your global CSS
+                    "bg-[#FFF8E1] text-[#D4A017] border border-[#FFE082]/70",
+                    // Hover: slightly brighter + shadow lift
+                    "hover:bg-[#FFF176] hover:shadow-md hover:shadow-[#FFD400]/30 hover:scale-[1.03]",
+                    // Pulse dot
+                    "relative",
                   )}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/90 animate-pulse" />
-                  {badge.label}
+                  {/* Pulsing status dot */}
+                  <span
+                    className={clsx(
+                      "absolute -left-1 w-2 h-2 rounded-full bg-[#FFD400] shadow-sm",
+                      "animate-pulse",
+                    )}
+                  />
+
+                  {/* Label */}
+                  <span className="relative z-10">{badge.label}</span>
                 </div>
               </div>
             )}

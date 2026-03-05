@@ -102,7 +102,7 @@ export default function LoginPage() {
               >
                 HUNAR
                 <br />
-                Punjab
+                PUNJAB
               </h1>
               <div className="mt-4 w-12 h-1 rounded-full bg-primary-content/30 mx-auto" />
             </div>
@@ -139,7 +139,7 @@ export default function LoginPage() {
               />
             </div>
             <h1 className="text-3xl font-black text-base-content">
-              HUNAR Punjab
+              HUNAR PUNJAB
             </h1>
           </div>
 
@@ -256,7 +256,7 @@ export default function LoginPage() {
           </div> */}
 
           <p className="text-center text-base-content/30 text-xs mt-10">
-            © {new Date().getFullYear()} HUNAR Punjab • All Rights Reserved
+            © {new Date().getFullYear()} HUNAR PUNJAB • All Rights Reserved
           </p>
         </div>
       </div>
