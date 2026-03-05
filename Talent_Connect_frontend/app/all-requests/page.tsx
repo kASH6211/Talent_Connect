@@ -720,7 +720,12 @@ export default function AllRequestsPage() {
               <button
                 onClick={exportToExcel}
                 disabled={filteredOffers.length === 0}
-                className="btn btn-sm btn-info text-info-content gap-2 disabled:opacity-50"
+                className={clsx(
+                  "btn btn-sm gap-2 transition-colors duration-200",
+                  "bg-secondary text-secondary-content hover:brightness-110",
+                  "disabled:opacity-50 disabled:cursor-not-allowed",
+                  "shadow-sm hover:shadow-md border border-secondary/30",
+                )}
               >
                 <TrendingUp size={14} />
                 Export to Excel
