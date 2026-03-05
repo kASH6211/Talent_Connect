@@ -19,7 +19,13 @@ export default function AuthWrapper({
   useEffect(() => {
     if (loading) return;
 
-    const publicRoutes = ["/", "/login", "/signup", "/forgot-password"];
+    const publicRoutes = [
+      "/",
+      "/login",
+      "/signup",
+      "/forgot-password",
+      "/contact",
+    ];
     const isPublic = publicRoutes.includes(pathname);
 
     // Not logged in → block private routes
