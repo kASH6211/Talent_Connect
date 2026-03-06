@@ -1,15 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GraduationCap, Loader2, Eye, EyeOff, X } from "lucide-react";
 import api from "@/lib/api";
 import { ThemeToggle } from "@/components2/ThemeToggle";
 import { useAuth } from "@/lib/AuthProvider";
 import { getDashboardRoute } from "@/lib/helper";
+import { setCurrentRole } from "@/store/login";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
 
 export default function LoginPage() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+
   const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -33,6 +38,12 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      dispatch(setCurrentRole(""));
+    };
+  });
 
   return (
     <div className="relative min-h-screen flex overflow-hidden bg-base-200 dark:bg-base-950">
