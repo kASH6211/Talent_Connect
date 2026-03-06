@@ -3,8 +3,12 @@ import { useState } from "react";
 import { MapPin, Mail, Clock, Phone, Send } from "lucide-react";
 import Navbar from "@/components/landing-page/Navbar";
 import Footer from "@/components/landing-page/Footer";
+import RoleSelectModal from "@/components/landing-page/RoleSelectModal";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 const ContactPage = () => {
+  const roleSelectUI = useSelector((state: RootState) => state?.login?.ui);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -182,6 +186,7 @@ const ContactPage = () => {
         </div>
       </main>
       <Footer />
+      <RoleSelectModal open={roleSelectUI?.roleSelectModal?.open} />
     </div>
   );
 };

@@ -27,10 +27,8 @@ export default function AuthWrapper({
       "/contact",
       "/search-institutes",
     ];
-    // const publicRoutes = ["/", "/login", "/signup", "/forgot-password", "/search-institutes"];
-    const guestOnlyRoutes = ["/login", "/signup", "/forgot-password"];
+
     const isPublic = publicRoutes.includes(pathname);
-    const isGuestOnly = guestOnlyRoutes.includes(pathname);
 
     // Not logged in → block private routes
     if (!user && !isPublic) {
@@ -39,7 +37,7 @@ export default function AuthWrapper({
     }
 
     // Logged in → block guest-only routes
-    if (user && isGuestOnly) {
+    if (user && isPublic) {
       const dashboard = getDashboardRoute(role);
       if (pathname !== dashboard) {
         router.replace(dashboard);
