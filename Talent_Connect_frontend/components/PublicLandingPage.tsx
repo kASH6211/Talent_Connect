@@ -450,13 +450,7 @@ export default function PublicLandingPage() {
                 onChange={(v) => setFilters((f) => ({ ...f, stream_ids: v }))}
                 placeholder="All courses"
               />
-              <MultiSelectDropdown
-                label="Institute Type"
-                options={typeOpts}
-                selected={filters.type_ids}
-                onChange={(v) => setFilters((f) => ({ ...f, type_ids: v }))}
-                placeholder="All types"
-              />
+
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end">
