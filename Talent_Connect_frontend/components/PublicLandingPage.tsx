@@ -16,12 +16,17 @@ import {
   Shield,
   Globe,
   BookOpen,
+  AlertCircle,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useMapEvents, useMap } from "react-leaflet";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
+import { updateLoginUi } from "@/store/login";
+import RoleSelectModal from "./landing-page/RoleSelectModal";
 
 // Fix Leaflet marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -105,6 +110,7 @@ function MapClickEvent({
 
 function LoginPromptModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
@@ -120,7 +126,9 @@ function LoginPromptModal({ onClose }: { onClose: () => void }) {
         </p>
         <div className="flex flex-col gap-3">
           <button
-            onClick={() => router.push("/login")}
+            onClick={() =>
+              dispatch(updateLoginUi({ roleSelectModal: { open: true } }))
+            }
             className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm sm:text-base"
           >
             Sign In
@@ -140,6 +148,7 @@ function LoginPromptModal({ onClose }: { onClose: () => void }) {
 export default function PublicLandingPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const roleModal = useSelector((state: RootState) => state?.login?.ui);
 
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [institutes, setInstitutes] = useState<InstituteRow[]>([]);
@@ -160,6 +169,9 @@ export default function PublicLandingPage() {
   );
   const [searchGeoTerm, setSearchGeoTerm] = useState("");
   const [punjabGeoJson, setPunjabGeoJson] = useState<any>(null);
+  const [mapSearchLoading, setMapSearchLoading] = useState(false);
+  const [mapSearchError, setMapSearchError] = useState("");
+  const [mapSearchSuccess, setMapSearchSuccess] = useState(false);
 
   const totalPages = Math.ceil(institutes.length / PAGE_SIZE);
   const currentPageItems = institutes.slice(
@@ -295,21 +307,71 @@ export default function PublicLandingPage() {
     setPage(1);
   };
 
-  // Handle Geocoding Search
+  // Handle Geocoding Search with better error handling
   const handleGeoSearch = async () => {
-    if (!searchGeoTerm.trim()) return;
+    const term = searchGeoTerm.trim();
+    if (!term) {
+      setMapSearchError("Please enter a city, area, or pincode");
+      return;
+    }
+
+    setMapSearchLoading(true);
+    setMapSearchError("");
+    setMapSearchSuccess(false);
+
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          searchGeoTerm,
-        )}`,
+      // Add Punjab context to search for better results
+      const searchQuery = `${term}, Punjab, India`;
+      const encodedQuery = encodeURIComponent(searchQuery);
+
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedQuery}&limit=1`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        },
       );
-      const data = await res.json();
-      if (data && data.length > 0) {
-        setUserLocation([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+
+      if (!response.ok) {
+        throw new Error("Search service temporarily unavailable");
       }
-    } catch (e) {
-      console.warn("Geocoding failed", e);
+
+      const data = await response.json();
+
+      if (!data || data.length === 0) {
+        setMapSearchError(
+          `No location found for "${term}". Try a different city or area.`,
+        );
+        setMapSearchLoading(false);
+        return;
+      }
+
+      const result = data[0];
+      const lat = parseFloat(result.lat);
+      const lon = parseFloat(result.lon);
+
+      // Validate coordinates are within Punjab bounds
+      if (lat < 29 || lat > 33 || lon < 73 || lon > 77) {
+        setMapSearchError(
+          "Location is outside Punjab. Please search for places in Punjab.",
+        );
+        setMapSearchLoading(false);
+        return;
+      }
+
+      setUserLocation([lat, lon]);
+      setMapSearchSuccess(true);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setMapSearchSuccess(false), 3000);
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      setMapSearchError(
+        "Unable to search location. Please try again or click on the map.",
+      );
+    } finally {
+      setMapSearchLoading(false);
     }
   };
 
@@ -702,7 +764,7 @@ export default function PublicLandingPage() {
                   <div className="flex-1 relative">
                     <input
                       type="text"
-                      placeholder="Enter city, area or pincode..."
+                      placeholder="Enter city, area or pincode (e.g., Chandigarh, Sector 17)..."
                       className="w-full pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                       value={searchGeoTerm}
                       onChange={(e) => setSearchGeoTerm(e.target.value)}
@@ -713,21 +775,59 @@ export default function PublicLandingPage() {
                       className="sm:w-5 sm:h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                     />
                   </div>
+
+                  {mapSearchError && (
+                    <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <AlertCircle
+                        size={16}
+                        className="text-red-600 flex-shrink-0 mt-0.5"
+                      />
+                      <p className="text-xs sm:text-sm text-red-700">
+                        {mapSearchError}
+                      </p>
+                    </div>
+                  )}
+
+                  {mapSearchSuccess && (
+                    <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <MapPin
+                        size={16}
+                        className="text-green-600 flex-shrink-0 mt-0.5"
+                      />
+                      <p className="text-xs sm:text-sm text-green-700">
+                        Location found! Map updated.
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex flex-col sm:flex-row gap-2">
                     <button
                       onClick={handleGeoSearch}
-                      className="px-4 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm flex-1"
+                      disabled={mapSearchLoading}
+                      className="px-4 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold rounded-lg transition-colors text-sm flex-1 flex items-center justify-center gap-2"
                     >
-                      Search
+                      {mapSearchLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Searching...
+                        </>
+                      ) : (
+                        <>
+                          <Search size={14} />
+                          Search Location
+                        </>
+                      )}
                     </button>
                     <button
                       onClick={() => {
                         setUserLocation(null);
                         setSearchGeoTerm("");
+                        setMapSearchError("");
+                        setMapSearchSuccess(false);
                       }}
                       className="px-4 py-2 sm:py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold rounded-lg transition-colors text-sm flex-1"
                     >
-                      Reset
+                      Reset Location
                     </button>
                   </div>
                 </div>
@@ -736,7 +836,7 @@ export default function PublicLandingPage() {
                 <div className="w-full h-64 sm:h-80 md:h-96 rounded-lg border border-slate-200 overflow-hidden shadow-inner bg-slate-100">
                   <MapContainer
                     center={userLocation || [31.1471, 75.3412]}
-                    zoom={userLocation ? 14 : 7}
+                    zoom={userLocation ? 13 : 7}
                     scrollWheelZoom={true}
                     style={{ height: "100%", width: "100%" }}
                   >
@@ -762,8 +862,8 @@ export default function PublicLandingPage() {
 
                 <p className="text-xs sm:text-sm text-slate-600 mt-3 text-center px-2">
                   {!userLocation
-                    ? "Search for your location or click on the map to place a pin"
-                    : "✓ Location marked! You can now see distances to institutes."}
+                    ? "💡 Search for a location or click anywhere on the map to mark your position"
+                    : "✓ Location marked! You can click on map to move marker or search for another location."}
                 </p>
               </div>
             </>
@@ -818,6 +918,7 @@ export default function PublicLandingPage() {
             </div>
           </div>
         </div>
+        <RoleSelectModal open={roleModal?.roleSelectModal?.open} />
       </div>
     </>
   );
