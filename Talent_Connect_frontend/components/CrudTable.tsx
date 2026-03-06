@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import SpinnerFallback from "./Spinner";
+import { openConfirm } from "@/store/common/confirmSlice";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
 
 // ── Detect mobile reliably (SSR-safe)
 function useIsMobile(): boolean {
@@ -70,6 +73,7 @@ export default function CrudTable({
   const [page, setPage] = useState(1);
   const limit = 10;
   const isMobile = useIsMobile();
+  const dispatch = useDispatch<AppDispatch>();
 
   const { data, isLoading, isFetching, isError, refetch } = useQuery<any>({
     queryKey: [queryKey, page],
@@ -179,6 +183,17 @@ export default function CrudTable({
           </div>
         )}
       </div>
+    );
+  };
+
+  const handleDelete = (row: any) => {
+    dispatch(
+      openConfirm({
+        message: "Are you sure you want to delete this record?",
+        onConfirm: () => {
+          deleteMutation.mutate(row[primaryKey]);
+        },
+      }),
     );
   };
 
@@ -353,9 +368,7 @@ export default function CrudTable({
 
                               <button
                                 onClick={() => {
-                                  if (confirm("Deactivate this record?")) {
-                                    deleteMutation.mutate(row[primaryKey]);
-                                  }
+                                  handleDelete(row);
                                 }}
                                 className={clsx(
                                   "relative inline-flex items-center justify-center w-8 h-8 rounded-lg",
