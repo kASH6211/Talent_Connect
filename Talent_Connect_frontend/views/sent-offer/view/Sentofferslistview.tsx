@@ -25,6 +25,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { setCurrentIndustry } from "@/store/industry";
 import { useAuth } from "@/lib/AuthProvider";
+import clsx from "clsx";
 
 /* ─── Styles ──────────────────────────────────────────────────────────────── */
 const styles = `
@@ -682,48 +683,56 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 /* ─── StatCard - Icon on RIGHT, text on LEFT ─────────────────────────────── */
+
 function StatCard({
   label,
   count,
   onClick,
   active,
   icon: Icon,
-  iconBg,
-  countColor,
-  activeClass,
 }: {
   label: string;
   count: number;
   onClick: () => void;
   active: boolean;
   icon: any;
-  iconBg: string;
-  countColor: string;
-  activeClass: string;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`sol-stat ${active ? activeClass : ""}`}
+      className={clsx(
+        "flex flex-col items-center justify-center p-6 rounded-lg border text-center",
+        "card-custom",
+        "transition-all duration-200 ease-in-out",
+        "hover:shadow-md",
+        "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2",
+        active && "border-primary bg-primary/10 text-primary font-semibold",
+      )}
     >
-      <div className="sol-stat-content">
-        <div
-          className="sol-stat-count"
-          style={{ color: active ? countColor : "#0f0e1a" }}
-        >
-          {count}
-        </div>
-        <div className="sol-stat-label">{label}</div>
+      <Icon
+        size={32}
+        className={clsx(
+          "mb-3 opacity-90 transition-colors",
+          active ? "text-primary" : "text-base-content/70",
+        )}
+      />
+      <div
+        className={clsx(
+          "text-2xl font-bold mb-1",
+          active ? "text-primary" : "text-base-content",
+        )}
+      >
+        {count.toLocaleString()}
       </div>
-      <div className="sol-stat-icon" style={{ background: iconBg }}>
-        <Icon size={24} color="#fff" />
+      <div className="text-xs font-medium uppercase tracking-wider text-base-content/60">
+        {label}
       </div>
-      <div className="sol-stat-glow" style={{ background: countColor }} />
     </button>
   );
 }
 
 /* ─── OfferGroupCard - Bigger & more spacious ────────────────────────────── */
+
 function OfferGroupCard({
   group,
   onWithdraw,
@@ -749,288 +758,215 @@ function OfferGroupCard({
   const salary = salaryStr(group.salary_min, group.salary_max);
 
   return (
-    <div className="sol-card sol-fade-up">
-      {/* Header - bigger padding & font */}
-      <div className="sol-card-header" onClick={() => setOpen((o) => !o)}>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: "20px" }}>
-          {/* Icon */}
-          <div className="sol-job-icon">
-            <Send size={24} color="#fff" />
+    <div className="bg-white border border-gray-200 rounded-lg shadow-sm transition-all hover:shadow-md">
+      {/* Header */}
+      <div
+        className="flex p-5 cursor-pointer"
+        onClick={() => setOpen((o) => !o)}
+      >
+        {/* Left: Icon */}
+        <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-primary rounded-md text-white">
+          <Send size={24} />
+        </div>
+
+        {/* Middle: Info */}
+        <div className="flex-1 ml-4 min-w-0">
+          {/* EOI Type Badge */}
+          {group.eoi_type && (
+            <span
+              className={clsx(
+                "inline-block text-xs font-semibold rounded-md px-3 py-1 mb-1",
+                group.eoi_type === "Placement"
+                  ? "bg-blue-100 text-blue-700"
+                  : group.eoi_type === "Industrial Training"
+                    ? "bg-gray-100 text-gray-800"
+                    : "bg-purple-100 text-purple-700",
+              )}
+            >
+              {group.eoi_type === "Placement"
+                ? "🎓 Hire Students"
+                : group.eoi_type === "Industrial Training"
+                  ? "🏭 Industrial Training"
+                  : "🤝 Collaboration"}
+            </span>
+          )}
+
+          {/* Job Title */}
+          <div className="text-lg font-semibold text-gray-800 truncate">
+            {group.job_title || "—"}
           </div>
 
-          {/* Info - more space */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="sol-job-title" style={{ marginBottom: "8px" }}>
-              {group.eoi_type ? (
+          {/* Pills */}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {group.eoi_type === "Collaboration" ? (
+              group.collaboration_types?.split("|").map((type, i) => (
                 <span
-                  style={{
-                    fontSize: "12px",
-                    background: "#eef2ff",
-                    color: "#6366f1",
-                    borderRadius: "6px",
-                    padding: "3px 10px",
-                    fontWeight: 700,
-                    marginBottom: "6px",
-                    display: "inline-block",
-                  }}
+                  key={i}
+                  className="text-xs font-medium px-2 py-1 rounded-md bg-purple-100 text-primary"
                 >
-                  {group.eoi_type === "Placement"
-                    ? "🎓 Hire Students"
-                    : group.eoi_type === "Industrial Training"
-                      ? "🏭 Industrial Training"
-                      : "🤝 Collaboration"}
+                  {type}
                 </span>
-              ) : null}
-              <div style={{ marginTop: "4px" }}>{group.job_title || "—"}</div>
-            </div>
-
-            {/* Pills - bigger */}
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "8px",
-                marginBottom: "16px",
-              }}
-            >
-              {group.eoi_type === "Collaboration" ? (
-                group.collaboration_types ? (
-                  group.collaboration_types.split("|").map((type, i) => (
-                    <span
-                      key={i}
-                      className="sol-pill"
-                      style={{ background: "#f3e8ff", color: "#7c3aed" }}
-                    >
-                      {type}
-                    </span>
-                  ))
-                ) : null
-              ) : (
-                <>
-                  {salary && (
-                    <span className="sol-pill sol-pill-salary">{salary}</span>
-                  )}
-                  {group.number_of_posts && (
-                    <span className="sol-pill sol-pill-posts">
-                      {group.number_of_posts} post
-                      {group.number_of_posts !== 1 ? "s" : ""}
-                    </span>
-                  )}
-                </>
-              )}
-              {group.last_date && (
-                <span className="sol-pill sol-pill-date">
-                  <CalendarDays size={12} />
-                  Closes {formatDate(group.last_date)}
-                </span>
-              )}
-            </div>
-
-            {/* Meta - bigger text */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
-              <div className="sol-meta-item">
-                <CalendarDays size={14} />
-                Sent {formatDate(group.offer_date)}
-              </div>
-              <div className="sol-meta-item">
-                <Building2 size={14} />
-                {group.rows.length} institute
-                {group.rows.length !== 1 ? "s" : ""}
-              </div>
-            </div>
+              ))
+            ) : (
+              <>
+                {salary && (
+                  <span className="text-xs font-medium px-2 py-1 rounded-md bg-gray-100 text-gray-800">
+                    {salary}
+                  </span>
+                )}
+                {group.number_of_posts && (
+                  <span className="text-xs font-medium px-2 py-1 rounded-md bg-gray-100 text-gray-800">
+                    {group.number_of_posts} post
+                    {group.number_of_posts !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </>
+            )}
+            {group.last_date && (
+              <span className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md bg-yellow-100 text-yellow-800">
+                <CalendarDays size={12} /> Closes {formatDate(group.last_date)}
+              </span>
+            )}
           </div>
 
-          {/* Right side - bigger chevron & badges */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-end",
-              gap: "12px",
-              flexShrink: 0,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                gap: "6px",
-                flexWrap: "wrap",
-                justifyContent: "flex-end",
-              }}
-            >
-              {group.sent > 0 && (
-                <span
-                  className="sol-mini-badge"
-                  style={{ background: "#dbeafe", color: "#1d4ed8" }}
-                >
-                  {group.sent}
-                </span>
-              )}
-              {group.discussed > 0 && (
-                <span
-                  className="sol-mini-badge"
-                  style={{ background: "#fef9c3", color: "#ca8a04" }}
-                >
-                  {group.discussed}
-                </span>
-              )}
-              {group.accepted > 0 && (
-                <span
-                  className="sol-mini-badge"
-                  style={{ background: "#dcfce7", color: "#16a34a" }}
-                >
-                  {group.accepted}
-                </span>
-              )}
-              {group.rejected > 0 && (
-                <span
-                  className="sol-mini-badge"
-                  style={{ background: "#fee2e2", color: "#dc2626" }}
-                >
-                  {group.rejected}
-                </span>
-              )}
-              {group.projectInitiated > 0 && (
-                <span
-                  className="sol-mini-badge"
-                  style={{ background: "#ede9fe", color: "#7c3aed" }}
-                >
-                  {group.projectInitiated}
-                </span>
-              )}
-              {group.projectCompleted > 0 && (
-                <span
-                  className="sol-mini-badge"
-                  style={{ background: "#dcfce7", color: "#15803d" }}
-                >
-                  {group.projectCompleted}
-                </span>
-              )}
-              {group.withdrawn > 0 && (
-                <span
-                  className="sol-mini-badge"
-                  style={{ background: "#f1f5f9", color: "#64748b" }}
-                >
-                  {group.withdrawn}
-                </span>
-              )}
+          {/* Meta */}
+          <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-600">
+            <div className="flex items-center gap-1">
+              <CalendarDays size={14} /> Sent {formatDate(group.offer_date)}
             </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "16px",
-                marginTop: "4px",
-              }}
-            >
-              <button
-                className="sol-btn-eye"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEyeClick(group);
-                }}
-                title="View EOI Details"
-              >
-                <Eye size={16} />{" "}
-                <span className="sol-btn-text">View Details</span>
-              </button>
-              <div className={`sol-chevron ${open ? "open" : ""}`}>
-                <ChevronDown size={18} />
-              </div>
+            <div className="flex items-center gap-1">
+              <Building2 size={14} /> {group.rows.length} institute
+              {group.rows.length !== 1 ? "s" : ""}
             </div>
+          </div>
+        </div>
+
+        {/* Right: Badges + Actions */}
+        <div className="flex flex-col items-end gap-3 flex-shrink-0 ml-4">
+          <div className="flex flex-wrap gap-1">
+            {group.sent > 0 && (
+              <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">
+                {group.sent}
+              </span>
+            )}
+            {group.discussed > 0 && (
+              <span className="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">
+                {group.discussed}
+              </span>
+            )}
+            {group.accepted > 0 && (
+              <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-800">
+                {group.accepted}
+              </span>
+            )}
+            {group.rejected > 0 && (
+              <span className="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
+                {group.rejected}
+              </span>
+            )}
+            {group.projectInitiated > 0 && (
+              <span className="px-2 py-1 text-xs rounded bg-purple-100 text-purple-700">
+                {group.projectInitiated}
+              </span>
+            )}
+            {group.projectCompleted > 0 && (
+              <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                {group.projectCompleted}
+              </span>
+            )}
+            {group.withdrawn > 0 && (
+              <span className="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600">
+                {group.withdrawn}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 mt-1">
+            <button
+              className="flex items-center gap-1 text-sm text-blue-600 hover:bg-blue-50 px-2 py-1 rounded"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEyeClick(group);
+              }}
+              title="View EOI Details"
+            >
+              <Eye size={16} /> View Details
+            </button>
+            <ChevronDown
+              size={18}
+              className={clsx("transition-transform", open && "rotate-180")}
+            />
           </div>
         </div>
       </div>
 
-      {/* Table - bigger rows */}
+      {/* Table */}
       {open && (
-        <div className="sol-table-wrap">
-          <table className="sol-table">
-            <thead>
+        <div className="overflow-x-auto border-t border-gray-200">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <th>Institute</th>
-                <th>District</th>
-                <th>Contact</th>
-                <th className="center">Status</th>
-                <th className="center">Action</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  Institute
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  District
+                </th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  Contact
+                </th>
+                <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                  Status
+                </th>
+                <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                  Action
+                </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="bg-white divide-y divide-gray-200">
               {group.rows.map((row) => (
-                <tr key={row.offer_id}>
-                  <td>
-                    <div className="sol-inst-name">
-                      {row.institute?.institute_name ??
-                        `Institute #${row.offer_id}`}
-                    </div>
+                <tr key={row.offer_id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-sm text-gray-700 truncate">
+                    {row.institute?.institute_name ??
+                      `Institute #${row.offer_id}`}
                   </td>
-                  <td>
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        color: "#475569",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {row.institute?.district?.districtname || "—"}
-                    </div>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {row.institute?.district?.districtname || "—"}
                   </td>
-                  <td>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px",
-                      }}
-                    >
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    <div className="flex flex-col gap-1">
                       {row.institute?.emailId && (
-                        <div className="sol-contact-line">
-                          <div className="sol-contact-dot" />
-                          <span
-                            style={{
-                              maxWidth: "180px",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {row.institute.emailId}
-                          </span>
-                        </div>
-                      )}
-                      {row.institute?.mobileno && (
-                        <div className="sol-contact-line">
-                          <div className="sol-contact-dot" />
-                          {row.institute.mobileno}
-                        </div>
-                      )}
-                      {!row.institute?.emailId && !row.institute?.mobileno && (
-                        <span style={{ fontSize: "13px", color: "#cbd5e1" }}>
-                          No contact
+                        <span className="truncate">
+                          {row.institute.emailId}
                         </span>
                       )}
+                      {row.institute?.mobileno && (
+                        <span>{row.institute.mobileno}</span>
+                      )}
+                      {!row.institute?.emailId && !row.institute?.mobileno && (
+                        <span className="text-gray-400">No contact</span>
+                      )}
                     </div>
                   </td>
-                  <td style={{ textAlign: "center" }}>
+                  <td className="px-4 py-3 text-center">
                     <StatusBadge status={row.status} />
                   </td>
-                  <td style={{ textAlign: "center" }}>
+                  <td className="px-4 py-3 text-center">
                     <button
-                      className="sol-btn-eye"
+                      className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
                       title="View Institute Details"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Send an event up or just handle directly if passed as prop.
-                        // Or we can just use an event to set a state in SentOffersListView
                         const customEvent = new CustomEvent(
                           "openInstituteModal",
-                          { detail: row.institute },
+                          {
+                            detail: row.institute,
+                          },
                         );
                         window.dispatchEvent(customEvent);
                       }}
                     >
-                      <Eye size={16} />{" "}
-                      <span className="sol-btn-text">View</span>
+                      <Eye size={16} /> View
                     </button>
                   </td>
                 </tr>
@@ -1081,24 +1017,32 @@ function Pagination({
   }
 
   return (
-    <div className="sol-pagination">
+    <div className="flex items-center justify-center gap-3 mt-4 pb-6">
+      {/* Previous */}
       <button
-        className="sol-pagination-btn"
+        className={clsx(
+          "px-3 py-1 rounded-md border transition-colors",
+          currentPage === 1
+            ? "border-base-300 text-base-content/40 cursor-not-allowed"
+            : "border-base-300 text-base-content hover:bg-base-200 hover:border-base-400",
+        )}
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
       >
         <ChevronLeft size={18} />
       </button>
 
-      <div className="sol-pagination-info">
-        Page {currentPage} of {totalPages}
-      </div>
-
-      <div className="sol-pagination-numbers">
+      {/* Page numbers */}
+      <div className="flex gap-1">
         {pages.map((pageNum) => (
           <button
             key={pageNum}
-            className={`sol-page-num ${currentPage === pageNum ? "active" : ""}`}
+            className={clsx(
+              "px-3 py-1 rounded-md border transition-colors",
+              currentPage === pageNum
+                ? "bg-primary text-primary-content border-primary font-semibold"
+                : "border-base-300 text-base-content hover:bg-base-200 hover:border-base-400",
+            )}
             onClick={() => onPageChange(pageNum)}
           >
             {pageNum}
@@ -1106,8 +1050,14 @@ function Pagination({
         ))}
       </div>
 
+      {/* Next */}
       <button
-        className="sol-pagination-btn"
+        className={clsx(
+          "px-3 py-1 rounded-md border transition-colors",
+          currentPage === totalPages
+            ? "border-base-300 text-base-content/40 cursor-not-allowed"
+            : "border-base-300 text-base-content hover:bg-base-200 hover:border-base-400",
+        )}
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
       >
@@ -1230,12 +1180,22 @@ export default function SentOffersListView() {
   });
 
   const groups = groupOffers(filteredOffers);
+  // const groups = groupOffers(filteredOffers);
 
   // Pagination logic
   const totalPages = Math.ceil(groups.length / CARDS_PER_PAGE);
   const startIndex = (currentPage - 1) * CARDS_PER_PAGE;
   const endIndex = startIndex + CARDS_PER_PAGE;
-  const paginatedGroups = groups.slice(startIndex, endIndex);
+  const paginatedGroups = useMemo(() => {
+    const start = (currentPage - 1) * CARDS_PER_PAGE;
+    return groups.slice(start, start + CARDS_PER_PAGE);
+  }, [groups, currentPage]);
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
 
   const handleSearch = () => {
     // console.log("Search for:", searchTerm);
@@ -1253,15 +1213,16 @@ export default function SentOffersListView() {
         }}
       >
         {/* Page Header */}
-        <div className="sol-page-header sol-fade-up flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="sol-page-header sol-fade-up flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          {/* Title & Subtitle */}
           <div>
-            <h1 className="sol-page-title flex items-center gap-2">
-              <div className="sol-page-title-icon">
-                <MailCheck size={20} color="#fff" />
+            <h1 className="sol-page-title flex items-center gap-2 text-gray-900 font-semibold text-xl">
+              <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-primary rounded-md text-white">
+                <MailCheck size={20} />
               </div>
               Sent EOI
             </h1>
-            <p className="sol-page-sub">
+            <p className="sol-page-sub text-gray-600 mt-1 text-sm">
               Track every Expression of Interest you've sent to institutes.
             </p>
           </div>
@@ -1292,7 +1253,7 @@ export default function SentOffersListView() {
               />
               <button
                 onClick={handleSearch}
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 btn btn-primary btn-sm px-3"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 btn btn-primary btn-sm flex items-center justify-center px-3"
               >
                 <Search size={16} />
               </button>
@@ -1396,9 +1357,9 @@ export default function SentOffersListView() {
                 onClick={() => setFilter("All")}
                 active={filter === "All"}
                 icon={TrendingUp}
-                iconBg="linear-gradient(135deg,#6366f1,#8b5cf6)"
-                countColor="#6366f1"
-                activeClass="active-all"
+                // iconBg="linear-gradient(135deg,#6366f1,#8b5cf6)"
+                // countColor="#6366f1"
+                // activeClass="active-all"
               />
               <StatCard
                 label="Discussed"
@@ -1406,9 +1367,9 @@ export default function SentOffersListView() {
                 onClick={() => setFilter("Discussed")}
                 active={filter === "Discussed"}
                 icon={AlertCircle}
-                iconBg="linear-gradient(135deg,#f59e0b,#fbbf24)"
-                countColor="#f59e0b"
-                activeClass="active-discussed"
+                // iconBg="linear-gradient(135deg,#f59e0b,#fbbf24)"
+                // countColor="#f59e0b"
+                // activeClass="active-discussed"
               />
               <StatCard
                 label="Accepted"
@@ -1416,9 +1377,9 @@ export default function SentOffersListView() {
                 onClick={() => setFilter("Accepted")}
                 active={filter === "Accepted"}
                 icon={CheckCircle2}
-                iconBg="linear-gradient(135deg,#10b981,#34d399)"
-                countColor="#10b981"
-                activeClass="active-accepted"
+                // iconBg="linear-gradient(135deg,#10b981,#34d399)"
+                // countColor="#10b981"
+                // activeClass="active-accepted"
               />
               <StatCard
                 label="Pending Discussion (>2d)"
@@ -1426,9 +1387,9 @@ export default function SentOffersListView() {
                 onClick={() => setFilter("PendingDiscuss")}
                 active={filter === "PendingDiscuss"}
                 icon={Clock}
-                iconBg="linear-gradient(135deg,#ef4444,#f87171)"
-                countColor="#ef4444"
-                activeClass="active-rejected"
+                // iconBg="linear-gradient(135deg,#ef4444,#f87171)"
+                // countColor="#ef4444"
+                // activeClass="active-rejected"
               />
               <StatCard
                 label="Pending Accept/Reject (>7d)"
@@ -1436,9 +1397,9 @@ export default function SentOffersListView() {
                 onClick={() => setFilter("PendingAccept")}
                 active={filter === "PendingAccept"}
                 icon={Ban}
-                iconBg="linear-gradient(135deg,#8b5cf6,#a78bfa)"
-                countColor="#8b5cf6"
-                activeClass="active-project"
+                // iconBg="linear-gradient(135deg,#8b5cf6,#a78bfa)"
+                // countColor="#8b5cf6"
+                // activeClass="active-project"
               />
             </div>
 
@@ -1507,7 +1468,10 @@ export default function SentOffersListView() {
                     <OfferGroupCard
                       group={g}
                       onWithdraw={handleWithdraw}
-                      onEyeClick={handleEyeClick}
+                      onEyeClick={(g) => {
+                        setSelectedOffer(g);
+                        setModalOpen(true);
+                      }}
                     />
                   </div>
                 ))

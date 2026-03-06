@@ -19,6 +19,13 @@ export default function AuthWrapper({
   useEffect(() => {
     if (loading) return;
 
+    const publicRoutes = [
+      "/",
+      "/login",
+      "/signup",
+      "/forgot-password",
+      "/contact",
+    ];
     const publicRoutes = ["/", "/login", "/signup", "/forgot-password", "/search-institutes"];
     const guestOnlyRoutes = ["/login", "/signup", "/forgot-password"];
     const isPublic = publicRoutes.includes(pathname);

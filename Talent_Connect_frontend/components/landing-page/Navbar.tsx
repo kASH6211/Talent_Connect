@@ -1,7 +1,11 @@
+"use client";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import logo from "../assets/Gov Logo.png";
 import Link from "next/link";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
+import { updateLoginUi } from "@/store/login";
 
 const pageLinks = [
   { label: "Home", to: "/" },
@@ -9,13 +13,15 @@ const pageLinks = [
   { label: "Students", to: "/#students" },
   { label: "Industries", to: "/#industries" },
   // { label: "Placements", to: "/placements" },
-  { label: "Contact", to: "#contact" },
+  { label: "Contact", to: "/contact" },
 ];
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
 
-  const isActive = (to: string) => location.pathname === to;
+  const isActive = (to: string) =>
+    typeof window !== "undefined" && window.location.pathname === to;
 
   return (
     <nav className="bg-primary text-primary-content sticky top-0 z-50 shadow-md">
@@ -62,12 +68,14 @@ const Navbar = () => {
               </Link>
             ),
           )}
-          <Link
-            href="/login"
+          <button
+            onClick={() => {
+              dispatch(updateLoginUi({ roleSelectModal: { open: true } }));
+            }}
             className="bg-secondary text-secondary-foreground px-5 py-1.5 rounded text-sm font-semibold hover:opacity-90 transition-opacity"
           >
             Login
-          </Link>
+          </button>
         </div>
 
         {/* Mobile toggle */}

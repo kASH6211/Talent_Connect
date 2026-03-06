@@ -1,3 +1,4 @@
+"use client";
 import {
   Wrench,
   BookOpen,
@@ -73,14 +74,18 @@ const InstitutesSection = () => {
                     : undefined
                 }
                 className={`group border border-border rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-lg transition ${inst.name === "ITI" || inst.name === "Polytechnic"
-                    ? "cursor-pointer"
-                    : ""
+                  ? "cursor-pointer"
+                  : ""
                   }`}
               >
                 {/* Top Section */}
                 <div className="p-6">
                   <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center mb-4 mx-auto">
-                    <Icon className="w-7 h-7 text-primary" />
+                    {loading && (inst.name === "ITI" || inst.name === "Polytechnic") ? (
+                      <Loader2 className="w-7 h-7 text-primary animate-spin" />
+                    ) : (
+                      <Icon className="w-7 h-7 text-primary" />
+                    )}
                   </div>
 
                   <p className="text-primary font-bold text-base">

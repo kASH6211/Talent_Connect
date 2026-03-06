@@ -4,4 +4,6 @@ export const apiConfig = {
   boardUniversity: "/api/board-university",
   job: "/api/jobs",
   student: "/api/students",
+  login: "/login",
+  me: "/me",
 };

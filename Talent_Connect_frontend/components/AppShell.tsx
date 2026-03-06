@@ -1,8 +1,10 @@
 "use client";
-import { ReactNode, useState } from "react";
+
+import { ReactNode, useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import { usePathname } from "next/navigation";
 import AuthWrapper from "@/lib/AuthWrapper";
+import { Menu } from "lucide-react";
 
 export default function AppShell({
   children,
@@ -12,38 +14,81 @@ export default function AppShell({
   showSidebar?: boolean;
 }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const pathname = usePathname();
+
+  const allowedRoutes = ["/login", "/", "/contact"];
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    function checkMobile() {
+      setIsMobile(window.innerWidth < 1024);
+    }
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const isLoginPage = pathname === "/login";
   const home = pathname === "/";
   const searchInstitutes = pathname === "/search-institutes";
 
   return (
     <AuthWrapper>
-      {isLoginPage || home || searchInstitutes ? (
-        <>{children}</>
-      ) : (
-        <div className="flex h-screen w-screen overflow-hidden">
-          {showSidebar && (
-            <Sidebar
-              collapsed={sidebarCollapsed}
-              setCollapsed={setSidebarCollapsed}
-            />
-          )}
+      {allowedRoutes.includes(pathname) ? (
+        { isLoginPage || home || searchInstitutes ? (
+          <>{children}</>
+        ) : (
+          <div className="flex h-screen w-screen overflow-hidden">
+            {showSidebar && (
+              <>
+                {isMobile && !mobileSidebarOpen && (
+                  <button
+                    onClick={() => setMobileSidebarOpen(true)}
+                    aria-label="Open sidebar"
+                    className="fixed top-4 left-4 z-60 p-2 rounded-md bg-primary text-primary-content shadow-lg lg:hidden"
+                  >
+                    <Menu size={24} />
+                  </button>
+                )}
 
-          <main
-            className="flex-1 transition-all duration-500 ease-in-out overflow-auto bg-gray-50 pt-6 sm:pt-8 lg:pt-10 px-4 sm:px-6 lg:px-8 xl:px-10"
-            style={{
-              marginLeft: showSidebar
-                ? sidebarCollapsed
-                  ? "88px"
-                  : "260px"
-                : "0px",
-            }}
-          >
-            {children}
-          </main>
-        </div>
-      )}
+                {(mobileSidebarOpen || !isMobile) && (
+                  <Sidebar
+                    collapsed={sidebarCollapsed}
+                    setCollapsed={setSidebarCollapsed}
+                    mobileSidebarOpen={mobileSidebarOpen}
+                    setMobileSidebarOpen={setMobileSidebarOpen}
+                    isMobile={isMobile}
+                  />
+                )}
+
+                {isMobile && mobileSidebarOpen && (
+                  <div
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={() => setMobileSidebarOpen(false)}
+                    aria-hidden="true"
+                  />
+                )}
+              </>
+            )}
+
+            <main
+              className="flex-1 transition-all duration-500 ease-in-out overflow-auto bg-gray-50 pt-6 sm:pt-8 lg:pt-10 px-4 sm:px-6 lg:px-8 xl:px-10"
+              style={{
+                marginLeft:
+                  showSidebar && !isMobile
+                    ? sidebarCollapsed
+                      ? "88px"
+                      : "260px"
+                    : "0px",
+              }}
+            >
+              {children}
+            </main>
+          </div>
+        )}
     </AuthWrapper>
   );
 }
