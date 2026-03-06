@@ -68,15 +68,14 @@ const InstitutesSection = () => {
                 onClick={
                   inst.name === "ITI" || inst.name === "Polytechnic"
                     ? () => {
-                        window.location.href = "http://localhost:4000/";
-                      }
+                      window.location.href = `/search-institutes?type=${inst.name}`;
+                    }
                     : undefined
                 }
-                className={`group border border-border rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-lg transition ${
-                  inst.name === "ITI" || inst.name === "Polytechnic"
+                className={`group border border-border rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-lg transition ${inst.name === "ITI" || inst.name === "Polytechnic"
                     ? "cursor-pointer"
                     : ""
-                }`}
+                  }`}
               >
                 {/* Top Section */}
                 <div className="p-6">

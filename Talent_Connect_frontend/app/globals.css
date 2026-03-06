@@ -1,5 +1,6 @@
 @import "tailwindcss";
-
+@source "../app";
+@source "../components";
 @plugin "daisyui" {
   themes: hunar, hunar-dark;
 }

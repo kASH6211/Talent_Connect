@@ -25,6 +25,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check for token in URL (SSO Callback)
+    const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get("token");
+
+    if (urlToken) {
+      try {
+        // Simple JWT decode (payload is the second part)
+        const base64Url = urlToken.split(".")[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split("")
+            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+            .join("")
+        );
+        const decoded = JSON.parse(jsonPayload);
+
+        // Construct user object from token payload
+        const ssoUser = {
+          id: decoded.sub,
+          username: decoded.username,
+          role: decoded.role,
+          industry_id: decoded.industry_id,
+          institute_id: decoded.institute_id,
+        };
+
+        login(ssoUser, urlToken);
+
+        // Clean up URL
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+      } catch (e) {
+        console.error("Failed to process SSO token", e);
+      }
+    }
+
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("tc_token");
 

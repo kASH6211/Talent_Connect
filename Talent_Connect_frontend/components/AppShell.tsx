@@ -15,9 +15,11 @@ export default function AppShell({
   const pathname = usePathname();
   const isLoginPage = pathname === "/login";
   const home = pathname === "/";
+  const searchInstitutes = pathname === "/search-institutes";
+
   return (
     <AuthWrapper>
-      {isLoginPage || home ? (
+      {isLoginPage || home || searchInstitutes ? (
         <>{children}</>
       ) : (
         <div className="flex h-screen w-screen overflow-hidden">

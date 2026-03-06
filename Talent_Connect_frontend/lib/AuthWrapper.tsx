@@ -19,8 +19,10 @@ export default function AuthWrapper({
   useEffect(() => {
     if (loading) return;
 
-    const publicRoutes = ["/", "/login", "/signup", "/forgot-password"];
+    const publicRoutes = ["/", "/login", "/signup", "/forgot-password", "/search-institutes"];
+    const guestOnlyRoutes = ["/login", "/signup", "/forgot-password"];
     const isPublic = publicRoutes.includes(pathname);
+    const isGuestOnly = guestOnlyRoutes.includes(pathname);
 
     // Not logged in → block private routes
     if (!user && !isPublic) {
@@ -28,8 +30,8 @@ export default function AuthWrapper({
       return;
     }
 
-    // Logged in → block public routes
-    if (user && isPublic) {
+    // Logged in → block guest-only routes
+    if (user && isGuestOnly) {
       const dashboard = getDashboardRoute(role);
       if (pathname !== dashboard) {
         router.replace(dashboard);

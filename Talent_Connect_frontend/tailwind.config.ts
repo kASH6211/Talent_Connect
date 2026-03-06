@@ -5,6 +5,8 @@ export default {
   // Optional: if you need to override auto-detected content paths
   content: [
     "./index.html",
+    "./app/**/*.{js,ts,jsx,tsx,html}",
+    "./components/**/*.{js,ts,jsx,tsx,html}",
     "./src/**/*.{js,ts,jsx,tsx,html}", // adjust to your project structure
   ],
 

@@ -1,8 +1,14 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, Query, Res, All } from '@nestjs/common';
+// Removed invalid import of frontend helper
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto } from './dto/auth.dto';
+import { SSOCallbackDto } from './dto/sso-callback.dto';
 import { Public } from './public.decorator';
+import type { Request } from 'express';
+import { Req } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -22,5 +28,63 @@ export class AuthController {
     @ApiOperation({ summary: 'Login and receive JWT token' })
     login(@Body() dto: LoginDto) {
         return this.authService.login(dto);
+    }
+
+    @Public()
+    @All('sso/callback')
+    @ApiOperation({ summary: 'Handle FastTrack SSO Callback' })
+    async ssoCallback(@Query() query: SSOCallbackDto, @Body() body: any, @Res() res: any, @Req() req: Request) {
+        const logFilePath = path.join(process.cwd(), 'sso_debug.log');
+        const timestamp = new Date().toISOString();
+        const method = req.method;
+        const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+
+        const logData = `--- SSO Callback [${method}] at ${timestamp} ---\n` +
+            `Full URL: ${fullUrl}\n` +
+            `Raw Query: ${JSON.stringify(req.query)}\n` +
+            `Raw Body: ${JSON.stringify(req.body)}\n` +
+            `DTO Query: ${JSON.stringify(query)}\n` +
+            `Headers: ${JSON.stringify(req.headers)}\n\n`;
+
+        try {
+            fs.appendFileSync(logFilePath, logData);
+        } catch (e) {
+            console.error('Failed to write to sso_debug.log', e);
+        }
+
+        console.log(`[SSO Callback] ${method} request received. Check sso_debug.log for details.`);
+
+        // Support multiple parameter names (msg, ssotoken, ssoToken, etc.) from both query and body
+        const combined = { ...req.query, ...req.body, ...query };
+        const tokenPayload = combined.msg || combined.ssotoken || combined.ssoToken || combined.token || combined.SsoToken;
+
+        if (!tokenPayload) {
+            console.warn(`[SSO Callback] Missing payload in ${method} request.`);
+            return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:4000'}/login?error=Missing+SSO+Payload`);
+        }
+
+        try {
+            const result = await this.authService.handleSSOCallback(tokenPayload);
+
+            // Redirect to appropriate dashboard based on role
+            const role = result.user.role;
+            let dashboardPath = '/';
+            if (role === 'industry') {
+                dashboardPath = '/find-institutes';
+            } else if (role === 'institute') {
+                dashboardPath = '/institute/dashboard';
+            } else if (role === 'superadmin') {
+                dashboardPath = '/admin/dashboard';
+            }
+            const redirectUrl = new URL(`${process.env.FRONTEND_URL || 'http://localhost:4000'}${dashboardPath}`);
+            redirectUrl.searchParams.set('token', result.access_token);
+
+            return res.redirect(redirectUrl.toString());
+        } catch (error) {
+            console.error('SSO Callback Error:', error);
+            const errorLog = `--- SSO Callback Error at ${new Date().toISOString()} ---\n${error.stack}\n\n`;
+            fs.appendFileSync(logFilePath, errorLog);
+            return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:4000'}/login?error=SSO+Failed`);
+        }
     }
 }

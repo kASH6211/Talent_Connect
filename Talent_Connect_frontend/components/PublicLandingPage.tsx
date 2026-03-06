@@ -3,10 +3,10 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import MultiSelectDropdown, { Option } from '@/components/MultiSelectDropdown';
 import { Search, Filter, MapPin, Users, Building2, LogIn, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') + '/api';
 
 // No-auth axios instance for public endpoints
 const pub = axios.create({ baseURL: BASE });
@@ -37,7 +37,7 @@ interface Filters {
     stream_ids: number[];
 }
 
-const EMPTY: Filters = { state_ids: [], district_ids: [], type_ids: [], ownership_ids: [], qualification_ids: [], stream_ids: [] };
+const EMPTY: Filters = { state_ids: [3], district_ids: [], type_ids: [], ownership_ids: [], qualification_ids: [], stream_ids: [] };
 const PAGE_SIZE = 12;
 
 function LoginPromptModal({ onClose }: { onClose: () => void }) {
@@ -54,7 +54,23 @@ function LoginPromptModal({ onClose }: { onClose: () => void }) {
                 </div>
                 <div className="flex gap-3">
                     <button onClick={onClose} className="btn btn-ghost flex-1">Cancel</button>
-                    <button onClick={() => router.push('/login')} className="btn btn-primary flex-1 gap-2">
+                    <button
+                        onClick={async () => {
+                            try {
+                                const res = await axios.get('/api/sso');
+
+                                if (res.data?.url) {
+                                    window.location.href = res.data.url;
+                                } else {
+                                    router.push('/login');
+                                }
+                            } catch (e) {
+                                console.error('SSO login proxy failed', e);
+                                router.push('/login');
+                            }
+                        }}
+                        className="btn btn-primary flex-1 gap-2"
+                    >
                         <LogIn size={16} /> Log In
                     </button>
                 </div>
@@ -64,6 +80,8 @@ function LoginPromptModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function PublicLandingPage() {
+    const searchParams = useSearchParams();
+    const typeParam = searchParams?.get('type');
     const [filters, setFilters] = useState<Filters>(EMPTY);
     const [institutes, setInstitutes] = useState<InstituteRow[]>([]);
     const [loading, setLoading] = useState(false);
@@ -81,13 +99,23 @@ export default function PublicLandingPage() {
     // Load static filter options on mount
     useEffect(() => {
         pub.get('/state').then(r => setStateOpts(r.data.map((s: any) => ({ value: s.lgdstateid ?? s.stateid, label: s.statename }))));
-        pub.get('/institute-type').then(r => setTypeOpts(r.data.map((t: any) => ({ value: t.institute_type_id, label: t.institute_type }))));
         pub.get('/institute-ownership-type').then(r => setOwnershipOpts(r.data.map((o: any) => ({ value: o.institute_ownership_type_id, label: o.institute_type }))));
-        pub.get('/qualification').then(r => setQualOpts(r.data.map((q: any) => ({ value: q.qualificationid, label: q.qualification_name }))));
+        pub.get('/qualification').then(r => setQualOpts(r.data.map((q: any) => ({ value: q.qualificationid, label: q.qualification }))));
         pub.get('/institute-qualification-mapping/streams-in-use').then(r =>
             setStreamOpts(r.data.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })))
         );
-    }, []);
+
+        pub.get('/institute-type').then(r => {
+            const types = r.data.map((t: any) => ({ value: t.institute_type_id, label: t.institute_type }));
+            setTypeOpts(types);
+            if (typeParam) {
+                const match = types.find((t: any) => t.label.toLowerCase() === typeParam.toLowerCase());
+                if (match) {
+                    setFilters(f => ({ ...f, type_ids: [match.value] }));
+                }
+            }
+        });
+    }, [typeParam]);
 
     // Load districts when state changes
     useEffect(() => {
@@ -160,12 +188,9 @@ export default function PublicLandingPage() {
                     {/* Filters */}
                     <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6 space-y-4 relative z-30">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <MultiSelectDropdown label="State" options={stateOpts} selected={filters.state_ids} onChange={vals => { setFilter('state_ids')(vals); setFilter('district_ids')([]); }} placeholder="All states" />
-                            <MultiSelectDropdown label="District" options={districtOpts} selected={filters.district_ids} onChange={setFilter('district_ids')} placeholder={filters.state_ids.length ? 'All districts' : 'Select state first'} />
+                            <MultiSelectDropdown label="District" options={districtOpts} selected={filters.district_ids} onChange={setFilter('district_ids')} placeholder="All districts" />
                             <MultiSelectDropdown label="Qualification" options={qualOpts} selected={filters.qualification_ids} onChange={setFilter('qualification_ids')} placeholder="All qualifications" />
                             <MultiSelectDropdown label="Course/Trade" options={streamOpts} selected={filters.stream_ids} onChange={setFilter('stream_ids')} placeholder="All courses/trades" />
-                            <MultiSelectDropdown label="Institute Type" options={typeOpts} selected={filters.type_ids} onChange={setFilter('type_ids')} placeholder="All types" />
-                            <MultiSelectDropdown label="Ownership" options={ownershipOpts} selected={filters.ownership_ids} onChange={setFilter('ownership_ids')} placeholder="All ownerships" />
                         </div>
 
                         <div className="flex gap-3 justify-end mt-4">
