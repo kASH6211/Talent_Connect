@@ -37,58 +37,57 @@ export default function AppShell({
 
   return (
     <AuthWrapper>
-      {allowedRoutes.includes(pathname) ? (
-        { isLoginPage || home || searchInstitutes ? (
-          <>{children}</>
-        ) : (
-          <div className="flex h-screen w-screen overflow-hidden">
-            {showSidebar && (
-              <>
-                {isMobile && !mobileSidebarOpen && (
-                  <button
-                    onClick={() => setMobileSidebarOpen(true)}
-                    aria-label="Open sidebar"
-                    className="fixed top-4 left-4 z-60 p-2 rounded-md bg-primary text-primary-content shadow-lg lg:hidden"
-                  >
-                    <Menu size={24} />
-                  </button>
-                )}
+      {allowedRoutes.includes(pathname) || isLoginPage || home || searchInstitutes ? (
+        <>{children}</>
+      ) : (
+        <div className="flex h-screen w-screen overflow-hidden">
+          {showSidebar && (
+            <>
+              {isMobile && !mobileSidebarOpen && (
+                <button
+                  onClick={() => setMobileSidebarOpen(true)}
+                  aria-label="Open sidebar"
+                  className="fixed top-4 left-4 z-60 p-2 rounded-md bg-primary text-primary-content shadow-lg lg:hidden"
+                >
+                  <Menu size={24} />
+                </button>
+              )}
 
-                {(mobileSidebarOpen || !isMobile) && (
-                  <Sidebar
-                    collapsed={sidebarCollapsed}
-                    setCollapsed={setSidebarCollapsed}
-                    mobileSidebarOpen={mobileSidebarOpen}
-                    setMobileSidebarOpen={setMobileSidebarOpen}
-                    isMobile={isMobile}
-                  />
-                )}
+              {(mobileSidebarOpen || !isMobile) && (
+                <Sidebar
+                  collapsed={sidebarCollapsed}
+                  setCollapsed={setSidebarCollapsed}
+                  mobileSidebarOpen={mobileSidebarOpen}
+                  setMobileSidebarOpen={setMobileSidebarOpen}
+                  isMobile={isMobile}
+                />
+              )}
 
-                {isMobile && mobileSidebarOpen && (
-                  <div
-                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-                    onClick={() => setMobileSidebarOpen(false)}
-                    aria-hidden="true"
-                  />
-                )}
-              </>
-            )}
+              {isMobile && mobileSidebarOpen && (
+                <div
+                  className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                  onClick={() => setMobileSidebarOpen(false)}
+                  aria-hidden="true"
+                />
+              )}
+            </>
+          )}
 
-            <main
-              className="flex-1 transition-all duration-500 ease-in-out overflow-auto bg-gray-50 pt-6 sm:pt-8 lg:pt-10 px-4 sm:px-6 lg:px-8 xl:px-10"
-              style={{
-                marginLeft:
-                  showSidebar && !isMobile
-                    ? sidebarCollapsed
-                      ? "88px"
-                      : "260px"
-                    : "0px",
-              }}
-            >
-              {children}
-            </main>
-          </div>
-        )}
+          <main
+            className="flex-1 transition-all duration-500 ease-in-out overflow-auto bg-gray-50 pt-6 sm:pt-8 lg:pt-10 px-4 sm:px-6 lg:px-8 xl:px-10"
+            style={{
+              marginLeft:
+                showSidebar && !isMobile
+                  ? sidebarCollapsed
+                    ? "88px"
+                    : "260px"
+                  : "0px",
+            }}
+          >
+            {children}
+          </main>
+        </div>
+      )}
     </AuthWrapper>
   );
 }
