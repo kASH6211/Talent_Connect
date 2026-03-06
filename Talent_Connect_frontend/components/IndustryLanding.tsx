@@ -30,25 +30,40 @@ import {
   ArrowUpDown,
 } from "lucide-react";
 import api from "@/lib/api";
-import dynamic from 'next/dynamic';
-const IndustryMap = dynamic(() => import('./IndustryMap'), { ssr: false });
+import dynamic from "next/dynamic";
+const IndustryMap = dynamic(() => import("./IndustryMap"), { ssr: false });
 
 // Helper for 'in air' distance (Haversine formula in km)
-function calculateAirDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+function calculateAirDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) {
   const R = 6371; // km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
 // Helper for 'in path' distance using OSRM
-async function calculatePathDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+async function calculatePathDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) {
   try {
-    const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`);
+    const res = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`,
+    );
     const data = await res.json();
     if (data.routes && data.routes.length > 0) {
       return data.routes[0].distance / 1000; // convert meters to km
@@ -63,6 +78,7 @@ async function calculatePathDistance(lat1: number, lon1: number, lat2: number, l
 import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
 import { InstituteViewModal } from "@/views/find-institute/list/InstituteViewModal";
 import InstituteCoursesModal from "@/views/find-institute/view/InstituteCoursesModal";
+import SpinnerFallback from "./Spinner";
 
 /* ─── Brand color ────────────────────────────────────────────────── */
 const P = "#605dff";
@@ -470,16 +486,22 @@ export default function IndustryLandingPage() {
   const [institutes, setInstitutes] = useState<InstituteRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [sort, setSort] = useState<"name" | "name-rev" | "student_count">("student_count");
+  const [sort, setSort] = useState<"name" | "name-rev" | "student_count">(
+    "student_count",
+  );
   const [loginModal, setLoginModal] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [viewInstitute, setViewInstitute] = useState(false);
   const [viewCourses, setViewCourses] = useState(false);
-  const [currentInstitute, setCurrentInstitute] = useState<InstituteRow | null>(null);
+  const [currentInstitute, setCurrentInstitute] = useState<InstituteRow | null>(
+    null,
+  );
   const [currentPage, setCurrentPage] = useState(1);
 
   // Map state
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(
+    null,
+  );
   const [searchGeoTerm, setSearchGeoTerm] = useState("");
 
   const [districtOpts, setDistrictOpts] = useState<Option[]>([]);
@@ -493,10 +515,12 @@ export default function IndustryLandingPage() {
         api
           .get("/qualification")
           .then((r) =>
-            r.data.map((q: { qualificationid: number; qualification: string }) => ({
-              value: q.qualificationid,
-              label: q.qualification,
-            })),
+            r.data.map(
+              (q: { qualificationid: number; qualification: string }) => ({
+                value: q.qualificationid,
+                label: q.qualification,
+              }),
+            ),
           )
           .catch(() => []),
       ]);
@@ -512,7 +536,10 @@ export default function IndustryLandingPage() {
         const res = await api.get(`/district?state_id=3`);
         setDistrictOpts(
           res.data
-            .map((d: { districtid: number; districtname: string }) => ({ value: d.districtid, label: d.districtname }))
+            .map((d: { districtid: number; districtname: string }) => ({
+              value: d.districtid,
+              label: d.districtname,
+            }))
             .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
         );
       } catch {
@@ -532,26 +559,32 @@ export default function IndustryLandingPage() {
           api.get("/institute-qualification-mapping/streams-in-use"),
         ]);
         const inUseIds = new Set(
-          inUseRes.data.map((s: { stream_branch_Id: number }) => s.stream_branch_Id),
+          inUseRes.data.map(
+            (s: { stream_branch_Id: number }) => s.stream_branch_Id,
+          ),
         );
-        const filtered = masterRes.data.filter((s: { stream_branch_Id: number }) =>
-          inUseIds.has(s.stream_branch_Id),
+        const filtered = masterRes.data.filter(
+          (s: { stream_branch_Id: number }) => inUseIds.has(s.stream_branch_Id),
         );
         setStreamOpts(
-          filtered.map((s: { stream_branch_Id: number; stream_branch_name: string }) => ({
-            value: s.stream_branch_Id,
-            label: s.stream_branch_name,
-          })),
+          filtered.map(
+            (s: { stream_branch_Id: number; stream_branch_name: string }) => ({
+              value: s.stream_branch_Id,
+              label: s.stream_branch_name,
+            }),
+          ),
         );
       } else {
         const res = await api.get(
           "/institute-qualification-mapping/streams-in-use",
         );
         setStreamOpts(
-          res.data.map((s: { stream_branch_Id: number; stream_branch_name: string }) => ({
-            value: s.stream_branch_Id,
-            label: s.stream_branch_name,
-          })),
+          res.data.map(
+            (s: { stream_branch_Id: number; stream_branch_name: string }) => ({
+              value: s.stream_branch_Id,
+              label: s.stream_branch_name,
+            }),
+          ),
         );
       }
     };
@@ -576,7 +609,12 @@ export default function IndustryLandingPage() {
       if (userLocation) {
         data = data.map((inst: InstituteRow) => {
           if (inst.latitude && inst.longitude) {
-            const air = calculateAirDistance(userLocation[0], userLocation[1], parseFloat(inst.latitude), parseFloat(inst.longitude));
+            const air = calculateAirDistance(
+              userLocation[0],
+              userLocation[1],
+              parseFloat(inst.latitude),
+              parseFloat(inst.longitude),
+            );
             return { ...inst, air_distance: air };
           }
           return inst;
@@ -599,20 +637,29 @@ export default function IndustryLandingPage() {
   useEffect(() => {
     if (!userLocation || institutes.length === 0) return;
     // eslint-disable-next-line
-    setInstitutes(prev => prev.map(inst => {
-      if (inst.latitude && inst.longitude) {
-        const air = calculateAirDistance(userLocation[0], userLocation[1], parseFloat(inst.latitude), parseFloat(inst.longitude));
-        return { ...inst, air_distance: air };
-      }
-      return inst;
-    }));
+    setInstitutes((prev) =>
+      prev.map((inst) => {
+        if (inst.latitude && inst.longitude) {
+          const air = calculateAirDistance(
+            userLocation[0],
+            userLocation[1],
+            parseFloat(inst.latitude),
+            parseFloat(inst.longitude),
+          );
+          return { ...inst, air_distance: air };
+        }
+        return inst;
+      }),
+    );
   }, [userLocation]);
 
   // Handle Geocoding Search (Nominatim)
   const handleGeoSearch = async () => {
     if (!searchGeoTerm.trim()) return;
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchGeoTerm)}`);
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchGeoTerm)}`,
+      );
       const data = await res.json();
       if (data && data.length > 0) {
         setUserLocation([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
@@ -621,8 +668,6 @@ export default function IndustryLandingPage() {
       console.warn("Geocoding failed", e);
     }
   };
-
-
 
   const activeFilterCount = Object.values(filters).filter(
     (v, i) =>
@@ -647,7 +692,10 @@ export default function IndustryLandingPage() {
 
   const PAGE_SIZE = 10;
   const totalPages = Math.ceil(filteredInstitutes.length / PAGE_SIZE);
-  const pagedInstitutes = filteredInstitutes.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pagedInstitutes = filteredInstitutes.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
 
   return (
     <>
@@ -661,22 +709,78 @@ export default function IndustryLandingPage() {
         {/* ══════════════════════════════════════════════════════
             TOP HEADER
         ══════════════════════════════════════════════════════ */}
-        <header className="w-full sticky top-0 z-50 shadow" style={{ backgroundColor: "rgb(15, 34, 87)" }}>
+        <header
+          className="w-full sticky top-0 z-50 shadow"
+          style={{ backgroundColor: "rgb(15, 34, 87)" }}
+        >
           <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8">
-            <a className="flex items-center gap-3" href="http://localhost:8080/">
-              <img src="/Gov Logo.png" alt="Govt of Punjab Logo" className="h-12 w-12 object-contain" />
+            <a
+              className="flex items-center gap-3"
+              href="http://localhost:8080/"
+            >
+              <img
+                src="/Gov Logo.png"
+                alt="Govt of Punjab Logo"
+                className="h-12 w-12 object-contain"
+              />
               <div>
-                <h1 className="text-sm font-bold leading-tight" style={{ color: "rgb(255, 255, 255)" }}>HUNAR PUNJAB</h1>
-                <p className="text-[10px] sm:text-xs" style={{ color: "rgba(255, 255, 255, 0.7)" }}>Hub for Upskilling, Networking and Access to Rozgar</p>
+                <h1
+                  className="text-sm font-bold leading-tight"
+                  style={{ color: "rgb(255, 255, 255)" }}
+                >
+                  HUNAR PUNJAB
+                </h1>
+                <p
+                  className="text-[10px] sm:text-xs"
+                  style={{ color: "rgba(255, 255, 255, 0.7)" }}
+                >
+                  Hub for Upskilling, Networking and Access to Rozgar
+                </p>
               </div>
             </a>
             <div className="hidden md:flex items-center gap-6">
-              <a className="text-sm font-medium transition-colors" style={{ color: "rgb(255, 255, 255)" }} href="http://localhost:8080/">Home</a>
-              <a href="http://localhost:8080/#institutes" className="text-sm font-medium transition-colors" style={{ color: "rgba(255, 255, 255, 0.8)" }}>Institutes</a>
-              <a href="http://localhost:8080/#students" className="text-sm font-medium transition-colors" style={{ color: "rgba(255, 255, 255, 0.8)" }}>Students</a>
-              <a href="http://localhost:8080/#industries" className="text-sm font-medium transition-colors" style={{ color: "rgba(255, 255, 255, 0.8)" }}>Industries</a>
-              <a className="text-sm font-medium transition-colors" style={{ color: "rgba(255, 255, 255, 0.8)" }} href="http://localhost:8080/placements">Placements</a>
-              <a className="text-sm font-medium transition-colors" style={{ color: "rgba(255, 255, 255, 0.8)" }} href="http://localhost:8080/contact">Contact</a>
+              <a
+                className="text-sm font-medium transition-colors"
+                style={{ color: "rgb(255, 255, 255)" }}
+                href="http://localhost:8080/"
+              >
+                Home
+              </a>
+              <a
+                href="http://localhost:8080/#institutes"
+                className="text-sm font-medium transition-colors"
+                style={{ color: "rgba(255, 255, 255, 0.8)" }}
+              >
+                Institutes
+              </a>
+              <a
+                href="http://localhost:8080/#students"
+                className="text-sm font-medium transition-colors"
+                style={{ color: "rgba(255, 255, 255, 0.8)" }}
+              >
+                Students
+              </a>
+              <a
+                href="http://localhost:8080/#industries"
+                className="text-sm font-medium transition-colors"
+                style={{ color: "rgba(255, 255, 255, 0.8)" }}
+              >
+                Industries
+              </a>
+              <a
+                className="text-sm font-medium transition-colors"
+                style={{ color: "rgba(255, 255, 255, 0.8)" }}
+                href="http://localhost:8080/placements"
+              >
+                Placements
+              </a>
+              <a
+                className="text-sm font-medium transition-colors"
+                style={{ color: "rgba(255, 255, 255, 0.8)" }}
+                href="http://localhost:8080/contact"
+              >
+                Contact
+              </a>
               <button
                 onClick={() => router.push("/login")}
                 className="btn btn-sm border-none shadow-md hover:-translate-y-0.5 transition-transform px-5 rounded"
@@ -685,8 +789,22 @@ export default function IndustryLandingPage() {
                 Login
               </button>
             </div>
-            <button className="md:hidden" style={{ color: "rgb(255, 255, 255)" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-menu">
+            <button
+              className="md:hidden"
+              style={{ color: "rgb(255, 255, 255)" }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-menu"
+              >
                 <line x1="4" x2="20" y1="12" y2="12"></line>
                 <line x1="4" x2="20" y1="6" y2="6"></line>
                 <line x1="4" x2="20" y1="18" y2="18"></line>
@@ -755,15 +873,15 @@ export default function IndustryLandingPage() {
                   style={
                     filtersOpen
                       ? {
-                        background: P_ALPHA(0.09),
-                        color: P,
-                        border: `1px solid ${P_ALPHA(0.25)}`,
-                      }
+                          background: P_ALPHA(0.09),
+                          color: P,
+                          border: `1px solid ${P_ALPHA(0.25)}`,
+                        }
                       : {
-                        background: "hsl(var(--bc) / 0.05)",
-                        color: "hsl(var(--bc) / 0.45)",
-                        border: "1px solid hsl(var(--bc) / 0.09)",
-                      }
+                          background: "hsl(var(--bc) / 0.05)",
+                          color: "hsl(var(--bc) / 0.45)",
+                          border: "1px solid hsl(var(--bc) / 0.09)",
+                        }
                   }
                 >
                   <Filter size={11} />
@@ -858,24 +976,23 @@ export default function IndustryLandingPage() {
                 </div>
               </div>
 
-
-
               {/* Loading */}
               {searched && loading && (
-                <div
-                  className="px-6 sm:px-8 pb-10 pt-4 flex items-center justify-center gap-2.5"
-                  style={{
-                    borderTop: "1px solid hsl(var(--bc) / 0.06)",
-                    color: "hsl(var(--bc) / 0.33)",
-                  }}
-                >
-                  <Loader2
-                    size={17}
-                    className="animate-spin"
-                    style={{ color: P }}
-                  />
-                  <span className="text-sm">Finding matching institutes…</span>
-                </div>
+                // <div
+                //   className="px-6 sm:px-8 pb-10 pt-4 flex items-center justify-center gap-2.5"
+                //   style={{
+                //     borderTop: "1px solid hsl(var(--bc) / 0.06)",
+                //     color: "hsl(var(--bc) / 0.33)",
+                //   }}
+                // >
+                //   <Loader2
+                //     size={17}
+                //     className="animate-spin"
+                //     style={{ color: P }}
+                //   />
+                //   <span className="text-sm">Finding matching institutes…</span>
+                // </div>
+                <SpinnerFallback />
               )}
 
               {/* Results */}
@@ -906,14 +1023,41 @@ export default function IndustryLandingPage() {
                         value={sort}
                         onChange={(e) => {
                           setSort(
-                            e.target.value as "name" | "name-rev" | "student_count",
+                            e.target.value as
+                              | "name"
+                              | "name-rev"
+                              | "student_count",
                           );
                           setCurrentPage(1);
                         }}
                       >
-                        <option value="student_count" style={{ color: "var(--fallback-bc,oklch(var(--bc)/1))", background: "var(--fallback-b1,oklch(var(--b1)/1))" }}>Students</option>
-                        <option value="name" style={{ color: "var(--fallback-bc,oklch(var(--bc)/1))", background: "var(--fallback-b1,oklch(var(--b1)/1))" }}>A–Z</option>
-                        <option value="name-rev" style={{ color: "var(--fallback-bc,oklch(var(--bc)/1))", background: "var(--fallback-b1,oklch(var(--b1)/1))" }}>Z–A</option>
+                        <option
+                          value="student_count"
+                          style={{
+                            color: "var(--fallback-bc,oklch(var(--bc)/1))",
+                            background: "var(--fallback-b1,oklch(var(--b1)/1))",
+                          }}
+                        >
+                          Students
+                        </option>
+                        <option
+                          value="name"
+                          style={{
+                            color: "var(--fallback-bc,oklch(var(--bc)/1))",
+                            background: "var(--fallback-b1,oklch(var(--b1)/1))",
+                          }}
+                        >
+                          A–Z
+                        </option>
+                        <option
+                          value="name-rev"
+                          style={{
+                            color: "var(--fallback-bc,oklch(var(--bc)/1))",
+                            background: "var(--fallback-b1,oklch(var(--b1)/1))",
+                          }}
+                        >
+                          Z–A
+                        </option>
                       </select>
                     </div>
                   </div>
@@ -967,7 +1111,10 @@ export default function IndustryLandingPage() {
                         </thead>
                         <tbody className="divide-y divide-base-200 dark:divide-base-800">
                           {pagedInstitutes.map((inst, idx) => (
-                            <tr key={inst.institute_id} className="transition-colors duration-150 hover:bg-base-200/50 dark:hover:bg-base-800/50">
+                            <tr
+                              key={inst.institute_id}
+                              className="transition-colors duration-150 hover:bg-base-200/50 dark:hover:bg-base-800/50"
+                            >
                               <td className="px-4 py-3 align-top">
                                 <span className="text-sm font-semibold text-base-content block">
                                   {inst.institute_name}
@@ -997,12 +1144,12 @@ export default function IndustryLandingPage() {
                               <td className="px-4 py-3 align-top">
                                 <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-secondary/10 text-secondary text-xs font-bold">
                                   <Users size={12} />
-                                  {inst.final_year_student_count?.toLocaleString() || '0'}
+                                  {inst.final_year_student_count?.toLocaleString() ||
+                                    "0"}
                                 </span>
                               </td>
                               <td className="px-4 py-3 align-top">
                                 <div className="flex items-center gap-2">
-
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -1034,20 +1181,38 @@ export default function IndustryLandingPage() {
                       {/* Mobile Cards */}
                       <div className="md:hidden flex flex-col divide-y divide-base-200 dark:divide-base-800">
                         {pagedInstitutes.map((inst, idx) => (
-                          <div key={inst.institute_id} className="p-4 bg-base-100 flex flex-col gap-3 ilp-card-anim" style={{ animationDelay: `${idx * 35}ms` }}>
+                          <div
+                            key={inst.institute_id}
+                            className="p-4 bg-base-100 flex flex-col gap-3 ilp-card-anim"
+                            style={{ animationDelay: `${idx * 35}ms` }}
+                          >
                             <div>
                               <h3 className="text-sm font-bold text-base-content leading-snug mb-1.5">
                                 {inst.institute_name}
                               </h3>
                               <div className="flex flex-wrap items-center gap-3 text-xs text-base-content/60">
-                                <span className="flex items-center gap-1"><MapPin size={11} /> {inst.district || "—"}</span>
-                                <span className="flex items-center gap-1 font-semibold text-primary"><Users size={11} /> {inst.student_count.toLocaleString()} Total Enrolled</span>
-                                <span className="flex items-center gap-1 font-semibold text-secondary"><Users size={11} /> {inst.final_year_student_count?.toLocaleString() || '0'} Final Year</span>
+                                <span className="flex items-center gap-1">
+                                  <MapPin size={11} /> {inst.district || "—"}
+                                </span>
+                                <span className="flex items-center gap-1 font-semibold text-primary">
+                                  <Users size={11} />{" "}
+                                  {inst.student_count.toLocaleString()} Total
+                                  Enrolled
+                                </span>
+                                <span className="flex items-center gap-1 font-semibold text-secondary">
+                                  <Users size={11} />{" "}
+                                  {inst.final_year_student_count?.toLocaleString() ||
+                                    "0"}{" "}
+                                  Final Year
+                                </span>
                               </div>
                             </div>
                             <div className="flex items-center gap-2 mt-1">
                               <button
-                                onClick={() => { setCurrentInstitute(inst); setViewCourses(true); }}
+                                onClick={() => {
+                                  setCurrentInstitute(inst);
+                                  setViewCourses(true);
+                                }}
                                 className="flex-[1.5] py-1.5 rounded bg-base-200 border border-base-300 flex items-center justify-center text-xs font-bold gap-1.5 text-base-content/80 hover:border-primary hover:text-primary transition-all"
                               >
                                 <BookOpen size={14} /> View Courses
@@ -1076,7 +1241,7 @@ export default function IndustryLandingPage() {
                       {totalPages > 1 && (
                         <div className="flex items-center justify-between bg-base-100 dark:bg-base-900 border-t border-base-300 dark:border-base-700 px-4 py-3">
                           <button
-                            onClick={() => setCurrentPage(prev => prev - 1)}
+                            onClick={() => setCurrentPage((prev) => prev - 1)}
                             disabled={currentPage === 1}
                             className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
                           >
@@ -1092,7 +1257,7 @@ export default function IndustryLandingPage() {
                           </span>
 
                           <button
-                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            onClick={() => setCurrentPage((prev) => prev + 1)}
                             disabled={currentPage === totalPages}
                             className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
                           >
@@ -1115,12 +1280,15 @@ export default function IndustryLandingPage() {
                 </div>
               )}
               {/* Interactive Map Section (Moved to Bottom) */}
-              <div className="flex flex-col gap-3 p-5 sm:p-8"
+              <div
+                className="flex flex-col gap-3 p-5 sm:p-8"
                 style={{
                   borderTop: "1px solid hsl(var(--bc) / 0.08)",
-                }}>
+                }}
+              >
                 <h3 className="font-semibold text-base-content flex items-center gap-2">
-                  <MapPin size={16} className="text-secondary" /> Mark Your Location for Distances
+                  <MapPin size={16} className="text-secondary" /> Mark Your
+                  Location for Distances
                 </h3>
                 <div className="flex flex-col sm:flex-row gap-3 items-end">
                   <div className="flex-1 w-full relative">
@@ -1131,15 +1299,27 @@ export default function IndustryLandingPage() {
                       style={{ background: "hsl(var(--b1))" }}
                       value={searchGeoTerm}
                       onChange={(e) => setSearchGeoTerm(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleGeoSearch()}
+                      onKeyDown={(e) => e.key === "Enter" && handleGeoSearch()}
                     />
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40 pointer-events-none" />
+                    <Search
+                      size={14}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40 pointer-events-none"
+                    />
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={handleGeoSearch} className="btn btn-sm btn-secondary shadow-sm">
+                    <button
+                      onClick={handleGeoSearch}
+                      className="btn btn-sm btn-secondary shadow-sm"
+                    >
                       Search Map
                     </button>
-                    <button onClick={() => { setUserLocation(null); setSearchGeoTerm(""); }} className="btn btn-sm btn-outline shadow-sm text-base-content/60 border-base-300 hover:bg-base-100 bg-transparent">
+                    <button
+                      onClick={() => {
+                        setUserLocation(null);
+                        setSearchGeoTerm("");
+                      }}
+                      className="btn btn-sm btn-outline shadow-sm text-base-content/60 border-base-300 hover:bg-base-100 bg-transparent"
+                    >
                       Reset
                     </button>
                   </div>
@@ -1147,19 +1327,28 @@ export default function IndustryLandingPage() {
 
                 {/* Map Container */}
                 <div className="w-full h-[300px] sm:h-[400px] mt-2 rounded-xl overflow-hidden border border-base-200 shadow-inner z-0 relative">
-                  <IndustryMap userLocation={userLocation} onLocationSelect={setUserLocation} />
+                  <IndustryMap
+                    userLocation={userLocation}
+                    onLocationSelect={setUserLocation}
+                  />
                 </div>
 
                 {!userLocation ? (
-                  <p className="text-xs text-base-content/50 italic text-center">Search for your city or click on the map to place a pin and calculate distances.</p>
+                  <p className="text-xs text-base-content/50 italic text-center">
+                    Search for your city or click on the map to place a pin and
+                    calculate distances.
+                  </p>
                 ) : (
                   <div className="flex flex-col gap-0.5 items-center">
-                    <p className="text-sm font-semibold text-secondary text-center">Location marked! See calculated distances.</p>
-                    <p className="text-xs text-secondary/70">Air distance (Haversine) and Path distance (OSRM Route)</p>
+                    <p className="text-sm font-semibold text-secondary text-center">
+                      Location marked! See calculated distances.
+                    </p>
+                    <p className="text-xs text-secondary/70">
+                      Air distance (Haversine) and Path distance (OSRM Route)
+                    </p>
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* ── CTA banner below card ── */}
@@ -1197,60 +1386,229 @@ export default function IndustryLandingPage() {
             </div>
           </div>
         </div>
-
       </div>
       {/* ══════════════════════════════════════════════════════
             FOOTER
         ══════════════════════════════════════════════════════ */}
-      <footer className="mt-auto" style={{ backgroundColor: "rgb(23, 35, 69)", color: "rgb(209, 214, 224)" }}>
+      <footer
+        className="mt-auto"
+        style={{
+          backgroundColor: "rgb(23, 35, 69)",
+          color: "rgb(209, 214, 224)",
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="font-bold text-sm mb-1" style={{ color: "rgb(255, 255, 255)" }}>Dept. of Technical Education &amp; Industrial Training</h3>
-              <p className="text-xs mb-2" style={{ color: "rgba(209, 214, 224, 0.6)" }}>Government of Punjab</p>
-              <p className="text-xs leading-relaxed" style={{ color: "rgba(209, 214, 224, 0.8)" }}>Empowering youth through technical education and creating a skilled workforce for the future of Punjab.</p>
+              <h3
+                className="font-bold text-sm mb-1"
+                style={{ color: "rgb(255, 255, 255)" }}
+              >
+                Dept. of Technical Education &amp; Industrial Training
+              </h3>
+              <p
+                className="text-xs mb-2"
+                style={{ color: "rgba(209, 214, 224, 0.6)" }}
+              >
+                Government of Punjab
+              </p>
+              <p
+                className="text-xs leading-relaxed"
+                style={{ color: "rgba(209, 214, 224, 0.8)" }}
+              >
+                Empowering youth through technical education and creating a
+                skilled workforce for the future of Punjab.
+              </p>
             </div>
             <div>
-              <h3 className="font-bold text-sm mb-3" style={{ color: "rgb(255, 255, 255)" }}>Important Links</h3>
+              <h3
+                className="font-bold text-sm mb-3"
+                style={{ color: "rgb(255, 255, 255)" }}
+              >
+                Important Links
+              </h3>
               <ul className="grid grid-cols-2 gap-y-2 gap-x-6">
-                <li><a href="http://localhost:8080/" className="text-xs hover:text-white transition-colors flex items-center gap-2" style={{ color: "rgba(209, 214, 224, 0.8)" }}><span className="text-[10px]" style={{ color: "rgba(209, 214, 224, 0.8)" }}>▶</span>About Department</a></li>
-                <li><a href="http://localhost:8080/#institutes" className="text-xs hover:text-white transition-colors flex items-center gap-2" style={{ color: "rgba(209, 214, 224, 0.8)" }}><span className="text-[10px]" style={{ color: "rgba(209, 214, 224, 0.8)" }}>▶</span>Institutes</a></li>
-                <li><a href="http://localhost:8080/#students" className="text-xs hover:text-white transition-colors flex items-center gap-2" style={{ color: "rgba(209, 214, 224, 0.8)" }}><span className="text-[10px]" style={{ color: "rgba(209, 214, 224, 0.8)" }}>▶</span>Student Portal</a></li>
-                <li><a href="http://localhost:8080/#industries" className="text-xs hover:text-white transition-colors flex items-center gap-2" style={{ color: "rgba(209, 214, 224, 0.8)" }}><span className="text-[10px]" style={{ color: "rgba(209, 214, 224, 0.8)" }}>▶</span>Industry Connect</a></li>
-                <li><a href="http://localhost:8080/placements" className="text-xs hover:text-white transition-colors flex items-center gap-2" style={{ color: "rgba(209, 214, 224, 0.8)" }}><span className="text-[10px]" style={{ color: "rgba(209, 214, 224, 0.8)" }}>▶</span>Placements</a></li>
-                <li><a href="http://localhost:8080/contact" className="text-xs hover:text-white transition-colors flex items-center gap-2" style={{ color: "rgba(209, 214, 224, 0.8)" }}><span className="text-[10px]" style={{ color: "rgba(209, 214, 224, 0.8)" }}>▶</span>Contact Us</a></li>
+                <li>
+                  <a
+                    href="http://localhost:8080/"
+                    className="text-xs hover:text-white transition-colors flex items-center gap-2"
+                    style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                  >
+                    <span
+                      className="text-[10px]"
+                      style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                    >
+                      ▶
+                    </span>
+                    About Department
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="http://localhost:8080/#institutes"
+                    className="text-xs hover:text-white transition-colors flex items-center gap-2"
+                    style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                  >
+                    <span
+                      className="text-[10px]"
+                      style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                    >
+                      ▶
+                    </span>
+                    Institutes
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="http://localhost:8080/#students"
+                    className="text-xs hover:text-white transition-colors flex items-center gap-2"
+                    style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                  >
+                    <span
+                      className="text-[10px]"
+                      style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                    >
+                      ▶
+                    </span>
+                    Student Portal
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="http://localhost:8080/#industries"
+                    className="text-xs hover:text-white transition-colors flex items-center gap-2"
+                    style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                  >
+                    <span
+                      className="text-[10px]"
+                      style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                    >
+                      ▶
+                    </span>
+                    Industry Connect
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="http://localhost:8080/placements"
+                    className="text-xs hover:text-white transition-colors flex items-center gap-2"
+                    style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                  >
+                    <span
+                      className="text-[10px]"
+                      style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                    >
+                      ▶
+                    </span>
+                    Placements
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="http://localhost:8080/contact"
+                    className="text-xs hover:text-white transition-colors flex items-center gap-2"
+                    style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                  >
+                    <span
+                      className="text-[10px]"
+                      style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                    >
+                      ▶
+                    </span>
+                    Contact Us
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-bold text-sm mb-3" style={{ color: "rgb(255, 255, 255)" }}>Contact Information</h3>
+              <h3
+                className="font-bold text-sm mb-3"
+                style={{ color: "rgb(255, 255, 255)" }}
+              >
+                Contact Information
+              </h3>
               <div className="space-y-2">
                 <div className="flex items-start gap-2 text-xs">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-map-pin w-4 h-4 shrink-0 mt-0.5" style={{ color: "rgba(209, 214, 224, 0.8)" }}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-map-pin w-4 h-4 shrink-0 mt-0.5"
+                    style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                  >
                     <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path>
                     <circle cx="12" cy="10" r="3"></circle>
                   </svg>
-                  <span style={{ color: "rgba(209, 214, 224, 0.8)" }}>Department of Technical Education &amp; Industrial Training<br />Sector 36-A, Chandigarh, Punjab</span>
+                  <span style={{ color: "rgba(209, 214, 224, 0.8)" }}>
+                    Department of Technical Education &amp; Industrial Training
+                    <br />
+                    Sector 36-A, Chandigarh, Punjab
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mail w-4 h-4 shrink-0" style={{ color: "rgba(209, 214, 224, 0.8)" }}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-mail w-4 h-4 shrink-0"
+                    style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                  >
                     <rect width="20" height="16" x="2" y="4" rx="2"></rect>
                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
                   </svg>
-                  <span style={{ color: "rgba(209, 214, 224, 0.8)" }}>info.dteit@punjab.gov.in</span>
+                  <span style={{ color: "rgba(209, 214, 224, 0.8)" }}>
+                    info.dteit@punjab.gov.in
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-clock w-4 h-4 shrink-0" style={{ color: "rgba(209, 214, 224, 0.8)" }}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-clock w-4 h-4 shrink-0"
+                    style={{ color: "rgba(209, 214, 224, 0.8)" }}
+                  >
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                   </svg>
-                  <span style={{ color: "rgba(209, 214, 224, 0.8)" }}>Monday &ndash; Friday <br />9:00 AM to 5:00 PM</span>
+                  <span style={{ color: "rgba(209, 214, 224, 0.8)" }}>
+                    Monday &ndash; Friday <br />
+                    9:00 AM to 5:00 PM
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div className="border-t py-3" style={{ borderColor: "rgba(255, 255, 255, 0.1)" }}>
-          <p className="text-center text-xs" style={{ color: "rgba(209, 214, 224, 0.5)" }}>&copy; 2026 Government of Punjab | All Rights Reserved | Department of Technical Education &amp; Industrial Training</p>
+        <div
+          className="border-t py-3"
+          style={{ borderColor: "rgba(255, 255, 255, 0.1)" }}
+        >
+          <p
+            className="text-center text-xs"
+            style={{ color: "rgba(209, 214, 224, 0.5)" }}
+          >
+            &copy; 2026 Government of Punjab | All Rights Reserved | Department
+            of Technical Education &amp; Industrial Training
+          </p>
         </div>
       </footer>
       <InstituteViewModal

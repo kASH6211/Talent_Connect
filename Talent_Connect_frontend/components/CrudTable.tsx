@@ -15,6 +15,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import clsx from "clsx";
+import SpinnerFallback from "./Spinner";
 
 // ── Detect mobile reliably (SSR-safe)
 function useIsMobile(): boolean {
@@ -185,12 +186,13 @@ export default function CrudTable({
     <div className="space-y-6">
       {/* Background-refetch indicator */}
       {isFetching && !isLoading && (
-        <div className="h-0.5 w-full bg-base-300 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-primary animate-pulse"
-            style={{ width: "indeterminate" }}
-          />
-        </div>
+        // <div className="h-0.5 w-full bg-base-300 rounded-full overflow-hidden">
+        //   <div
+        //     className="h-full bg-primary animate-pulse"
+        //     style={{ width: "indeterminate" }}
+        //   />
+        // </div>
+        <SpinnerFallback />
       )}
 
       {/* Header */}
@@ -244,10 +246,11 @@ export default function CrudTable({
       {/* Main Content */}
       <div className="bg-base-100 border border-base-200/70 rounded-2xl shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="flex items-center justify-center py-24 text-base-content/40 gap-3">
-            <span className="loading loading-spinner loading-lg" />
-            <span className="text-sm font-medium">Loading records...</span>
-          </div>
+          // <div className="flex items-center justify-center py-24 text-base-content/40 gap-3">
+          //   <span className="loading loading-spinner loading-lg" />
+          //   <span className="text-sm font-medium">Loading records...</span>
+          // </div>
+          <SpinnerFallback />
         ) : isError ? (
           <div className="flex flex-col items-center justify-center py-20 text-error gap-3">
             <AlertCircle size={28} />
