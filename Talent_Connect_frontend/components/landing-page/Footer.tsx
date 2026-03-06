@@ -1,4 +1,12 @@
 import { MapPin, Mail, Clock } from "lucide-react";
+const importantLinks = [
+  { title: "About Department", link: "#" },
+  { title: "Institutes", link: "#" },
+  { title: "Student Portal", link: "#" },
+  { title: "Industry Connect", link: "#" },
+  { title: "Placements", link: "#" },
+  { title: "Contact Us", link: "/contact" },
+];
 
 const Footer = () => {
   return (
@@ -25,21 +33,14 @@ const Footer = () => {
             <h3 className="font-bold text-sm mb-3">Important Links</h3>
 
             <ul className="grid grid-cols-2 gap-y-2 gap-x-6">
-              {[
-                "About Department",
-                "Institutes",
-                "Student Portal",
-                "Industry Connect",
-                "Placements",
-                "Contact Us",
-              ].map((link) => (
-                <li key={link}>
+              {importantLinks?.map((link) => (
+                <li key={link.title}>
                   <a
-                    href="#"
+                    href={link.link}
                     className="text-primary-content/80 text-xs hover:text-primary-content transition-colors flex items-center gap-2"
                   >
                     <span className="text-secondary text-[10px]">▶</span>
-                    {link}
+                    {link.title}
                   </a>
                 </li>
               ))}
