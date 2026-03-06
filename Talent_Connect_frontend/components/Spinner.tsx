@@ -1,7 +1,7 @@
 "use client";
 
 export default function SpinnerFallback({
-  title = "HUNAR Punjab",
+  title = "HUNAR PUNJAB",
 }: {
   title?: string;
 }) {
@@ -57,7 +57,7 @@ export default function SpinnerFallback({
         }
       `}</style>
 
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-base-100/95 backdrop-blur-md gap-10 px-4">
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-base-100/60 backdrop-blur-sm gap-10 px-4">
         {/* Brand / Title with subtle glow */}
         <div className="relative">
           <h1
