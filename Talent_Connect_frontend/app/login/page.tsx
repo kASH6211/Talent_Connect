@@ -7,7 +7,7 @@ import api from "@/lib/api";
 import { ThemeToggle } from "@/components2/ThemeToggle";
 import { useAuth } from "@/lib/AuthProvider";
 import { getDashboardRoute } from "@/lib/helper";
-import { setCurrentRole } from "@/store/login";
+import { setCurrentRole, updateLoginUi } from "@/store/login";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
 
@@ -42,6 +42,7 @@ export default function LoginPage() {
   useEffect(() => {
     return () => {
       dispatch(setCurrentRole(""));
+      dispatch(updateLoginUi({ roleSelectModal: { open: false } }));
     };
   });
 

@@ -1,24 +1,26 @@
 // "use client";
-// import { closeConfirm } from "@/store/common/confirmSlice";
-// import { RootState } from "@/store/store";
-// import React, { useEffect } from "react";
-// import { useSelector, useDispatch } from "react-redux";
 
-// const GlobalConfirmModal = () => {
-//   const dispatch = useDispatch();
+// import React, { useEffect, useCallback } from "react";
+// import { useSelector, useDispatch } from "react-redux";
+// import { RootState, AppDispatch } from "@/store/store";
+// import { closeConfirm } from "@storek";
+
+// export default function GlobalConfirmModal() {
+//   const dispatch = useDispatch<AppDispatch>();
+
 //   const { isOpen, message, onConfirm, onCancel } = useSelector(
-//     (state: RootState) => state.confirm,
+//     (state: RootState) => state.confirm
 //   );
 
-//   const handleConfirm = () => {
+//   const handleConfirm = useCallback(() => {
 //     onConfirm?.();
 //     dispatch(closeConfirm());
-//   };
+//   }, [dispatch, onConfirm]);
 
-//   const handleCancel = () => {
+//   const handleCancel = useCallback(() => {
 //     onCancel?.();
 //     dispatch(closeConfirm());
-//   };
+//   }, [dispatch, onCancel]);
 
 //   useEffect(() => {
 //     const handleEscape = (e: KeyboardEvent) => {
@@ -26,10 +28,12 @@
 //         handleCancel();
 //       }
 //     };
+
 //     if (isOpen) {
 //       document.body.style.overflow = "hidden";
 //       document.addEventListener("keydown", handleEscape);
 //     }
+
 //     return () => {
 //       document.body.style.overflow = "unset";
 //       document.removeEventListener("keydown", handleEscape);
@@ -39,30 +43,39 @@
 //   if (!isOpen) return null;
 
 //   return (
-//     <>
-//       <input
-//         type="checkbox"
-//         className="modal-toggle"
-//         checked={isOpen}
-//         readOnly
-//       />
-//       <div className="modal modal-open">
-//         <div className="modal-box">
-//           <h3 className="font-bold text-lg">Delete Confirmation</h3>
-//           <p className="py-4">{message}</p>
-//           <div className="modal-action">
-//             <button className="btn" onClick={handleCancel}>
-//               Cancel
-//             </button>
-//             <button className="btn btn-primary" onClick={handleConfirm}>
-//               Yes, Delete
-//             </button>
-//           </div>
-//         </div>
-//         <div className="modal-backdrop" onClick={handleCancel} />
-//       </div>
-//     </>
-//   );
-// };
+//     <div className="modal modal-open">
+//       <div className="modal-box">
 
-// export default GlobalConfirmModal;
+//         {/* Title */}
+//         <h3 className="font-bold text-lg text-base-content">
+//           Delete Confirmation
+//         </h3>
+
+//         {/* Message */}
+//         <p className="py-4 text-base-content/70">
+//           {message || "Are you sure you want to delete this record?"}
+//         </p>
+
+//         {/* Actions */}
+//         <div className="modal-action">
+//           <button
+//             className="btn btn-outline"
+//             onClick={handleCancel}
+//           >
+//             Cancel
+//           </button>
+
+//           <button
+//             className="btn btn-error"
+//             onClick={handleConfirm}
+//           >
+//             Yes, Delete
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Backdrop */}
+//       <div className="modal-backdrop" onClick={handleCancel}></div>
+//     </div>
+//   );
+// }

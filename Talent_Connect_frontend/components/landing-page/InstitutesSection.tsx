@@ -7,6 +7,7 @@ import {
   HeartPulse,
   Award,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const institutes = [
   {
@@ -52,6 +53,8 @@ const institutes = [
 ];
 
 const InstitutesSection = () => {
+  const router = useRouter();
+
   return (
     <section className="py-12 bg-background" id="institutes">
       <div className="container mx-auto px-4 text-center">
@@ -69,14 +72,15 @@ const InstitutesSection = () => {
                 onClick={
                   inst.name === "ITI" || inst.name === "Polytechnic"
                     ? () => {
-                      window.location.href = `/search-institutes?type=${inst.name}`;
-                    }
+                        router.push(`/search-institutes?type=${inst.name}`);
+                      }
                     : undefined
                 }
-                className={`group border border-border rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-lg transition ${inst.name === "ITI" || inst.name === "Polytechnic"
-                  ? "cursor-pointer"
-                  : ""
-                  }`}
+                className={`group border border-border rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-lg transition ${
+                  inst.name === "ITI" || inst.name === "Polytechnic"
+                    ? "cursor-pointer"
+                    : ""
+                }`}
               >
                 {/* Top Section */}
                 <div className="p-6">

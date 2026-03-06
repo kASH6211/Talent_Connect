@@ -5,6 +5,7 @@ import Sidebar from "./Sidebar";
 import { usePathname } from "next/navigation";
 import AuthWrapper from "@/lib/AuthWrapper";
 import { Menu } from "lucide-react";
+import GlobalConfirmModal from "./common/ConfirmDialogHOC";
 
 export default function AppShell({
   children,
@@ -37,7 +38,10 @@ export default function AppShell({
 
   return (
     <AuthWrapper>
-      {allowedRoutes.includes(pathname) || isLoginPage || home || searchInstitutes ? (
+      {allowedRoutes.includes(pathname) ||
+      isLoginPage ||
+      home ||
+      searchInstitutes ? (
         <>{children}</>
       ) : (
         <div className="flex h-screen w-screen overflow-hidden">
@@ -86,6 +90,7 @@ export default function AppShell({
           >
             {children}
           </main>
+          <GlobalConfirmModal />
         </div>
       )}
     </AuthWrapper>

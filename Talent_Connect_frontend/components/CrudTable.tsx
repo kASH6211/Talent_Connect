@@ -15,6 +15,10 @@ import {
   ChevronUp,
 } from "lucide-react";
 import clsx from "clsx";
+import SpinnerFallback from "./Spinner";
+import { openConfirm } from "@/store/common/confirmSlice";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
 
 // ── Detect mobile reliably (SSR-safe)
 function useIsMobile(): boolean {
@@ -70,6 +74,7 @@ export default function CrudTable({
   const [page, setPage] = useState(1);
   const limit = 10;
   const isMobile = useIsMobile();
+  const dispatch = useDispatch<AppDispatch>();
 
   // Debounce search input (300ms) and reset page on new search
   useEffect(() => {
@@ -195,16 +200,28 @@ export default function CrudTable({
     );
   };
 
+  const handleDelete = (row: any) => {
+    dispatch(
+      openConfirm({
+        message: "Are you sure you want to delete this record?",
+        onConfirm: () => {
+          deleteMutation.mutate(row[primaryKey]);
+        },
+      }),
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Background-refetch indicator */}
       {isFetching && !isLoading && (
-        <div className="h-0.5 w-full bg-base-300 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-primary animate-pulse"
-            style={{ width: "indeterminate" }}
-          />
-        </div>
+        // <div className="h-0.5 w-full bg-base-300 rounded-full overflow-hidden">
+        //   <div
+        //     className="h-full bg-primary animate-pulse"
+        //     style={{ width: "indeterminate" }}
+        //   />
+        // </div>
+        <SpinnerFallback />
       )}
 
       {/* Header */}
@@ -258,10 +275,11 @@ export default function CrudTable({
       {/* Main Content */}
       <div className="bg-base-100 border border-base-200/70 rounded-2xl shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="flex items-center justify-center py-24 text-base-content/40 gap-3">
-            <span className="loading loading-spinner loading-lg" />
-            <span className="text-sm font-medium">Loading records...</span>
-          </div>
+          // <div className="flex items-center justify-center py-24 text-base-content/40 gap-3">
+          //   <span className="loading loading-spinner loading-lg" />
+          //   <span className="text-sm font-medium">Loading records...</span>
+          // </div>
+          <SpinnerFallback />
         ) : isError ? (
           <div className="flex flex-col items-center justify-center py-20 text-error gap-3">
             <AlertCircle size={28} />
@@ -364,9 +382,7 @@ export default function CrudTable({
 
                               <button
                                 onClick={() => {
-                                  if (confirm("Deactivate this record?")) {
-                                    deleteMutation.mutate(row[primaryKey]);
-                                  }
+                                  handleDelete(row);
                                 }}
                                 className={clsx(
                                   "relative inline-flex items-center justify-center w-8 h-8 rounded-lg",

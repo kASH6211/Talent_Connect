@@ -4,11 +4,16 @@ import IndustryDashboard from "@/components/dashboards/IndustryDashboard";
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { useAuth } from "@/lib/AuthProvider";
+import SpinnerFallback from "@/components/Spinner";
 
 const page = () => {
   const { user, role, loading } = useAuth();
   const userName = user?.username ?? "Industry";
   const [industryName, setIndustryName] = useState("Leading Tech Corp");
+
+  if (loading) {
+    return <SpinnerFallback />;
+  }
 
   useEffect(() => {
     if (user?.industry_id) {

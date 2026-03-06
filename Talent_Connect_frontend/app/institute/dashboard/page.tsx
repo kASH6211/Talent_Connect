@@ -4,11 +4,16 @@ import InstituteDashboard from "@/components/dashboards/InstituteDashboard";
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { useAuth } from "@/lib/AuthProvider";
+import SpinnerFallback from "@/components/Spinner";
 
 const page = () => {
   const { user, role, loading } = useAuth();
   const userName = user?.username ?? "Institute";
   const [instituteName, setInstituteName] = useState("Top University");
+
+  if (loading) {
+    return <SpinnerFallback />;
+  }
 
   useEffect(() => {
     if (user?.institute_id) {
