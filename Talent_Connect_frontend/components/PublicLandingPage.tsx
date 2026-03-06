@@ -173,71 +173,113 @@ export default function PublicLandingPage() {
   const [showLogin, setShowLogin] = useState(false);
   const [page, setPage] = useState(1);
 
-  const [stateOpts, setStateOpts] = useState<Option2[]>([]);
-  const [districtOpts, setDistrictOpts] = useState<Option2[]>([]);
-  const [typeOpts, setTypeOpts] = useState<Option2[]>([]);
-  const [ownershipOpts, setOwnershipOpts] = useState<Option2[]>([]);
-  const [qualOpts, setQualOpts] = useState<Option2[]>([]);
-  const [streamOpts, setStreamOpts] = useState<Option2[]>([]);
+  const [districtOpts, setDistrictOpts] = useState<Option[]>([]);
+  const [typeOpts, setTypeOpts] = useState<Option[]>([]);
+  const [ownershipOpts, setOwnershipOpts] = useState<Option[]>([]);
+  const [qualOpts, setQualOpts] = useState<Option[]>([]);
+  const [streamOpts, setStreamOpts] = useState<Option[]>([]);
 
-  const [loadingFilters, setLoadingFilters] = useState<Record<string, boolean>>({});
+  // Map state
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(
+    null,
+  );
+  const [searchGeoTerm, setSearchGeoTerm] = useState("");
+  const [punjabGeoJson, setPunjabGeoJson] = useState<any>(null);
+  const [mapSearchLoading, setMapSearchLoading] = useState(false);
+  const [mapSearchError, setMapSearchError] = useState("");
+  const [mapSearchSuccess, setMapSearchSuccess] = useState(false);
 
-  // Load static filter options on mount
+  const totalPages = Math.ceil(institutes.length / PAGE_SIZE);
+  const currentPageItems = institutes.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE,
+  );
+
+  // Load Punjab GeoJSON
   useEffect(() => {
-    setLoadingFilters(prev => ({ ...prev, states: true, ownership: true, qual: true, type: true }));
+    fetch("/punjab_state.geojson")
+      .then((res) => res.json())
+      .then((data) => setPunjabGeoJson(data))
+      .catch((err) => console.error("Error loading Punjab GeoJSON:", err));
+  }, []);
 
-    pub.get('/state').then(r => setStateOpts(r.data.map((s: any) => ({ value: s.lgdstateid ?? s.stateid, label: s.statename })))).finally(() => setLoadingFilters(prev => ({ ...prev, states: false })));
-    pub.get('/institute-ownership-type').then(r => setOwnershipOpts(r.data.map((o: any) => ({ value: o.institute_ownership_type_id, label: o.institute_type })))).finally(() => setLoadingFilters(prev => ({ ...prev, ownership: false })));
-    pub.get('/qualification').then(r => setQualOpts(r.data.map((q: any) => ({ value: q.qualificationid, label: q.qualification })))).finally(() => setLoadingFilters(prev => ({ ...prev, qual: false })));
+  // Load filter options
+  useEffect(() => {
+    const loadFilters = async () => {
+      try {
+        const [types, ownerships, quals, streams] = await Promise.all([
+          pub.get("/institute-type"),
+          pub.get("/institute-ownership-type"),
+          pub.get("/qualification"),
+          pub.get("/institute-qualification-mapping/streams-in-use"),
+        ]);
 
-    setLoadingFilters(prev => ({ ...prev, streams: true }));
-    pub.get('/institute-qualification-mapping/streams-in-use').then(r =>
-      setStreamOpts(r.data.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })))
-    ).finally(() => setLoadingFilters(prev => ({ ...prev, streams: false })));
+        setTypeOpts(
+          types.data.map((t: any) => ({
+            value: t.institute_type_id,
+            label: t.institute_type,
+          })),
+        );
 
-    pub.get('/institute-type').then(r => {
-      const types = r.data.map((t: any) => ({ value: t.institute_type_id, label: t.institute_type }));
-      setTypeOpts(types);
-      if (typeParam) {
-        const match = types.find((t: any) => t.label.toLowerCase() === typeParam.toLowerCase());
-        if (match) {
-          setFilters(f => ({ ...f, type_ids: [match.value] }));
-        }
+        setOwnershipOpts(
+          ownerships.data.map((o: any) => ({
+            value: o.institute_ownership_type_id,
+            label: o.institute_type,
+          })),
+        );
+
+        setQualOpts(
+          quals.data.map((q: any) => ({
+            value: q.qualificationid,
+            label: q.qualification,
+          })),
+        );
+
+        setStreamOpts(
+          streams.data.map((s: any) => ({
+            value: s.stream_branch_Id,
+            label: s.stream_branch_name,
+          })),
+        );
+      } catch (error) {
+        console.error("Failed to load filters:", error);
       }
-    }).finally(() => setLoadingFilters(prev => ({ ...prev, type: false })));
-  }, [typeParam]);
+    };
 
-  // Load districts when state changes
+    loadFilters();
+  }, []);
+
+  // Districts cascade
   useEffect(() => {
-    if (!filters.state_ids.length) { setDistrictOpts([]); return; }
-    setLoadingFilters(prev => ({ ...prev, districts: true }));
-    pub.get(`/district?state_id=${filters.state_ids[0]}`).then(r =>
-      setDistrictOpts(r.data.map((d: any) => ({ value: d.districtid ?? d.lgddistrictId, label: d.districtname })))
-    ).finally(() => setLoadingFilters(prev => ({ ...prev, districts: false })));
+    if (filters.state_ids.length === 0) {
+      setDistrictOpts([]);
+      return;
+    }
+    pub
+      .get(`/district?state_id=${filters.state_ids[0]}`)
+      .then((r) =>
+        setDistrictOpts(
+          r.data.map((d: any) => ({
+            value: d.districtid ?? d.lgddistrictId,
+            label: d.districtname,
+          })),
+        ),
+      )
+      .catch((error) => console.error("Failed to load districts:", error));
   }, [filters.state_ids]);
 
-  // Cascade streams when qualification changes
+  // Handle initial type filter from URL
   useEffect(() => {
-    setLoadingFilters(prev => ({ ...prev, streams: true }));
-    if (filters.qualification_ids.length > 0) {
-      const qId = filters.qualification_ids[0];
-      Promise.all([
-        pub.get(`/stream-branch?qualification_id=${qId}`),
-        pub.get('/institute-qualification-mapping/streams-in-use'),
-      ]).then(([masterRes, inUseRes]) => {
-        const inUseIds = new Set(inUseRes.data.map((s: any) => s.stream_branch_Id));
-        const filtered = masterRes.data.filter((s: any) => inUseIds.has(s.stream_branch_Id));
-        setStreamOpts(filtered.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })));
-      }).finally(() => setLoadingFilters(prev => ({ ...prev, streams: false })));
-    } else {
-      pub.get('/institute-qualification-mapping/streams-in-use').then(r =>
-        setStreamOpts(r.data.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })))
-      ).finally(() => setLoadingFilters(prev => ({ ...prev, streams: false })));
+    const typeParam = searchParams?.get("type");
+    if (typeParam && typeOpts.length > 0) {
+      const match = typeOpts.find(
+        (t) => t.label.toLowerCase() === typeParam.toLowerCase(),
+      );
+      if (match) {
+        setFilters((prev) => ({ ...prev, type_ids: [match.value] }));
+      }
     }
-  }, [filters.qualification_ids]);
-
-  const setFilter = (key: keyof Filters) => (vals: number[]) =>
-    setFilters(f => ({ ...f, [key]: vals }));
+  }, [typeOpts, searchParams]);
 
   const handleSearch = useCallback(async () => {
     setLoading(true);
@@ -375,395 +417,429 @@ export default function PublicLandingPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6 space-y-4 relative z-30">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <MultiSelectDropdown label="District" options={districtOpts} selected={filters.district_ids} onChange={setFilter('district_ids')} placeholder={loadingFilters.districts ? "Loading districts..." : "All districts"} />
-          <MultiSelectDropdown label="Qualification" options={qualOpts} selected={filters.qualification_ids} onChange={setFilter('qualification_ids')} placeholder={loadingFilters.qual ? "Loading qualifications..." : "All qualifications"} />
-          <MultiSelectDropdown label="Course/Trade" options={streamOpts} selected={filters.stream_ids} onChange={setFilter('stream_ids')} placeholder={loadingFilters.streams ? "Loading courses..." : "All courses/trades"} />
-        </div>
+      {/* Search & Filter Section */}
+      <div className="bg-gradient-to-b from-base-200 to-base-100 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-base-100 rounded-xl border border-base-300 shadow-lg p-4 sm:p-6 md:p-8">
+            <h2 className="text-lg sm:text-xl font-bold text-base-content mb-4 sm:mb-6 flex items-center gap-2">
+              <Filter size={18} className="sm:w-5 sm:h-5 text-primary" />
+              Search Institutes
+            </h2>
 
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end">
-          {/* Reset Button */}
-          <button
-            onClick={resetFilters}
-            className="px-4 sm:px-6 py-2 sm:py-2.5 border border-base-300 text-base-content hover:bg-base-200 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
-          >
-            <X size={16} className="sm:w-5 sm:h-5" />
-            Reset
-          </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+              <MultiSelectDropdown
+                label="District"
+                options={districtOpts}
+                selected={filters.district_ids}
+                onChange={(v) => setFilters((f) => ({ ...f, district_ids: v }))}
+                placeholder="All districts"
+              />
+              <MultiSelectDropdown
+                label="Qualification"
+                options={qualOpts}
+                selected={filters.qualification_ids}
+                onChange={(v) =>
+                  setFilters((f) => ({ ...f, qualification_ids: v }))
+                }
+                placeholder="All qualifications"
+              />
+              <MultiSelectDropdown
+                label="Course / Trade"
+                options={streamOpts}
+                selected={filters.stream_ids}
+                onChange={(v) => setFilters((f) => ({ ...f, stream_ids: v }))}
+                placeholder="All courses"
+              />
+              <MultiSelectDropdown
+                label="Institute Type"
+                options={typeOpts}
+                selected={filters.type_ids}
+                onChange={(v) => setFilters((f) => ({ ...f, type_ids: v }))}
+                placeholder="All types"
+              />
+            </div>
 
-          {/* Search Button (SECONDARY COLOR) */}
-          <button
-            onClick={handleSearch}
-            disabled={loading}
-            className="px-4 sm:px-8 py-2 sm:py-2.5 bg-secondary hover:bg-secondary-focus text-secondary-content font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm sm:text-base"
-          >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-secondary-content border-t-transparent rounded-full animate-spin" />
-                <span className="hidden sm:inline">Searching...</span>
-              </>
-            ) : (
-              <>
-                <Search size={16} className="sm:w-5 sm:h-5" />
-                <span>Search</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    </div >
-      </div >
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end">
+              {/* Reset Button */}
+              <button
+                onClick={resetFilters}
+                className="px-4 sm:px-6 py-2 sm:py-2.5 border border-base-300 text-base-content hover:bg-base-200 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+              >
+                <X size={16} className="sm:w-5 sm:h-5" />
+                Reset
+              </button>
 
-    {/* Results Section */ }
-    < div className = "bg-base-100 py-8 sm:py-12 px-4 sm:px-6 lg:px-8" >
-      <div className="max-w-7xl mx-auto">
-        {loading && (
-          <div className="flex justify-center items-center py-16 sm:py-20">
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-              <p className="text-base-content/70 font-medium text-sm sm:text-base">
-                Searching institutes...
-              </p>
+              {/* Search Button (SECONDARY COLOR) */}
+              <button
+                onClick={handleSearch}
+                disabled={loading}
+                className="px-4 sm:px-8 py-2 sm:py-2.5 bg-secondary hover:bg-secondary-focus text-secondary-content font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm sm:text-base"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-secondary-content border-t-transparent rounded-full animate-spin" />
+                    <span className="hidden sm:inline">Searching...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search size={16} className="sm:w-5 sm:h-5" />
+                    <span>Search</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      </div>
 
-        {!searched && !loading && (
-          <div className="text-center py-16 sm:py-20">
-            <Filter
-              size={40}
-              className="sm:w-12 sm:h-12 mx-auto mb-4 text-base-content/40"
-            />
-            <p className="text-lg sm:text-xl text-base-content/70 font-medium px-4">
-              Use the filters above to search for institutes
-            </p>
-          </div>
-        )}
-
-        {searched && !loading && institutes.length === 0 && (
-          <div className="text-center py-16 sm:py-20">
-            <Building2
-              size={40}
-              className="sm:w-12 sm:h-12 mx-auto mb-4 text-base-content/40"
-            />
-            <p className="text-lg sm:text-xl font-semibold text-base-content mb-2">
-              No institutes found
-            </p>
-            <p className="text-base-content/70 text-sm sm:text-base px-4">
-              Try adjusting your filter criteria
-            </p>
-          </div>
-        )}
-
-        {searched && !loading && institutes.length > 0 && (
-          <>
-            <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-base-content">
-                  {institutes.length} Institutes Found
-                </h2>
-                <p className="text-base-content/70 mt-1 text-sm sm:text-base">
-                  Page {page} of {totalPages}
+      {/* Results Section */}
+      <div className="bg-base-100 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {loading && (
+            <div className="flex justify-center items-center py-16 sm:py-20">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+                <p className="text-base-content/70 font-medium text-sm sm:text-base">
+                  Searching institutes...
                 </p>
               </div>
             </div>
+          )}
 
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto rounded-lg border border-base-300 shadow-md bg-base-100 mb-8">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-base-200 border-b border-base-300">
-                    <th className="px-6 py-4 text-left text-sm font-bold text-base-content">
-                      Institute Name
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-base-content">
-                      District
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-base-content">
-                      Type
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-base-content">
-                      Students
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-base-content">
-                      Final Year
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-base-content">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-base-300">
-                  {currentPageItems.map((inst) => (
-                    <tr
-                      key={inst.institute_id}
-                      className="hover:bg-base-200 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Building2 size={18} className="text-primary" />
-                          </div>
-                          <div>
-                            <div className="font-semibold text-base-content">
-                              {inst.institute_name}
-                            </div>
-                            {inst.email && (
-                              <div className="text-xs text-base-content/60 mt-0.5">
-                                {inst.email}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-base-content/70">
-                        {inst.district || "—"}
-                      </td>
-                      <td className="px-6 py-4 text-base-content/70">
-                        {inst.type || "—"}
-                      </td>
-                      <td className="px-6 py-4 text-center font-semibold text-primary">
-                        {inst.student_count}
-                      </td>
-                      <td className="px-6 py-4 text-center font-semibold text-base-content">
-                        {inst.final_year_student_count ?? "—"}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => setShowLogin(true)}
-                          className="px-3 py-2 bg-primary hover:bg-primary-focus text-primary-content font-semibold rounded-lg transition-colors inline-flex items-center gap-2 text-sm"
-                        >
-                          <LogIn size={14} />
-                          Contact
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Card View */}
-            <div className="md:hidden space-y-3 mb-8">
-              {currentPageItems.map((inst) => (
-                <div
-                  key={inst.institute_id}
-                  className="bg-base-100 border border-base-300 rounded-lg p-4 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Building2 size={18} className="text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-base-content text-sm sm:text-base break-words">
-                        {inst.institute_name}
-                      </h3>
-                      {inst.email && (
-                        <p className="text-xs text-base-content/60 mt-0.5 break-all">
-                          {inst.email}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 mb-3 text-xs sm:text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-base-content/70">District:</span>
-                      <span className="text-base-content font-medium">
-                        {inst.district || "—"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-base-content/70">Type:</span>
-                      <span className="text-base-content font-medium">
-                        {inst.type || "—"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-base-content/70">
-                        Total Students:
-                      </span>
-                      <span className="text-primary font-semibold">
-                        {inst.student_count}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-base-content/70">
-                        Final Year:
-                      </span>
-                      <span className="text-base-content font-semibold">
-                        {inst.final_year_student_count ?? "—"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setShowLogin(true)}
-                    className="w-full px-3 py-2.5 bg-primary hover:bg-primary-focus text-primary-content font-semibold rounded-lg transition-colors inline-flex items-center justify-center gap-2 text-sm"
-                  >
-                    <LogIn size={14} />
-                    Contact Institute
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-8 mb-12">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="p-2 border border-base-300 text-base-content/70 hover:bg-base-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-
-                <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
-                  {totalPages <= 5
-                    ? Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (p) => (
-                        <button
-                          key={p}
-                          onClick={() => setPage(p)}
-                          className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg font-semibold transition-colors text-sm ${page === p
-                              ? "bg-primary text-primary-content"
-                              : "border border-base-300 text-base-content hover:bg-base-200"
-                            }`}
-                        >
-                          {p}
-                        </button>
-                      ),
-                    )
-                    : /* Advanced pagination logic remains same, just update colors similarly */
-                    null}
-                </div>
-
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="p-2 border border-base-300 text-base-content/70 hover:bg-base-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            )}
-
-            {/* Map Section */}
-            <div className="bg-base-100 rounded-lg border border-base-300 shadow-md p-4 sm:p-6 mb-8">
-              <h3 className="text-base sm:text-lg font-bold text-base-content flex items-center gap-2 mb-4">
-                <MapPin size={18} className="sm:w-5 sm:h-5 text-primary" />
-                Mark Your Location
-              </h3>
-
-              <div className="flex flex-col gap-2 sm:gap-3 mb-4">
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    placeholder="Enter city, area or pincode..."
-                    className="w-full pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 border border-base-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                    value={searchGeoTerm}
-                    onChange={(e) => setSearchGeoTerm(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleGeoSearch()}
-                  />
-                  <Search
-                    size={16}
-                    className="sm:w-5 sm:h-5 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40"
-                  />
-                </div>
-
-                {mapSearchError && (
-                  <div className="flex items-start gap-2 p-3 bg-error/10 border border-error/30 rounded-lg">
-                    <AlertCircle size={16} className="text-error mt-0.5" />
-                    <p className="text-xs sm:text-sm text-error">
-                      {mapSearchError}
-                    </p>
-                  </div>
-                )}
-
-                {mapSearchSuccess && (
-                  <div className="flex items-start gap-2 p-3 bg-success/10 border border-success/30 rounded-lg">
-                    <MapPin size={16} className="text-success mt-0.5" />
-                    <p className="text-xs sm:text-sm text-success">
-                      Location found! Map updated.
-                    </p>
-                  </div>
-                )}
-
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    onClick={handleGeoSearch}
-                    disabled={mapSearchLoading}
-                    className="px-4 py-2 sm:py-2.5 bg-primary hover:bg-primary-focus disabled:bg-base-300 text-primary-content font-semibold rounded-lg transition-colors text-sm flex-1 flex items-center justify-center gap-2"
-                  >
-                    {mapSearchLoading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-primary-content border-t-transparent rounded-full animate-spin" />
-                        Searching...
-                      </>
-                    ) : (
-                      <>
-                        <Search size={14} />
-                        Search Location
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setUserLocation(null);
-                      setSearchGeoTerm("");
-                      setMapSearchError("");
-                      setMapSearchSuccess(false);
-                    }}
-                    className="px-4 py-2 sm:py-2.5 border border-base-300 text-base-content/70 hover:bg-base-200 font-semibold rounded-lg transition-colors text-sm flex-1"
-                  >
-                    Reset Location
-                  </button>
-                </div>
-              </div>
-
-              <div className="w-full h-64 sm:h-80 md:h-96 rounded-lg border border-base-300 overflow-hidden shadow-inner bg-base-200">
-                <MapContainer
-                  center={userLocation || [31.1471, 75.3412]}
-                  zoom={userLocation ? 13 : 7}
-                  scrollWheelZoom={true}
-                  style={{ height: "100%", width: "100%" }}
-                >
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                  />
-                  {punjabGeoJson && (
-                    <GeoJSON
-                      data={punjabGeoJson}
-                      style={() => ({
-                        color: "#1e40af",
-                        weight: 2,
-                        fillColor: "#1e40af",
-                        fillOpacity: 0.08,
-                      })}
-                    />
-                  )}
-                  {userLocation && <Marker position={userLocation} />}
-                  <MapClickEvent setUserLocation={setUserLocation} />
-                </MapContainer>
-              </div>
-
-              <p className="text-xs sm:text-sm text-base-content/70 mt-3 text-center px-2">
-                {!userLocation
-                  ? "💡 Search for a location or click anywhere on the map to mark your position"
-                  : "✓ Location marked! You can click on map to move marker or search for another location."}
+          {!searched && !loading && (
+            <div className="text-center py-16 sm:py-20">
+              <Filter
+                size={40}
+                className="sm:w-12 sm:h-12 mx-auto mb-4 text-base-content/40"
+              />
+              <p className="text-lg sm:text-xl text-base-content/70 font-medium px-4">
+                Use the filters above to search for institutes
               </p>
             </div>
-          </>
-        )}
-      </div>
-      </div >
+          )}
 
-    {/* Info Section */ }
-    < div className = "bg-primary/5 border-t border-primary/20 py-8 sm:py-12 px-4 sm:px-6 lg:px-8" >
+          {searched && !loading && institutes.length === 0 && (
+            <div className="text-center py-16 sm:py-20">
+              <Building2
+                size={40}
+                className="sm:w-12 sm:h-12 mx-auto mb-4 text-base-content/40"
+              />
+              <p className="text-lg sm:text-xl font-semibold text-base-content mb-2">
+                No institutes found
+              </p>
+              <p className="text-base-content/70 text-sm sm:text-base px-4">
+                Try adjusting your filter criteria
+              </p>
+            </div>
+          )}
+
+          {searched && !loading && institutes.length > 0 && (
+            <>
+              <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-base-content">
+                    {institutes.length} Institutes Found
+                  </h2>
+                  <p className="text-base-content/70 mt-1 text-sm sm:text-base">
+                    Page {page} of {totalPages}
+                  </p>
+                </div>
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto rounded-lg border border-base-300 shadow-md bg-base-100 mb-8">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-base-200 border-b border-base-300">
+                      <th className="px-6 py-4 text-left text-sm font-bold text-base-content">
+                        Institute Name
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-base-content">
+                        District
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-base-content">
+                        Type
+                      </th>
+                      <th className="px-6 py-4 text-center text-sm font-bold text-base-content">
+                        Students
+                      </th>
+                      <th className="px-6 py-4 text-center text-sm font-bold text-base-content">
+                        Final Year
+                      </th>
+                      <th className="px-6 py-4 text-center text-sm font-bold text-base-content">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-base-300">
+                    {currentPageItems.map((inst) => (
+                      <tr
+                        key={inst.institute_id}
+                        className="hover:bg-base-200 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Building2 size={18} className="text-primary" />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-base-content">
+                                {inst.institute_name}
+                              </div>
+                              {inst.email && (
+                                <div className="text-xs text-base-content/60 mt-0.5">
+                                  {inst.email}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-base-content/70">
+                          {inst.district || "—"}
+                        </td>
+                        <td className="px-6 py-4 text-base-content/70">
+                          {inst.type || "—"}
+                        </td>
+                        <td className="px-6 py-4 text-center font-semibold text-primary">
+                          {inst.student_count}
+                        </td>
+                        <td className="px-6 py-4 text-center font-semibold text-base-content">
+                          {inst.final_year_student_count ?? "—"}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            onClick={() => setShowLogin(true)}
+                            className="px-3 py-2 bg-primary hover:bg-primary-focus text-primary-content font-semibold rounded-lg transition-colors inline-flex items-center gap-2 text-sm"
+                          >
+                            <LogIn size={14} />
+                            Contact
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3 mb-8">
+                {currentPageItems.map((inst) => (
+                  <div
+                    key={inst.institute_id}
+                    className="bg-base-100 border border-base-300 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Building2 size={18} className="text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-base-content text-sm sm:text-base break-words">
+                          {inst.institute_name}
+                        </h3>
+                        {inst.email && (
+                          <p className="text-xs text-base-content/60 mt-0.5 break-all">
+                            {inst.email}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 mb-3 text-xs sm:text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-base-content/70">District:</span>
+                        <span className="text-base-content font-medium">
+                          {inst.district || "—"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-base-content/70">Type:</span>
+                        <span className="text-base-content font-medium">
+                          {inst.type || "—"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-base-content/70">
+                          Total Students:
+                        </span>
+                        <span className="text-primary font-semibold">
+                          {inst.student_count}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-base-content/70">
+                          Final Year:
+                        </span>
+                        <span className="text-base-content font-semibold">
+                          {inst.final_year_student_count ?? "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setShowLogin(true)}
+                      className="w-full px-3 py-2.5 bg-primary hover:bg-primary-focus text-primary-content font-semibold rounded-lg transition-colors inline-flex items-center justify-center gap-2 text-sm"
+                    >
+                      <LogIn size={14} />
+                      Contact Institute
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-8 mb-12">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="p-2 border border-base-300 text-base-content/70 hover:bg-base-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+
+                  <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
+                    {totalPages <= 5
+                      ? Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                        (p) => (
+                          <button
+                            key={p}
+                            onClick={() => setPage(p)}
+                            className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg font-semibold transition-colors text-sm ${page === p
+                              ? "bg-primary text-primary-content"
+                              : "border border-base-300 text-base-content hover:bg-base-200"
+                              }`}
+                          >
+                            {p}
+                          </button>
+                        ),
+                      )
+                      : /* Advanced pagination logic remains same, just update colors similarly */
+                      null}
+                  </div>
+
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="p-2 border border-base-300 text-base-content/70 hover:bg-base-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+              )}
+
+              {/* Map Section */}
+              <div className="bg-base-100 rounded-lg border border-base-300 shadow-md p-4 sm:p-6 mb-8">
+                <h3 className="text-base sm:text-lg font-bold text-base-content flex items-center gap-2 mb-4">
+                  <MapPin size={18} className="sm:w-5 sm:h-5 text-primary" />
+                  Mark Your Location
+                </h3>
+
+                <div className="flex flex-col gap-2 sm:gap-3 mb-4">
+                  <div className="flex-1 relative">
+                    <input
+                      type="text"
+                      placeholder="Enter city, area or pincode..."
+                      className="w-full pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 border border-base-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                      value={searchGeoTerm}
+                      onChange={(e) => setSearchGeoTerm(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleGeoSearch()}
+                    />
+                    <Search
+                      size={16}
+                      className="sm:w-5 sm:h-5 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40"
+                    />
+                  </div>
+
+                  {mapSearchError && (
+                    <div className="flex items-start gap-2 p-3 bg-error/10 border border-error/30 rounded-lg">
+                      <AlertCircle size={16} className="text-error mt-0.5" />
+                      <p className="text-xs sm:text-sm text-error">
+                        {mapSearchError}
+                      </p>
+                    </div>
+                  )}
+
+                  {mapSearchSuccess && (
+                    <div className="flex items-start gap-2 p-3 bg-success/10 border border-success/30 rounded-lg">
+                      <MapPin size={16} className="text-success mt-0.5" />
+                      <p className="text-xs sm:text-sm text-success">
+                        Location found! Map updated.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      onClick={handleGeoSearch}
+                      disabled={mapSearchLoading}
+                      className="px-4 py-2 sm:py-2.5 bg-primary hover:bg-primary-focus disabled:bg-base-300 text-primary-content font-semibold rounded-lg transition-colors text-sm flex-1 flex items-center justify-center gap-2"
+                    >
+                      {mapSearchLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-primary-content border-t-transparent rounded-full animate-spin" />
+                          Searching...
+                        </>
+                      ) : (
+                        <>
+                          <Search size={14} />
+                          Search Location
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setUserLocation(null);
+                        setSearchGeoTerm("");
+                        setMapSearchError("");
+                        setMapSearchSuccess(false);
+                      }}
+                      className="px-4 py-2 sm:py-2.5 border border-base-300 text-base-content/70 hover:bg-base-200 font-semibold rounded-lg transition-colors text-sm flex-1"
+                    >
+                      Reset Location
+                    </button>
+                  </div>
+                </div>
+
+                <div className="w-full h-64 sm:h-80 md:h-96 rounded-lg border border-base-300 overflow-hidden shadow-inner bg-base-200">
+                  <MapContainer
+                    center={userLocation || [31.1471, 75.3412]}
+                    zoom={userLocation ? 13 : 7}
+                    scrollWheelZoom={true}
+                    style={{ height: "100%", width: "100%" }}
+                  >
+                    <TileLayer
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    />
+                    {punjabGeoJson && (
+                      <GeoJSON
+                        data={punjabGeoJson}
+                        style={() => ({
+                          color: "#1e40af",
+                          weight: 2,
+                          fillColor: "#1e40af",
+                          fillOpacity: 0.08,
+                        })}
+                      />
+                    )}
+                    {userLocation && <Marker position={userLocation} />}
+                    <MapClickEvent setUserLocation={setUserLocation} />
+                  </MapContainer>
+                </div>
+
+                <p className="text-xs sm:text-sm text-base-content/70 mt-3 text-center px-2">
+                  {!userLocation
+                    ? "💡 Search for a location or click anywhere on the map to mark your position"
+                    : "✓ Location marked! You can click on map to move marker or search for another location."}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Info Section */}
+      <div className="bg-primary/5 border-t border-primary/20 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
             {/* Item 1 */}
@@ -814,7 +890,7 @@ export default function PublicLandingPage() {
         </div>
 
         <RoleSelectModal open={roleModal?.roleSelectModal?.open} />
-      </div >
+      </div>
     </>
   );
 }
