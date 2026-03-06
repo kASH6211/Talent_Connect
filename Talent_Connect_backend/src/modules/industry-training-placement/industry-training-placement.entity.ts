@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { BaseEntity } from '../../common/base.entity';
 import { Industry } from '../industry/industry.entity';
-import { Program } from '../program/program.entity';
+import { Qualification } from '../qualification/qualification.entity';
 import { StreamBranch } from '../stream-branch/stream-branch.entity';
 
 @Entity('industry_training_placement_preference')
@@ -32,11 +32,11 @@ export class IndustryTrainingPlacement extends BaseEntity {
     is_industry_offer_campus_placement: string;
 
     @Column({ type: 'int', nullable: true })
-    programId: number;
+    qualificationid: number;
 
-    @ManyToOne(() => Program, { nullable: true })
-    @JoinColumn({ name: 'programId' })
-    program: Program;
+    @ManyToOne(() => Qualification, { nullable: true })
+    @JoinColumn({ name: 'qualificationid' })
+    qualification: Qualification;
 
     @Column({ type: 'int', nullable: true })
     stream_branch_Id: number;

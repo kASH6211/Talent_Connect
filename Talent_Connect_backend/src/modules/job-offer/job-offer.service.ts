@@ -10,7 +10,6 @@ export interface BulkOfferDto {
     job_description?: string;
     nature_of_engagement?: string;
     required_qualification_ids?: string;
-    required_program_ids?: string;
     required_stream_ids?: string;
     number_of_posts?: number;
     experience_required?: string;
@@ -47,7 +46,6 @@ export class JobOfferService {
             job_description: dto.job_description,
             nature_of_engagement: dto.nature_of_engagement,
             required_qualification_ids: dto.required_qualification_ids,
-            required_program_ids: dto.required_program_ids,
             required_stream_ids: dto.required_stream_ids,
             number_of_posts: dto.number_of_posts,
             experience_required: dto.experience_required,

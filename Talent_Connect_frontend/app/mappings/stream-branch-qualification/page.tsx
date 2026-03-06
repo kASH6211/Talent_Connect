@@ -18,9 +18,27 @@ export default function Page() {
     },
     {
       key: "stream_branch_Id",
-      label: "Stream / Branch",
+      label: "Course",
       render: (val: any, row: any) =>
         row.streamBranch?.stream_branch_name || val,
+    },
+    {
+      key: "affiliating_body_id",
+      label: "Affiliation Body",
+      render: (_: any, row: any) =>
+        row.streamBranch?.affiliation?.affiliating_body || "—",
+    },
+    {
+      key: "nsqfid",
+      label: "NSQF Level",
+      render: (_: any, row: any) =>
+        row.streamBranch?.nsqf?.nsqf_level || "—",
+    },
+    {
+      key: "coursedurationid",
+      label: "Course Duration",
+      render: (_: any, row: any) =>
+        row.streamBranch?.courseDuration?.courseduration || "—",
     },
     { key: "is_active", label: "Status" },
   ];
@@ -36,7 +54,7 @@ export default function Page() {
     },
     {
       key: "stream_branch_Id",
-      label: "Stream / Branch",
+      label: "Course",
       required: true,
       optionsApi: "stream-branch",
       optionsValueKey: "stream_branch_Id",
@@ -50,7 +68,7 @@ export default function Page() {
   return (
     <>
       <CrudTable
-        title="Qualification ↔ Stream/Branch Mapping"
+        title="Qualification ↔ Course Mapping"
         apiPath="stream-branch-qualification-mapping"
         queryKey="stream-branch-qualification-mapping"
         columns={COLUMNS}
@@ -66,7 +84,7 @@ export default function Page() {
       />
       {modalOpen && (
         <CrudModal
-          title="Qualification-Stream/Branch Mapping"
+          title="Qualification-Course Mapping"
           apiPath="stream-branch-qualification-mapping"
           queryKey="stream-branch-qualification-mapping"
           primaryKey="stream_branch_qualification_id"

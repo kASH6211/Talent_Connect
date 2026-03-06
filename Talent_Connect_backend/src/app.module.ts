@@ -15,7 +15,6 @@ import { DistrictModule } from './modules/district/district.module';
 import { InstituteEnrollmentModule } from './modules/institute-enrollment/institute-enrollment.module';
 import { TrainingTypeModule } from './modules/training-type/training-type.module';
 import { QualificationModule } from './modules/qualification/qualification.module';
-import { ProgramModule } from './modules/program/program.module';
 import { StreamBranchModule } from './modules/stream-branch/stream-branch.module';
 import { JobRoleModule } from './modules/job-role/job-role.module';
 import { LegalEntityModule } from './modules/legal-entity/legal-entity.module';
@@ -32,12 +31,14 @@ import { IndustryComplianceModule } from './modules/industry-compliance/industry
 import { IndustryRequestModule } from './modules/industry-request/industry-request.module';
 import { StudentModule } from './modules/student/student.module';
 import { StudentPlacementModule } from './modules/student-placement/student-placement.module';
-import { ProgramQualificationMappingModule } from './modules/program-qualification-mapping/program-qualification-mapping.module';
-import { InstituteProgramMappingModule } from './modules/institute-program-mapping/institute-program-mapping.module';
-import { JobRoleProgramMappingModule } from './modules/job-role-program-mapping/job-role-program-mapping.module';
+import { JobRoleQualificationMappingModule } from './modules/job-role-qualification-mapping/job-role-qualification-mapping.module';
 import { JobOfferModule } from './modules/job-offer/job-offer.module';
 import { StreamBranchQualificationMappingModule } from './modules/stream-branch-qualification-mapping/stream-branch-qualification-mapping.module';
 import { InstituteQualificationMappingModule } from './modules/institute-qualification-mapping/institute-qualification-mapping.module';
+import { MasterSessionModule } from './modules/master-session/master-session.module';
+import { MasterNsqfModule } from './modules/master-nsqf/master-nsqf.module';
+import { MasterCourseDurationModule } from './modules/master-course-duration/master-course-duration.module';
+import { StudentCountModule } from './modules/student-count/student-count.module';
 
 @Module({
   imports: [
@@ -69,7 +70,6 @@ import { InstituteQualificationMappingModule } from './modules/institute-qualifi
     InstituteEnrollmentModule,
     TrainingTypeModule,
     QualificationModule,
-    ProgramModule,
     StreamBranchModule,
     JobRoleModule,
     LegalEntityModule,
@@ -86,12 +86,14 @@ import { InstituteQualificationMappingModule } from './modules/institute-qualifi
     IndustryRequestModule,
     StudentModule,
     StudentPlacementModule,
-    ProgramQualificationMappingModule,
-    InstituteProgramMappingModule,
-    JobRoleProgramMappingModule,
+    JobRoleQualificationMappingModule,
     JobOfferModule,
     StreamBranchQualificationMappingModule,
     InstituteQualificationMappingModule,
+    MasterSessionModule,
+    MasterNsqfModule,
+    MasterCourseDurationModule,
+    StudentCountModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

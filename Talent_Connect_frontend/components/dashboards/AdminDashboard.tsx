@@ -16,8 +16,7 @@ import api from "@/lib/api";
 const quickLinks = [
   { label: "Boards & Universities", href: "/masters/boards" },
   { label: "States", href: "/masters/states" },
-  { label: "Programs", href: "/masters/programs" },
-  { label: "Stream & Branches", href: "/masters/stream-branches" },
+  { label: "Courses", href: "/masters/stream-branches" },
   { label: "Job Roles", href: "/masters/job-roles" },
   { label: "Industry Sectors", href: "/masters/industry-sectors" },
 ];
@@ -35,20 +34,29 @@ export default function AdminDashboard({ username }: { username: string }) {
   useEffect(() => {
     async function fetchCounts() {
       try {
-        const [instRes, indRes, stuRes, placeRes] = await Promise.all([
+        const [instRes, indRes, stuRes, placeRes, reqRes] = await Promise.all([
           api.get("/institute"),
           api.get("/industry"),
           api.get("/student"),
           api.get("/student-placement"),
+          api.get("/industry-request"),
         ]);
+
+        const requests = reqRes.data || [];
+        const sent = requests.filter((r: any) =>
+          ["Submitted", "Under Review", "Approved", "Completed"].includes(r.requestStatus?.request_status)
+        ).length;
+        const accepted = requests.filter((r: any) =>
+          ["Approved", "Completed"].includes(r.requestStatus?.request_status)
+        ).length;
 
         setCounts({
           institutes: instRes.data?.length || 0,
           industries: indRes.data?.length || 0,
           students: stuRes.data?.length || 0,
           placements: placeRes.data?.length || 0,
-          sentOffers: 0, // replace with actual API count
-          acceptedOffers: 0, // replace with actual API count
+          sentOffers: sent,
+          acceptedOffers: accepted,
         });
       } catch (error) {
         console.error("Failed to fetch dashboard counts", error);
@@ -182,14 +190,14 @@ export default function AdminDashboard({ username }: { username: string }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
             {
-              label: "Program ↔ Qualification",
-              href: "/mappings/program-qualification",
+              label: "Institute ↔ Qualification",
+              href: "/mappings/institute-qualification",
             },
+            { label: "Job Role ↔ Qualification", href: "/mappings/job-role-qualification" },
             {
-              label: "Institute ↔ Program",
-              href: "/mappings/institute-program",
+              label: "Qualification ↔ Course",
+              href: "/mappings/stream-branch-qualification",
             },
-            { label: "Job Role ↔ Program", href: "/mappings/job-role-program" },
           ].map((l) => (
             <Link
               key={l.href}

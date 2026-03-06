@@ -8,7 +8,6 @@ export interface InstituteSearchQuery {
   type_ids?: string;
   ownership_ids?: string;
   qualification_ids?: string;
-  program_ids?: string;
   stream_ids?: string;
   sort?: 'name' | 'student_count';
   order?: 'asc' | 'desc';
@@ -22,7 +21,19 @@ export class InstituteService {
     private readonly dataSource: DataSource,
   ) { }
 
-  findAll() { return this.repo.find(); }
+  async findAll(page?: number, limit?: number) {
+    if (page && limit) {
+      const take = limit || 10;
+      const skip = (page - 1) * take;
+      const [data, total] = await this.repo.findAndCount({
+        take,
+        skip,
+        order: { institute_id: 'DESC' } as any,
+      });
+      return { data, total, page, limit: take };
+    }
+    return this.repo.find({ order: { institute_id: 'DESC' } as any });
+  }
 
   async findOne(id: number) {
     const item = await this.repo.findOne({ where: { institute_id: id } as any });

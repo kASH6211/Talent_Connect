@@ -96,14 +96,20 @@ export default function PublicLandingPage() {
     const [qualOpts, setQualOpts] = useState<Option2[]>([]);
     const [streamOpts, setStreamOpts] = useState<Option2[]>([]);
 
+    const [loadingFilters, setLoadingFilters] = useState<Record<string, boolean>>({});
+
     // Load static filter options on mount
     useEffect(() => {
-        pub.get('/state').then(r => setStateOpts(r.data.map((s: any) => ({ value: s.lgdstateid ?? s.stateid, label: s.statename }))));
-        pub.get('/institute-ownership-type').then(r => setOwnershipOpts(r.data.map((o: any) => ({ value: o.institute_ownership_type_id, label: o.institute_type }))));
-        pub.get('/qualification').then(r => setQualOpts(r.data.map((q: any) => ({ value: q.qualificationid, label: q.qualification }))));
+        setLoadingFilters(prev => ({ ...prev, states: true, ownership: true, qual: true, type: true }));
+
+        pub.get('/state').then(r => setStateOpts(r.data.map((s: any) => ({ value: s.lgdstateid ?? s.stateid, label: s.statename })))).finally(() => setLoadingFilters(prev => ({ ...prev, states: false })));
+        pub.get('/institute-ownership-type').then(r => setOwnershipOpts(r.data.map((o: any) => ({ value: o.institute_ownership_type_id, label: o.institute_type })))).finally(() => setLoadingFilters(prev => ({ ...prev, ownership: false })));
+        pub.get('/qualification').then(r => setQualOpts(r.data.map((q: any) => ({ value: q.qualificationid, label: q.qualification })))).finally(() => setLoadingFilters(prev => ({ ...prev, qual: false })));
+
+        setLoadingFilters(prev => ({ ...prev, streams: true }));
         pub.get('/institute-qualification-mapping/streams-in-use').then(r =>
             setStreamOpts(r.data.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })))
-        );
+        ).finally(() => setLoadingFilters(prev => ({ ...prev, streams: false })));
 
         pub.get('/institute-type').then(r => {
             const types = r.data.map((t: any) => ({ value: t.institute_type_id, label: t.institute_type }));
@@ -114,19 +120,21 @@ export default function PublicLandingPage() {
                     setFilters(f => ({ ...f, type_ids: [match.value] }));
                 }
             }
-        });
+        }).finally(() => setLoadingFilters(prev => ({ ...prev, type: false })));
     }, [typeParam]);
 
     // Load districts when state changes
     useEffect(() => {
         if (!filters.state_ids.length) { setDistrictOpts([]); return; }
+        setLoadingFilters(prev => ({ ...prev, districts: true }));
         pub.get(`/district?state_id=${filters.state_ids[0]}`).then(r =>
             setDistrictOpts(r.data.map((d: any) => ({ value: d.districtid ?? d.lgddistrictId, label: d.districtname })))
-        );
+        ).finally(() => setLoadingFilters(prev => ({ ...prev, districts: false })));
     }, [filters.state_ids]);
 
     // Cascade streams when qualification changes
     useEffect(() => {
+        setLoadingFilters(prev => ({ ...prev, streams: true }));
         if (filters.qualification_ids.length > 0) {
             const qId = filters.qualification_ids[0];
             Promise.all([
@@ -136,11 +144,11 @@ export default function PublicLandingPage() {
                 const inUseIds = new Set(inUseRes.data.map((s: any) => s.stream_branch_Id));
                 const filtered = masterRes.data.filter((s: any) => inUseIds.has(s.stream_branch_Id));
                 setStreamOpts(filtered.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })));
-            });
+            }).finally(() => setLoadingFilters(prev => ({ ...prev, streams: false })));
         } else {
             pub.get('/institute-qualification-mapping/streams-in-use').then(r =>
                 setStreamOpts(r.data.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name })))
-            );
+            ).finally(() => setLoadingFilters(prev => ({ ...prev, streams: false })));
         }
     }, [filters.qualification_ids]);
 
@@ -188,9 +196,9 @@ export default function PublicLandingPage() {
                     {/* Filters */}
                     <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6 space-y-4 relative z-30">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <MultiSelectDropdown label="District" options={districtOpts} selected={filters.district_ids} onChange={setFilter('district_ids')} placeholder="All districts" />
-                            <MultiSelectDropdown label="Qualification" options={qualOpts} selected={filters.qualification_ids} onChange={setFilter('qualification_ids')} placeholder="All qualifications" />
-                            <MultiSelectDropdown label="Course/Trade" options={streamOpts} selected={filters.stream_ids} onChange={setFilter('stream_ids')} placeholder="All courses/trades" />
+                            <MultiSelectDropdown label="District" options={districtOpts} selected={filters.district_ids} onChange={setFilter('district_ids')} placeholder={loadingFilters.districts ? "Loading districts..." : "All districts"} />
+                            <MultiSelectDropdown label="Qualification" options={qualOpts} selected={filters.qualification_ids} onChange={setFilter('qualification_ids')} placeholder={loadingFilters.qual ? "Loading qualifications..." : "All qualifications"} />
+                            <MultiSelectDropdown label="Course/Trade" options={streamOpts} selected={filters.stream_ids} onChange={setFilter('stream_ids')} placeholder={loadingFilters.streams ? "Loading courses..." : "All courses/trades"} />
                         </div>
 
                         <div className="flex gap-3 justify-end mt-4">

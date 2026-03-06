@@ -11,10 +11,16 @@ export class StreamBranchQualificationMappingService {
     ) { }
 
     findAll(qualificationId?: number) {
-        return this.repo.find({
-            where: qualificationId ? { qualificationid: qualificationId } as any : {},
-            relations: ['qualification', 'streamBranch'],
-        });
+        const qb = this.repo.createQueryBuilder('m')
+            .leftJoinAndSelect('m.qualification', 'qualification')
+            .leftJoinAndSelect('m.streamBranch', 'streamBranch')
+            .leftJoinAndSelect('streamBranch.affiliation', 'affiliation')
+            .leftJoinAndSelect('streamBranch.nsqf', 'nsqf')
+            .leftJoinAndSelect('streamBranch.courseDuration', 'courseDuration');
+        if (qualificationId) {
+            qb.where('m.qualificationid = :qualificationId', { qualificationId });
+        }
+        return qb.getMany();
     }
 
     async findOne(id: number) {

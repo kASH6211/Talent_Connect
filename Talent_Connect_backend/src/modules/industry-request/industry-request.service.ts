@@ -10,9 +10,20 @@ export class IndustryRequestService {
     private readonly repo: Repository<IndustryRequest>,
   ) { }
 
-  findAll() {
+  async findAll(page?: number, limit?: number) {
+    if (page && limit) {
+      const take = limit || 10;
+      const skip = (page - 1) * take;
+      const [data, total] = await this.repo.findAndCount({
+        take,
+        skip,
+        relations: ['institute', 'institute.district', 'requestType', 'requestStatus', 'qualification', 'streamBranch'],
+        order: { industry_request_id: 'DESC' },
+      });
+      return { data, total, page, limit: take };
+    }
     return this.repo.find({
-      relations: ['institute', 'institute.district', 'requestType', 'requestStatus', 'program', 'streamBranch'],
+      relations: ['institute', 'institute.district', 'requestType', 'requestStatus', 'qualification', 'streamBranch'],
       order: { industry_request_id: 'DESC' },
     });
   }

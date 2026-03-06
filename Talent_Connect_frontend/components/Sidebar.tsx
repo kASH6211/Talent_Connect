@@ -37,8 +37,7 @@ const adminNav = [
       { label: "States", href: "/masters/states" },
       { label: "Districts", href: "/masters/districts" },
       { label: "Qualifications", href: "/masters/qualifications" },
-      { label: "Programs", href: "/masters/programs" },
-      { label: "Stream & Branches", href: "/masters/stream-branches" },
+      { label: "Courses", href: "/masters/stream-branches" },
       { label: "Job Roles", href: "/masters/job-roles" },
       { label: "Institute Types", href: "/masters/institute-types" },
       { label: "Institute Sub Types", href: "/masters/institute-sub-types" },
@@ -56,9 +55,13 @@ const adminNav = [
       { label: "Identifier Types", href: "/masters/identifier-types" },
       { label: "Request Types", href: "/masters/request-types" },
       { label: "Request Statuses", href: "/masters/request-statuses" },
+      { label: "Sessions", href: "/masters/sessions" },
+      { label: "NSQF Levels", href: "/masters/nsqf" },
+      { label: "Course Durations", href: "/masters/course-durations" },
     ],
   },
   { icon: University, label: "Institutes", href: "/institutes" },
+  { icon: Users, label: "Student Counts", href: "/masters/student-counts" },
   { icon: Factory, label: "Industries", href: "/industries" },
   { icon: Users, label: "Students", href: "/students" },
   { icon: Briefcase, label: "Placements", href: "/placements" },
@@ -67,16 +70,12 @@ const adminNav = [
     label: "Mappings",
     children: [
       {
-        label: "Program ↔ Qualification",
-        href: "/mappings/program-qualification",
-      },
-      {
-        label: "Institute Qualification",
+        label: "Institute ↔ Qualification",
         href: "/mappings/institute-qualification",
       },
-      { label: "Job Role ↔ Program", href: "/mappings/job-role-program" },
+      { label: "Job Role ↔ Qualification", href: "/mappings/job-role-qualification" },
       {
-        label: "Qualification ↔ Stream/Branch",
+        label: "Qualification ↔ Course",
         href: "/mappings/stream-branch-qualification",
       },
     ],
@@ -93,15 +92,16 @@ const instituteNav = [
     label: "Mappings",
     children: [
       {
-        label: "Institute Qualification",
+        label: "Institute ↔ Qualification",
         href: "/mappings/institute-qualification",
       },
       {
-        label: "Qualification ↔ Stream/Branch",
+        label: "Qualification ↔ Course",
         href: "/mappings/stream-branch-qualification",
       },
     ],
   },
+  { icon: Users, label: "Student Counts", href: "/masters/student-counts" },
   { icon: UserCircle, label: "My Profile", href: "/institute/profile" },
 ];
 

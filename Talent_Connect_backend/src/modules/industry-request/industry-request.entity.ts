@@ -10,7 +10,7 @@ import { Industry } from '../industry/industry.entity';
 import { Institute } from '../institute/institute.entity';
 import { RequestType } from '../request-type/request-type.entity';
 import { RequestStatus } from '../request-status/request-status.entity';
-import { Program } from '../program/program.entity';
+import { Qualification } from '../qualification/qualification.entity';
 import { StreamBranch } from '../stream-branch/stream-branch.entity';
 
 @Entity('industry_request')
@@ -47,11 +47,11 @@ export class IndustryRequest extends BaseEntity {
     requestStatus: RequestStatus;
 
     @Column({ type: 'int', nullable: true })
-    programId: number;
+    qualificationid: number;
 
-    @ManyToOne(() => Program, { nullable: true })
-    @JoinColumn({ name: 'programId' })
-    program: Program;
+    @ManyToOne(() => Qualification, { nullable: true })
+    @JoinColumn({ name: 'qualificationid' })
+    qualification: Qualification;
 
     @Column({ type: 'int', nullable: true })
     stream_branch_Id: number;

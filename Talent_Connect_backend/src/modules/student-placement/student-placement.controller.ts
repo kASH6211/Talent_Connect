@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, ParseIntPipe } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Patch, Delete, ParseIntPipe, Query } from '@nestjs/common';
+import { ApiTags, ApiQuery } from '@nestjs/swagger';
 import { StudentPlacementService } from './student-placement.service';
 import { StudentPlacement } from './student-placement.entity';
 
@@ -9,7 +9,12 @@ export class StudentPlacementController {
   constructor(private readonly service: StudentPlacementService) { }
 
   @Get('count') count() { return this.service.count(); }
-  @Get() findAll() { return this.service.findAll(); }
+  @Get()
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
+    return this.service.findAll(page, limit);
+  }
   @Get(':id') findOne(@Param('id', ParseIntPipe) id: number) { return this.service.findOne(id); }
   @Post() create(@Body() dto: Partial<StudentPlacement>) { return this.service.create(dto); }
   @Patch(':id') update(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<StudentPlacement>) { return this.service.update(id, dto); }

@@ -1,20 +1,14 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from '../../common/base.entity';
-import { Program } from '../program/program.entity';
 import { Affiliation } from '../affiliation/affiliation.entity';
 import { Qualification } from '../qualification/qualification.entity';
+import { MasterNsqf } from '../master-nsqf/master-nsqf.entity';
+import { MasterCourseDuration } from '../master-course-duration/master-course-duration.entity';
 
 @Entity('master_stream_branch')
 export class StreamBranch extends BaseEntity {
     @PrimaryGeneratedColumn()
     stream_branch_Id: number;
-
-    @Column({ type: 'int', nullable: true })
-    programId: number;
-
-    @ManyToOne(() => Program, { nullable: true })
-    @JoinColumn({ name: 'programId' })
-    program: Program;
 
     @Column({ type: 'varchar', length: 200 })
     stream_branch_name: string;
@@ -35,4 +29,18 @@ export class StreamBranch extends BaseEntity {
     @ManyToOne(() => Qualification, { eager: true, nullable: true })
     @JoinColumn({ name: 'qualificationid' })
     qualification: Qualification;
+
+    @Column({ type: 'int', nullable: true })
+    nsqfid: number;
+
+    @ManyToOne(() => MasterNsqf, { nullable: true })
+    @JoinColumn({ name: 'nsqfid' })
+    nsqf: MasterNsqf;
+
+    @Column({ type: 'int', nullable: true })
+    coursedurationid: number;
+
+    @ManyToOne(() => MasterCourseDuration, { nullable: true })
+    @JoinColumn({ name: 'coursedurationid' })
+    courseDuration: MasterCourseDuration;
 }

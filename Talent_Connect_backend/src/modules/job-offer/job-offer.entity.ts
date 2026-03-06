@@ -45,9 +45,6 @@ export class JobOffer extends BaseEntity {
     @Column({ type: 'text', nullable: true })
     required_qualification_ids: string;
 
-    /** Comma-separated program IDs pre-filled from filters */
-    @Column({ type: 'text', nullable: true })
-    required_program_ids: string;
 
     /** Comma-separated stream/branch IDs pre-filled from filters */
     @Column({ type: 'text', nullable: true })

@@ -3,13 +3,9 @@ import {
   X,
   AlertCircle,
   CheckCircle2,
-  Building2,
-  MapPin,
-  Phone,
-  Users,
 } from "lucide-react";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createOne, updateOne } from "@/lib/api";
 import { useOptions } from "@/hooks/useOptions";
@@ -26,6 +22,7 @@ export interface FieldDef {
   optionsLabelKey?: string;
   dependsOn?: string;
   dependsOnQueryKey?: string;
+  step?: string | number;
 }
 
 interface CrudModalProps {
@@ -38,41 +35,55 @@ interface CrudModalProps {
   onClose: () => void;
 }
 
-function ApiSelect({ field, register, watch }: { field: FieldDef; register: any, watch: any }) {
-  // If this field depends on another, watch that field's value
-  const dependentValue = field.dependsOn ? watch(field.dependsOn) : undefined;
+// ApiSelect – uses react-hook-form Controller to avoid controlled/uncontrolled conflict
+function ApiSelect({ field, control, watch, defaultValues }: {
+  field: FieldDef;
+  control: any;
+  watch: any;
+  defaultValues: any;
+}) {
+  const dependentValue = field.dependsOn
+    ? (watch(field.dependsOn) ?? defaultValues[field.dependsOn!])
+    : undefined;
 
-  // Conditionally construct the API path if there is a dependency
   let apiPath = field.optionsApi;
   if (field.dependsOn && field.optionsApi) {
-    if (dependentValue) {
-      apiPath = `${field.optionsApi}?${field.dependsOnQueryKey}=${dependentValue}`;
-    } else {
-      apiPath = undefined; // Don't fetch until dependency is selected
-    }
+    apiPath = dependentValue
+      ? `${field.optionsApi}?${field.dependsOnQueryKey}=${dependentValue}`
+      : undefined;
   }
 
-  const options = useOptions(
+  const { options, isFetching } = useOptions(
     apiPath,
     field.optionsValueKey || "id",
     field.optionsLabelKey || "name",
   );
 
   return (
-    <select
-      {...register(field.key, {
-        required: field.required ? `${field.label} is required` : false,
-      })}
-      disabled={field.dependsOn && !dependentValue}
-      className="w-full h-14 px-4 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-    >
-      <option value="">Select {field.label}…</option>
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
+    <Controller
+      name={field.key}
+      control={control}
+      defaultValue={defaultValues[field.key] != null ? String(defaultValues[field.key]) : ""}
+      rules={{ required: field.required ? `${field.label} is required` : false }}
+      render={({ field: rhfField }) => (
+        <select
+          {...rhfField}
+          value={rhfField.value ?? ""}
+          onChange={(e) => rhfField.onChange(e.target.value || null)}
+          disabled={!!field.dependsOn && !dependentValue}
+          className="w-full h-14 px-4 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+        >
+          <option value="">
+            {isFetching ? `Loading ${field.label}...` : `Select ${field.label}…`}
+          </option>
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      )}
+    />
   );
 }
 
@@ -111,6 +122,7 @@ export default function CrudModal({
   const {
     register,
     handleSubmit,
+    control,
     reset,
     watch,
     formState: { errors, isSubmitting },
@@ -127,13 +139,33 @@ export default function CrudModal({
       qc.invalidateQueries({ queryKey: [queryKey] });
       onClose();
     },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || err?.message || 'Unknown error';
+      console.error('[CrudModal] Save failed:', msg, err?.response?.data);
+    },
   });
 
-  const onSubmit = (data: any) => mutation.mutate(data);
+  const onSubmit = (data: any) => {
+    // Convert empty strings to null for integer/nullable columns
+    const cleanedData = Object.keys(data).reduce((acc: any, key) => {
+      const val = data[key];
+      acc[key] = val === "" ? null : val;
+      return acc;
+    }, {});
+    mutation.mutate(cleanedData);
+  };
 
   const renderField = (f: FieldDef) => {
     if (f.optionsApi)
-      return <ApiSelect key={f.key} field={f} register={register} watch={watch} />;
+      return (
+        <ApiSelect
+          key={f.key}
+          field={f}
+          control={control}
+          watch={watch}
+          defaultValues={editData || {}}
+        />
+      );
     if (f.type === "textarea")
       return (
         <textarea
@@ -145,17 +177,26 @@ export default function CrudModal({
       );
     if (f.type === "select")
       return (
-        <select
-          {...register(f.key, { required: f.required })}
-          className="w-full h-14 px-4 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-        >
-          <option value="">Select {f.label}…</option>
-          {f.options?.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+        <Controller
+          name={f.key}
+          control={control}
+          defaultValue={editData?.[f.key] ?? ""}
+          rules={{ required: f.required }}
+          render={({ field: rhfField }) => (
+            <select
+              {...rhfField}
+              value={rhfField.value ?? ""}
+              className="w-full h-14 px-4 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+            >
+              <option value="">Select {f.label}…</option>
+              {f.options?.map((o) => (
+                <option key={o.value} value={String(o.value)}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          )}
+        />
       );
     if (f.type === "radio")
       return (
@@ -186,6 +227,7 @@ export default function CrudModal({
         type={f.type || "text"}
         {...register(f.key, { required: f.required })}
         placeholder={f.placeholder}
+        step={f.step}
         className="w-full h-14 px-4 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
       />
     );
@@ -217,7 +259,6 @@ export default function CrudModal({
               <FormField
                 key={f.key}
                 label={f.label}
-              // error={errors[f.key]?.message}
               >
                 {renderField(f)}
               </FormField>
@@ -225,7 +266,10 @@ export default function CrudModal({
 
             {mutation.isError && (
               <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm shadow-sm">
-                Failed to save. Please try again.
+                <strong>Failed to save.</strong>{" "}
+                {(mutation.error as any)?.response?.data?.message
+                  ? String((mutation.error as any).response.data.message)
+                  : "Please check your input and try again."}
               </div>
             )}
           </div>

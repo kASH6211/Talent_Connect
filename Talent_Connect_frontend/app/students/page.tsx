@@ -33,12 +33,13 @@ const FIELDS = [
         optionsApi: 'qualification', optionsValueKey: 'qualificationid', optionsLabelKey: 'qualification',
     },
     {
-        key: 'programId', label: 'Program',
-        optionsApi: 'program', optionsValueKey: 'programId', optionsLabelKey: 'program_name',
+        key: 'stream_branch_Id', label: 'Course',
+        optionsApi: 'stream-branch', optionsValueKey: 'stream_branch_Id', optionsLabelKey: 'stream_branch_name',
+        dependsOn: 'qualificationid', dependsOnQueryKey: 'qualification_id',
     },
     {
-        key: 'stream_branch_Id', label: 'Stream / Branch',
-        optionsApi: 'stream-branch', optionsValueKey: 'stream_branch_Id', optionsLabelKey: 'stream_branch_name',
+        key: 'session_id', label: 'Session',
+        optionsApi: 'master-session', optionsValueKey: 'sessionid', optionsLabelKey: 'session',
     },
     { key: 'passing_year', label: 'Pass-out Year', type: 'number' },
     { key: 'percentage', label: 'CGPA / Percentage' },

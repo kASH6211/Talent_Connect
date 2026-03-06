@@ -13,13 +13,16 @@ export default function Page() {
     { key: "institute_qualification_id", label: "ID" },
     ...(user?.role !== "institute"
       ? [
-          {
-            key: "instituteId",
-            label: "Institute",
-            render: (val: any, row: any) =>
-              row.institute?.institute_name || val,
-          },
-        ]
+        {
+          key: "instituteId",
+          label: "Institute",
+          render: (val: any, row: any) => (
+            <div className="max-w-[200px] truncate" title={row.institute?.institute_name || val}>
+              {row.institute?.institute_name || val}
+            </div>
+          ),
+        },
+      ]
       : []),
     {
       key: "qualificationid",
@@ -28,9 +31,30 @@ export default function Page() {
     },
     {
       key: "stream_branch_Id",
-      label: "Stream / Branch",
-      render: (val: any, row: any) =>
-        row.streamBranch?.stream_branch_name || val || "—",
+      label: "Course",
+      render: (val: any, row: any) => (
+        <div className="max-w-[180px] truncate" title={row.streamBranch?.stream_branch_name || val}>
+          {row.streamBranch?.stream_branch_name || val || "—"}
+        </div>
+      ),
+    },
+    {
+      key: "affiliating_body_id",
+      label: "Affiliation Body",
+      render: (_: any, row: any) =>
+        row.streamBranch?.affiliation?.affiliating_body || "—",
+    },
+    {
+      key: "nsqfid",
+      label: "NSQF Level",
+      render: (_: any, row: any) =>
+        row.streamBranch?.nsqf?.nsqf_level || "—",
+    },
+    {
+      key: "coursedurationid",
+      label: "Course Duration",
+      render: (_: any, row: any) =>
+        row.streamBranch?.courseDuration?.courseduration || "—",
     },
     { key: "is_active", label: "Status" },
   ];
@@ -38,15 +62,15 @@ export default function Page() {
   const FIELDS = [
     ...(user?.role !== "institute"
       ? [
-          {
-            key: "instituteId",
-            label: "Institute",
-            required: true,
-            optionsApi: "institute",
-            optionsValueKey: "institute_id",
-            optionsLabelKey: "institute_name",
-          },
-        ]
+        {
+          key: "instituteId",
+          label: "Institute",
+          required: true,
+          optionsApi: "institute",
+          optionsValueKey: "institute_id",
+          optionsLabelKey: "institute_name",
+        },
+      ]
       : []),
     {
       key: "qualificationid",
@@ -58,7 +82,7 @@ export default function Page() {
     },
     {
       key: "stream_branch_Id",
-      label: "Stream / Branch",
+      label: "Course",
       optionsApi: "stream-branch",
       optionsValueKey: "stream_branch_Id",
       optionsLabelKey: "stream_branch_name",

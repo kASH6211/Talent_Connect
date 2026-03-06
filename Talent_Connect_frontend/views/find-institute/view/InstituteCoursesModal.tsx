@@ -40,14 +40,21 @@ export default function InstituteCoursesModal({
     useEffect(() => {
         if (!open || !instituteId) return;
 
-        const fetchCourses = () => {
+        const fetchCourses = async () => {
             setLoading(true);
+            try {
+                const params = new URLSearchParams();
+                if (filters.qualification_ids.length) params.append('qualification_ids', filters.qualification_ids.join(','));
+                if (filters.stream_ids.length) params.append('stream_ids', filters.stream_ids.join(','));
 
-            // Simulate network request
-            setTimeout(() => {
-                setCourses(DUMMY_COURSES);
+                const res = await api.get(`/institute/${instituteId}/filtered-courses?${params.toString()}`);
+                setCourses(res.data || []);
+            } catch (err) {
+                console.error("Failed to fetch filtered courses:", err);
+                setCourses([]);
+            } finally {
                 setLoading(false);
-            }, 600);
+            }
         };
 
         fetchCourses();

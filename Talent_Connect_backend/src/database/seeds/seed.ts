@@ -21,7 +21,6 @@ import { District } from '../../modules/district/district.entity';
 import { InstituteEnrollment } from '../../modules/institute-enrollment/institute-enrollment.entity';
 import { TrainingType } from '../../modules/training-type/training-type.entity';
 import { Qualification } from '../../modules/qualification/qualification.entity';
-import { Program } from '../../modules/program/program.entity';
 import { StreamBranch } from '../../modules/stream-branch/stream-branch.entity';
 import { JobRole } from '../../modules/job-role/job-role.entity';
 import { LegalEntity } from '../../modules/legal-entity/legal-entity.entity';
@@ -31,7 +30,9 @@ import { IdentifierType } from '../../modules/identifier-type/identifier-type.en
 import { RequestType } from '../../modules/request-type/request-type.entity';
 import { RequestStatus } from '../../modules/request-status/request-status.entity';
 import { User } from '../../modules/users/user.entity';
-import { ProgramQualificationMapping } from '../../modules/program-qualification-mapping/program-qualification-mapping.entity';
+import { MasterSession } from '../../modules/master-session/master-session.entity';
+import { MasterNsqf } from '../../modules/master-nsqf/master-nsqf.entity';
+import { MasterCourseDuration } from '../../modules/master-course-duration/master-course-duration.entity';
 
 // ─── Data Source ─────────────────────────────────────────────────────────────
 const ds = new DataSource({
@@ -284,83 +285,39 @@ async function seed() {
         console.log('⏭  Qualifications already exist');
     }
 
-    // ── 12. Programs ─────────────────────────────────────────────────────────
-    const progRepo = ds.getRepository(Program);
-    let programs: Program[] = [];
-    if ((await progRepo.count()) === 0) {
-        programs = await progRepo.save([
-            { program_name: 'Engineering / Technology', program_abbreviation: 'ENGG', is_active: 'Y', created_date: now, createdby: 'seed' },
-            { program_name: 'Science', program_abbreviation: 'SCI', is_active: 'Y', created_date: now, createdby: 'seed' },
-            { program_name: 'Commerce', program_abbreviation: 'COM', is_active: 'Y', created_date: now, createdby: 'seed' },
-            { program_name: 'Arts / Humanities', program_abbreviation: 'ARTS', is_active: 'Y', created_date: now, createdby: 'seed' },
-            { program_name: 'Management / Business', program_abbreviation: 'MGMT', is_active: 'Y', created_date: now, createdby: 'seed' },
-            { program_name: 'Computer Applications', program_abbreviation: 'CA', is_active: 'Y', created_date: now, createdby: 'seed' },
-            { program_name: 'Diploma (Polytechnic)', program_abbreviation: 'DIPL', is_active: 'Y', created_date: now, createdby: 'seed' },
-            { program_name: 'ITI Trades', program_abbreviation: 'ITI', is_active: 'Y', created_date: now, createdby: 'seed' },
-            { program_name: 'Pharmacy', program_abbreviation: 'PHRM', is_active: 'Y', created_date: now, createdby: 'seed' },
-            { program_name: 'Medical', program_abbreviation: 'MED', is_active: 'Y', created_date: now, createdby: 'seed' },
-        ]);
-        console.log('✅ Programs seeded');
-    } else {
-        programs = await progRepo.find();
-        console.log('⏭  Programs already exist');
-    }
+    // ── 12. [REMOVED] Programs ─────────────────────────────────────────────
 
     // ── 13. Stream / Branches ────────────────────────────────────────────────
     const sbRepo = ds.getRepository(StreamBranch);
     if ((await sbRepo.count()) === 0) {
-        const engg = programs.find(p => p.program_abbreviation === 'ENGG');
-        const sci = programs.find(p => p.program_abbreviation === 'SCI');
-        const mgmt = programs.find(p => p.program_abbreviation === 'MGMT');
-        const ca = programs.find(p => p.program_abbreviation === 'CA');
-        const dipl = programs.find(p => p.program_abbreviation === 'DIPL');
-        const iti = programs.find(p => p.program_abbreviation === 'ITI');
-        const com = programs.find(p => p.program_abbreviation === 'COM');
-        const arts = programs.find(p => p.program_abbreviation === 'ARTS');
+        const be = qualifications.find(q => q.qualification === 'B.E. / B.Tech');
+        const diploma = qualifications.find(q => q.qualification === 'Diploma (Polytechnic)');
+        const iti = qualifications.find(q => q.qualification === 'ITI Certificate');
+        const science = qualifications.find(q => q.qualification === 'B.Sc.');
+        const commerce = qualifications.find(q => q.qualification === 'B.Com');
+        const arts = qualifications.find(q => q.qualification === 'B.A.');
 
         const branches = [
             // Engineering branches
-            { programId: engg?.programId, stream_branch_name: 'Computer Science & Engineering', stream_branch_abbreviation: 'CSE' },
-            { programId: engg?.programId, stream_branch_name: 'Information Technology', stream_branch_abbreviation: 'IT' },
-            { programId: engg?.programId, stream_branch_name: 'Electronics & Communication Engg.', stream_branch_abbreviation: 'ECE' },
-            { programId: engg?.programId, stream_branch_name: 'Electrical Engineering', stream_branch_abbreviation: 'EE' },
-            { programId: engg?.programId, stream_branch_name: 'Mechanical Engineering', stream_branch_abbreviation: 'ME' },
-            { programId: engg?.programId, stream_branch_name: 'Civil Engineering', stream_branch_abbreviation: 'CE' },
-            { programId: engg?.programId, stream_branch_name: 'Chemical Engineering', stream_branch_abbreviation: 'CHEM' },
-            { programId: engg?.programId, stream_branch_name: 'Aerospace Engineering', stream_branch_abbreviation: 'AERO' },
-            { programId: engg?.programId, stream_branch_name: 'Artificial Intelligence & ML', stream_branch_abbreviation: 'AIML' },
-            { programId: engg?.programId, stream_branch_name: 'Data Science', stream_branch_abbreviation: 'DS' },
+            { qualificationid: be?.qualificationid, stream_branch_name: 'Computer Science & Engineering', stream_branch_abbreviation: 'CSE' },
+            { qualificationid: be?.qualificationid, stream_branch_name: 'Information Technology', stream_branch_abbreviation: 'IT' },
+            { qualificationid: be?.qualificationid, stream_branch_name: 'Electronics & Communication Engg.', stream_branch_abbreviation: 'ECE' },
+            { qualificationid: be?.qualificationid, stream_branch_name: 'Electrical Engineering', stream_branch_abbreviation: 'EE' },
+            { qualificationid: be?.qualificationid, stream_branch_name: 'Mechanical Engineering', stream_branch_abbreviation: 'ME' },
+            { qualificationid: be?.qualificationid, stream_branch_name: 'Civil Engineering', stream_branch_abbreviation: 'CE' },
             // Science
-            { programId: sci?.programId, stream_branch_name: 'Physics', stream_branch_abbreviation: 'PHY' },
-            { programId: sci?.programId, stream_branch_name: 'Chemistry', stream_branch_abbreviation: 'CHEM' },
-            { programId: sci?.programId, stream_branch_name: 'Mathematics', stream_branch_abbreviation: 'MATH' },
-            { programId: sci?.programId, stream_branch_name: 'Biology / Biotechnology', stream_branch_abbreviation: 'BIO' },
-            { programId: sci?.programId, stream_branch_name: 'Statistics', stream_branch_abbreviation: 'STAT' },
-            // Management
-            { programId: mgmt?.programId, stream_branch_name: 'Marketing Management', stream_branch_abbreviation: 'MKT' },
-            { programId: mgmt?.programId, stream_branch_name: 'Finance Management', stream_branch_abbreviation: 'FIN' },
-            { programId: mgmt?.programId, stream_branch_name: 'Human Resource Management', stream_branch_abbreviation: 'HR' },
-            { programId: mgmt?.programId, stream_branch_name: 'Operations Management', stream_branch_abbreviation: 'OPS' },
-            // Computer Applications
-            { programId: ca?.programId, stream_branch_name: 'Computer Applications (General)', stream_branch_abbreviation: 'CA-GEN' },
+            { qualificationid: science?.qualificationid, stream_branch_name: 'Physics', stream_branch_abbreviation: 'PHY' },
+            { qualificationid: science?.qualificationid, stream_branch_name: 'Chemistry', stream_branch_abbreviation: 'CHEM' },
             // Diploma
-            { programId: dipl?.programId, stream_branch_name: 'Diploma in Computer Engineering', stream_branch_abbreviation: 'DCE' },
-            { programId: dipl?.programId, stream_branch_name: 'Diploma in Mechanical Engineering', stream_branch_abbreviation: 'DME' },
-            { programId: dipl?.programId, stream_branch_name: 'Diploma in Electronics & Comm.', stream_branch_abbreviation: 'DECE' },
-            { programId: dipl?.programId, stream_branch_name: 'Diploma in Civil Engineering', stream_branch_abbreviation: 'DCivE' },
+            { qualificationid: diploma?.qualificationid, stream_branch_name: 'Diploma in Computer Engineering', stream_branch_abbreviation: 'DCE' },
+            { qualificationid: diploma?.qualificationid, stream_branch_name: 'Diploma in Mechanical Engineering', stream_branch_abbreviation: 'DME' },
             // ITI
-            { programId: iti?.programId, stream_branch_name: 'Electrician', stream_branch_abbreviation: 'ELEC' },
-            { programId: iti?.programId, stream_branch_name: 'Fitter', stream_branch_abbreviation: 'FTR' },
-            { programId: iti?.programId, stream_branch_name: 'Welder', stream_branch_abbreviation: 'WLD' },
-            { programId: iti?.programId, stream_branch_name: 'Turner', stream_branch_abbreviation: 'TRN' },
-            { programId: iti?.programId, stream_branch_name: 'COPA (Computer Operator & Programming)', stream_branch_abbreviation: 'COPA' },
+            { qualificationid: iti?.qualificationid, stream_branch_name: 'Electrician', stream_branch_abbreviation: 'ELEC' },
+            { qualificationid: iti?.qualificationid, stream_branch_name: 'Fitter', stream_branch_abbreviation: 'FTR' },
             // Commerce
-            { programId: com?.programId, stream_branch_name: 'Accounts & Finance', stream_branch_abbreviation: 'BCom-AF' },
-            { programId: com?.programId, stream_branch_name: 'Banking & Insurance', stream_branch_abbreviation: 'BCom-BI' },
+            { qualificationid: commerce?.qualificationid, stream_branch_name: 'Accounts & Finance', stream_branch_abbreviation: 'BCom-AF' },
             // Arts
-            { programId: arts?.programId, stream_branch_name: 'English Literature', stream_branch_abbreviation: 'ENG-LIT' },
-            { programId: arts?.programId, stream_branch_name: 'Economics', stream_branch_abbreviation: 'ECO' },
-            { programId: arts?.programId, stream_branch_name: 'Political Science', stream_branch_abbreviation: 'POL' },
+            { qualificationid: arts?.qualificationid, stream_branch_name: 'English Literature', stream_branch_abbreviation: 'ENG-LIT' },
         ];
         await sbRepo.save(branches.map(b => ({ ...b, is_active: 'Y', created_date: now, createdby: 'seed' })));
         console.log('✅ Stream/Branches seeded');
@@ -491,42 +448,49 @@ async function seed() {
         console.log('✅ Request Statuses seeded');
     } else { console.log('⏭  Request Statuses already exist'); }
 
-    // ── 21. Program ↔ Qualification Mappings ─────────────────────────────────
-    const pqmRepo = ds.getRepository(ProgramQualificationMapping);
-    if ((await pqmRepo.count()) === 0) {
-        const allProgs = await progRepo.find();
-        const allQuals = await qualRepo.find();
-        const getProgId = (abbr: string) => allProgs.find(p => p.program_abbreviation === abbr)?.programId;
-        const getQualId = (q: string) => allQuals.find(qu => qu.qualification.includes(q))?.qualificationid;
+    // ── 21. [REMOVED] Program ↔ Qualification Mappings ─────────────────────
 
-        const mappings = [
-            // Engineering → B.E./B.Tech, M.E./M.Tech, Diploma, ITI
-            { qualificationid: getQualId('B.E.'), programId: getProgId('ENGG') },
-            { qualificationid: getQualId('M.E.'), programId: getProgId('ENGG') },
-            { qualificationid: getQualId('Diploma'), programId: getProgId('ENGG') },
-            // Management → BBA, MBA
-            { qualificationid: getQualId('BBA'), programId: getProgId('MGMT') },
-            { qualificationid: getQualId('MBA'), programId: getProgId('MGMT') },
-            // Computer Applications → BCA, MCA
-            { qualificationid: getQualId('BCA'), programId: getProgId('CA') },
-            { qualificationid: getQualId('MCA'), programId: getProgId('CA') },
-            // Science → B.Sc., M.Sc.
-            { qualificationid: getQualId('B.Sc.'), programId: getProgId('SCI') },
-            { qualificationid: getQualId('M.Sc.'), programId: getProgId('SCI') },
-            // Commerce → B.Com, M.Com
-            { qualificationid: getQualId('B.Com'), programId: getProgId('COM') },
-            { qualificationid: getQualId('M.Com'), programId: getProgId('COM') },
-            // Arts → B.A.
-            { qualificationid: getQualId('B.A.'), programId: getProgId('ARTS') },
-            // Diploma program
-            { qualificationid: getQualId('Diploma'), programId: getProgId('DIPL') },
-            // ITI
-            { qualificationid: getQualId('ITI'), programId: getProgId('ITI') },
-        ].filter(m => m.qualificationid && m.programId);
+    // ── 22. Master Sessions ──────────────────────────────────────────────────
+    const msRepo = ds.getRepository(MasterSession);
+    if ((await msRepo.count()) === 0) {
+        await msRepo.save([
+            { session: '2023-24', is_active: 'Y', created_date: now, createdby: 'seed' },
+            { session: '2024-25', is_active: 'Y', created_date: now, createdby: 'seed' },
+            { session: '2025-26', is_active: 'Y', created_date: now, createdby: 'seed' },
+        ]);
+        console.log('✅ Master Sessions seeded');
+    } else { console.log('⏭  Master Sessions already exist'); }
 
-        await pqmRepo.save(mappings.map(m => ({ ...m, is_active: 'Y', created_date: now, createdby: 'seed' })));
-        console.log('✅ Program-Qualification Mappings seeded');
-    } else { console.log('⏭  Program-Qualification Mappings already exist'); }
+    // ── 23. Master NSQF Levels ───────────────────────────────────────────────
+    const nsqfRepo = ds.getRepository(MasterNsqf);
+    if ((await nsqfRepo.count()) === 0) {
+        await nsqfRepo.save([
+            { nsqf_level: 1, is_active: 'Y', created_date: now, createdby: 'seed' },
+            { nsqf_level: 2, is_active: 'Y', created_date: now, createdby: 'seed' },
+            { nsqf_level: 3, is_active: 'Y', created_date: now, createdby: 'seed' },
+            { nsqf_level: 4, is_active: 'Y', created_date: now, createdby: 'seed' },
+            { nsqf_level: 5, is_active: 'Y', created_date: now, createdby: 'seed' },
+            { nsqf_level: 6, is_active: 'Y', created_date: now, createdby: 'seed' },
+            { nsqf_level: 7, is_active: 'Y', created_date: now, createdby: 'seed' },
+            { nsqf_level: 8, is_active: 'Y', created_date: now, createdby: 'seed' },
+            { nsqf_level: 9, is_active: 'Y', created_date: now, createdby: 'seed' },
+            { nsqf_level: 10, is_active: 'Y', created_date: now, createdby: 'seed' },
+        ]);
+        console.log('✅ Master NSQF Levels seeded');
+    } else { console.log('⏭  Master NSQF Levels already exist'); }
+
+    // ── 24. Master Course Durations ──────────────────────────────────────────
+    const cdRepo = ds.getRepository(MasterCourseDuration);
+    if ((await cdRepo.count()) === 0) {
+        await cdRepo.save([
+            { courseduration: '6 Months', is_active: 'Y', created_date: now, createdby: 'seed' },
+            { courseduration: '1 Year', is_active: 'Y', created_date: now, createdby: 'seed' },
+            { courseduration: '2 Years', is_active: 'Y', created_date: now, createdby: 'seed' },
+            { courseduration: '3 Years', is_active: 'Y', created_date: now, createdby: 'seed' },
+            { courseduration: '4 Years', is_active: 'Y', created_date: now, createdby: 'seed' },
+        ]);
+        console.log('✅ Master Course Durations seeded');
+    } else { console.log('⏭  Master Course Durations already exist'); }
 
     // ── 22. Seed Demo Institute & Industry (for login demo accounts) ──────────
     const instituteRepo = ds.getRepository('master_institute');

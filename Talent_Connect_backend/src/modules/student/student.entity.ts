@@ -8,8 +8,8 @@ import {
 import { BaseEntity } from '../../common/base.entity';
 import { Institute } from '../institute/institute.entity';
 import { Qualification } from '../qualification/qualification.entity';
-import { Program } from '../program/program.entity';
 import { StreamBranch } from '../stream-branch/stream-branch.entity';
+import { MasterSession } from '../master-session/master-session.entity';
 
 @Entity('student_details')
 export class Student extends BaseEntity {
@@ -52,13 +52,6 @@ export class Student extends BaseEntity {
     qualification: Qualification;
 
     @Column({ type: 'int', nullable: true })
-    programId: number;
-
-    @ManyToOne(() => Program, { nullable: true })
-    @JoinColumn({ name: 'programId' })
-    program: Program;
-
-    @Column({ type: 'int', nullable: true })
     stream_branch_Id: number;
 
     @ManyToOne(() => StreamBranch, { nullable: true })
@@ -76,4 +69,11 @@ export class Student extends BaseEntity {
 
     @Column({ type: 'varchar', length: 6, nullable: true })
     pincode: string;
+
+    @Column({ type: 'int', nullable: true })
+    session_id: number;
+
+    @ManyToOne(() => MasterSession, { nullable: true })
+    @JoinColumn({ name: 'session_id' })
+    session: MasterSession;
 }

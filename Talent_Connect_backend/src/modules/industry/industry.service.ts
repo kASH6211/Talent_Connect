@@ -8,9 +8,21 @@ export class IndustryService {
   constructor(
     @InjectRepository(Industry)
     private readonly repo: Repository<Industry>,
-  ) {}
+  ) { }
 
-  findAll() { return this.repo.find(); }
+  async findAll(page?: number, limit?: number) {
+    if (page && limit) {
+      const take = limit || 10;
+      const skip = (page - 1) * take;
+      const [data, total] = await this.repo.findAndCount({
+        take,
+        skip,
+        order: { industry_id: 'DESC' } as any,
+      });
+      return { data, total, page, limit: take };
+    }
+    return this.repo.find({ order: { industry_id: 'DESC' } as any });
+  }
 
   async findOne(id: number) {
     const item = await this.repo.findOne({ where: { industry_id: id } as any });

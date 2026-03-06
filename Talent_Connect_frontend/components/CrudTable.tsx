@@ -66,14 +66,25 @@ export default function CrudTable({
 }: CrudTableProps) {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const limit = 10;
   const isMobile = useIsMobile();
 
+  // Debounce search input (300ms) and reset page on new search
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1); // Go back to page 1 when search changes
+    }, 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const { data, isLoading, isFetching, isError, refetch } = useQuery<any>({
-    queryKey: [queryKey, page],
+    queryKey: [queryKey, page, debouncedSearch],
     queryFn: async () => {
-      const params = pagination ? { page, limit } : {};
+      const params: any = pagination ? { page, limit } : {};
+      if (debouncedSearch) params.search = debouncedSearch;
       const res = await api.get(apiPath, { params });
       return res.data;
     },
@@ -88,17 +99,20 @@ export default function CrudTable({
   });
 
   const rows: any[] = Array.isArray(data) ? data : data?.data || [];
-  const totalCount = pagination ? data?.total || 0 : rows.length;
+  const totalCount =
+    pagination && !Array.isArray(data) ? data?.total || 0 : rows.length;
   const totalPages = Math.ceil(totalCount / limit);
 
-  const filtered = search
+  // When server-side search is active, use rows as-is (already filtered by backend)
+  // When no pagination or plain array, do client-side filter as fallback
+  const filtered = (!pagination || Array.isArray(data)) && debouncedSearch
     ? rows.filter((r) =>
-        columns.some((c) =>
-          String(r[c.key] ?? "")
-            .toLowerCase()
-            .includes(search.toLowerCase()),
-        ),
-      )
+      columns.some((c) =>
+        String(r[c.key] ?? "")
+          .toLowerCase()
+          .includes(debouncedSearch.toLowerCase()),
+      ),
+    )
     : rows;
 
   // ── Single row card for mobile ──

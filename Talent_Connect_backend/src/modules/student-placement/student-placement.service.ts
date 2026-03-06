@@ -13,7 +13,23 @@ export class StudentPlacementService {
   /** Fast COUNT */
   count() { return this.repo.count(); }
 
-  findAll() { return this.repo.find(); }
+  async findAll(page?: number, limit?: number) {
+    if (page && limit) {
+      const take = limit || 10;
+      const skip = (page - 1) * take;
+      const [data, total] = await this.repo.findAndCount({
+        take,
+        skip,
+        order: { placement_id: 'DESC' } as any,
+        relations: ['student', 'industry']
+      });
+      return { data, total, page, limit: take };
+    }
+    return this.repo.find({
+      order: { placement_id: 'DESC' } as any,
+      relations: ['student', 'industry']
+    });
+  }
 
   async findOne(id: number) {
     const item = await this.repo.findOne({ where: { placement_id: id } as any });

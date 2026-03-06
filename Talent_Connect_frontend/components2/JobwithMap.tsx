@@ -77,7 +77,7 @@ const JobsWithMap: React.FC = () => {
                 Top Courses
               </h2>
               <p className="text-xl text-base-content/70 max-w-md">
-                Most enrolled programs across Punjab institutes
+                Most enrolled qualifications across Punjab institutes
               </p>
             </div>
 

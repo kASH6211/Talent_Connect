@@ -12,7 +12,12 @@ import { Institute } from './institute.entity';
 export class InstituteController {
   constructor(private readonly service: InstituteService) { }
 
-  @Get() findAll() { return this.service.findAll(); }
+  @Get()
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
+    return this.service.findAll(page, limit);
+  }
 
   /** Filtered institute search — GET /api/institute/search */
   @Public()
@@ -21,7 +26,6 @@ export class InstituteController {
   @ApiQuery({ name: 'type_ids', required: false })
   @ApiQuery({ name: 'ownership_ids', required: false })
   @ApiQuery({ name: 'qualification_ids', required: false })
-  @ApiQuery({ name: 'program_ids', required: false })
   @ApiQuery({ name: 'stream_ids', required: false })
   @ApiQuery({ name: 'sort', required: false, enum: ['name', 'student_count'] })
   @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })

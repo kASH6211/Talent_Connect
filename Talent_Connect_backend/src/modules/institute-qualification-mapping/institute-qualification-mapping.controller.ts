@@ -29,7 +29,10 @@ export class InstituteQualificationMappingController {
     }
 
     @Public()
-    @Get() findAll(@Req() req: any) { return this.service.findAll(req.user); }
+    @Get() findAll(@Req() req: any) {
+        return this.service.findAll({ ...req.query, ...req.user });
+    }
+
     @Public()
     @Get(':id') findOne(@Param('id', ParseIntPipe) id: number) { return this.service.findOne(id); }
     @Post() create(@Body() dto: Partial<InstituteQualificationMapping>, @Req() req: any) { return this.service.create(dto, req.user); }

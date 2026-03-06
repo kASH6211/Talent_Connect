@@ -10,12 +10,22 @@ export class InstituteQualificationMappingService {
         private readonly repo: Repository<InstituteQualificationMapping>,
     ) { }
 
-    findAll(user?: any) {
-        const where: any = {};
-        if (user?.role === 'institute' && user?.institute_id) {
-            where.instituteId = user.institute_id;
+    findAll(query?: any) {
+        const qb = this.repo.createQueryBuilder('m')
+            .leftJoinAndSelect('m.institute', 'institute')
+            .leftJoinAndSelect('m.qualification', 'qualification')
+            .leftJoinAndSelect('m.streamBranch', 'streamBranch')
+            .leftJoinAndSelect('streamBranch.affiliation', 'affiliation')
+            .leftJoinAndSelect('streamBranch.nsqf', 'nsqf')
+            .leftJoinAndSelect('streamBranch.courseDuration', 'courseDuration');
+
+        if (query?.role === 'institute' && query?.institute_id) {
+            qb.where('m.instituteId = :instituteId', { instituteId: query.institute_id });
+        } else if (query?.institute_id) {
+            qb.where('m.instituteId = :instituteId', { instituteId: query.institute_id });
         }
-        return this.repo.find({ where, relations: ['institute', 'qualification', 'streamBranch'] });
+
+        return qb.getMany();
     }
 
     async findOne(id: number) {

@@ -391,11 +391,11 @@ export function OfferModalV2({
                   onChange={setQualIds} placeholder="Any qualification" disabledOptions={disabledQualIds} />
               </div>
 
-              {/* Relevant Course / Stream */}
+              {/* Relevant Course */}
               <div>
-                <label className={fieldLabelCls}>Relevant Course / Stream</label>
-                <MultiSelectDropdown label="Stream" options={streamOptions} selected={streamIds}
-                  onChange={setStreamIds} placeholder="Any stream / branch" />
+                <label className={fieldLabelCls}>Relevant Course</label>
+                <MultiSelectDropdown label="Course" options={streamOptions} selected={streamIds}
+                  onChange={setStreamIds} placeholder="Any course" />
               </div>
 
               {/* Students required + Experience */}

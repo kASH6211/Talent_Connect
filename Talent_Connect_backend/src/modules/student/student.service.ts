@@ -21,13 +21,13 @@ export class StudentService {
         take,
         skip,
         order: { student_id: 'DESC' },
-        relations: ['institute', 'program', 'streamBranch']
+        relations: ['institute', 'qualification', 'streamBranch', 'session']
       });
       return { data, total, page, limit: take };
     }
     return this.repo.find({
       order: { student_id: 'DESC' },
-      relations: ['institute', 'program', 'streamBranch']
+      relations: ['institute', 'qualification', 'streamBranch', 'session']
     });
   }
 
