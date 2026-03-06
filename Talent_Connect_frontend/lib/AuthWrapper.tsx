@@ -25,6 +25,7 @@ export default function AuthWrapper({
       "/signup",
       "/forgot-password",
       "/contact",
+      "/search-institutes",
     ];
     // const publicRoutes = ["/", "/login", "/signup", "/forgot-password", "/search-institutes"];
     const guestOnlyRoutes = ["/login", "/signup", "/forgot-password"];
