@@ -12,6 +12,9 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
+import { useState } from "react";
+import axios from "axios";
+import { Loader2 } from "lucide-react";
 
 interface RoleSelectModalProps {
   open: boolean;
@@ -30,9 +33,27 @@ export default function RoleSelectModal({ open }: RoleSelectModalProps) {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
+  const [loading, setLoading] = useState(false);
+
   if (!open) return null;
 
-  const handleRoleSelect = (role: string) => {
+  const handleRoleSelect = async (role: string) => {
+    if (role === "Industry") {
+      setLoading(true);
+      try {
+        const res = await axios.get("/api/sso");
+        if (res.data?.url) {
+          window.location.href = res.data.url;
+          return; // Prevent further execution as we are redirecting
+        }
+      } catch (e) {
+        console.error("SSO login proxy failed", e);
+      } finally {
+        // Only stop loading if we didn't redirect
+        setLoading(false);
+      }
+    }
+
     dispatch(setCurrentRole(role));
     dispatch(updateLoginUi({ roleSelectModal: { open: false } }));
     router.push("/login");
@@ -87,14 +108,16 @@ export default function RoleSelectModal({ open }: RoleSelectModalProps) {
               <button
                 key={role.name}
                 onClick={() => handleRoleSelect(role.name)}
-                className="group flex flex-col items-center justify-center
+                disabled={loading}
+                className={`group flex flex-col items-center justify-center
                 p-6 rounded-lg
                 border border-gray-200
                 bg-white
                 hover:border-blue-500
                 hover:shadow-md
                 transition-all duration-200
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+                ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <div
                   className="w-14 h-14 rounded-full 
@@ -103,7 +126,11 @@ export default function RoleSelectModal({ open }: RoleSelectModalProps) {
                   group-hover:bg-blue-50
                   transition-colors"
                 >
-                  <Icon className="w-6 h-6 text-blue-600" />
+                  {loading && role.name === "Industry" ? (
+                    <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                  ) : (
+                    <Icon className="w-6 h-6 text-blue-600" />
+                  )}
                 </div>
 
                 <p className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
