@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/AuthProvider";
 import { getDashboardRoute } from "./helper";
+import SpinnerFallback from "@/components/Spinner";
 
 export default function AuthWrapper({
   children,
@@ -51,11 +52,7 @@ export default function AuthWrapper({
 
   // 🔒 Show spinner while checking auth OR redirecting
   if (loading || checking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-base-200">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
-      </div>
-    );
+    return <SpinnerFallback />;
   }
 
   return <>{children}</>;
