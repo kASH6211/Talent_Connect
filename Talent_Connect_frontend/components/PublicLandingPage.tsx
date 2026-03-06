@@ -112,13 +112,27 @@ function LoginPromptModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
+  // Handle click outside to close
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // If the click is on the backdrop (not on the modal content), close it
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 sm:p-8 border border-slate-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+      onClick={handleBackdropClick} // ← This enables outside click to close
+    >
+      <div
+        className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 sm:p-8 border border-slate-200"
+        onClick={(e) => e.stopPropagation()} // ← Prevents closing when clicking inside modal
+      >
         <div className="w-16 h-16 mx-auto bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-          <Shield size={32} className="text-blue-600" />
+          <Shield size={32} className="text-primary" />
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">
+        <h2 className="text-2xl font-bold text-primary text-center mb-2">
           Authentication Required
         </h2>
         <p className="text-slate-600 text-center mb-8 text-sm sm:text-base">
@@ -129,13 +143,13 @@ function LoginPromptModal({ onClose }: { onClose: () => void }) {
             onClick={() =>
               dispatch(updateLoginUi({ roleSelectModal: { open: true } }))
             }
-            className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm sm:text-base"
+            className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-primary hover:bg-primary text-white font-semibold rounded-lg transition-colors text-sm sm:text-base"
           >
             Sign In
           </button>
           <button
             onClick={onClose}
-            className="w-full px-4 sm:px-6 py-2.5 sm:py-3 border border-slate-300 text-slate-900 hover:bg-slate-50 font-semibold rounded-lg transition-colors text-sm sm:text-base"
+            className="w-full px-4 sm:px-6 py-2.5 sm:py-3 border border-slate-300 text-primary hover:bg-slate-50 font-semibold rounded-lg transition-colors text-sm sm:text-base"
           >
             Cancel
           </button>
@@ -144,6 +158,8 @@ function LoginPromptModal({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
+
+// ... (rest of your PublicLandingPage component remains exactly the same)
 
 export default function PublicLandingPage() {
   const searchParams = useSearchParams();

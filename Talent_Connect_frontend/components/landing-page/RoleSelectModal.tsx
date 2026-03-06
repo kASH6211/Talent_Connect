@@ -10,7 +10,7 @@ import {
   Landmark,
   Code,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useState } from "react";
 import axios from "axios";
@@ -31,6 +31,8 @@ const roles = [
 
 export default function RoleSelectModal({ open }: RoleSelectModalProps) {
   const router = useRouter();
+  const path = usePathname();
+
   const dispatch = useDispatch<AppDispatch>();
 
   const [loading, setLoading] = useState(false);
@@ -61,7 +63,11 @@ export default function RoleSelectModal({ open }: RoleSelectModalProps) {
 
   const handleClose = () => {
     dispatch(updateLoginUi({ roleSelectModal: { open: false } }));
-    router.push("/");
+    if (path === "/search-institutes" || path === "/contact") {
+      router.push(path);
+    } else {
+      router.push("/");
+    }
   };
 
   return (
