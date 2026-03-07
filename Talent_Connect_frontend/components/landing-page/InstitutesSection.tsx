@@ -6,6 +6,7 @@ import {
   GraduationCap,
   HeartPulse,
   Award,
+  ArrowRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -154,6 +155,24 @@ const InstitutesSection = () => {
               </div>
             );
           })}
+        </div>
+
+        {/* Explore All Institutes CTA */}
+        <div className="mt-16 text-center animate-fade-in-up" style={{ animationDelay: '800ms' }}>
+          <button
+            onClick={() => router.push("/search-institutes")}
+            className="group relative inline-flex items-center gap-3 px-8 py-4 bg-primary text-white rounded-xl shadow-lg hover:shadow-primary/20 hover:-translate-y-1 transition-all duration-300"
+          >
+            <span className="text-sm font-bold uppercase tracking-widest">
+              Explore all institutes
+            </span>
+            <div className="p-1 rounded-md bg-white/20 group-hover:bg-secondary transition-colors duration-300">
+              <ArrowRight className="w-4 h-4" />
+            </div>
+          </button>
+          <p className="mt-4 text-slate-500 text-xs font-medium uppercase tracking-widest opacity-60">
+            Across all districts of Punjab
+          </p>
         </div>
       </div>
 

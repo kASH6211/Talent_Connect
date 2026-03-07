@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { MapPin, Mail, Clock, Phone, Send } from "lucide-react";
+import { MapPin, Mail, Clock, Send, Info } from "lucide-react";
+import { motion } from "framer-motion";
 import Footer from "@/components/landing-page/Footer";
 import RoleSelectModal from "@/components/landing-page/RoleSelectModal";
 import { useSelector } from "react-redux";
@@ -24,162 +25,188 @@ const ContactPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
       <main className="flex-1">
-        {/* Header */}
-        <div className="bg-primary py-12 text-center">
-          <p className="text-secondary text-xs font-bold uppercase tracking-[0.2em] mb-2">
-            Get in Touch
-          </p>
-          <h1 className="text-white text-3xl font-extrabold">Contact Us</h1>
-          <p className="text-white text-sm mt-2 max-w-md mx-auto">
-            Have questions? We'd love to hear from you.
-          </p>
-        </div>
+        {/* Professional Hero Section */}
+        <section className="relative w-full bg-primary overflow-hidden py-16 md:py-24">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]" />
+          </div>
 
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Contact Info */}
-            <div className="space-y-6">
-              <h2 className="text-foreground font-bold text-lg">
-                Contact Information
+          <div className="container mx-auto px-4 relative z-10 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-[10px] font-black uppercase tracking-[0.2em] mb-6"
+            >
+              <Info className="w-3 h-3" /> Talent Connect Portal
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.1 }}
+              className="text-white text-4xl md:text-6xl font-black tracking-tight mb-4"
+            >
+              Contact Support
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.3 }}
+              className="text-white/80 text-lg max-w-2xl mx-auto font-medium"
+            >
+              Official Department of Technical Education & Industrial Training Support
+            </motion.p>
+          </div>
+        </section>
+
+        <div className="container mx-auto px-4 -mt-12 relative z-20 pb-20">
+          <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Formal Contact Info */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="bg-white p-8 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 h-fit"
+            >
+              <h2 className="text-xl font-black text-primary uppercase tracking-wider mb-8 flex items-center gap-2">
+                <span className="w-8 h-1 bg-primary rounded-full" />
+                Information
               </h2>
-              <div className="space-y-5">
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <MapPin className="w-4 h-4 text-primary" />
+
+              <div className="space-y-8">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
+                    <MapPin className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-foreground text-sm font-semibold">
-                      Address
-                    </p>
-                    <p className="text-muted-foreground text-xs mt-0.5">
-                      Department of Technical Education & Industrial Training
-                      <br />
-                      Sector 36-A, Chandigarh, Punjab
+                    <h3 className="text-slate-900 font-black text-sm uppercase tracking-wide">Main Office</h3>
+                    <p className="text-slate-700 text-sm leading-relaxed mt-1.5 font-medium">
+                      Department of Technical Education & Industrial Training, Sector 36-A, Chandigarh, Punjab
                     </p>
                   </div>
                 </div>
-                {/* <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Phone className="w-4 h-4 text-primary" />
+
+                <div className="flex items-start gap-4 border-t border-slate-100 pt-6">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
+                    <Mail className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-foreground text-sm font-semibold">
-                      Phone
-                    </p>
-                    <p className="text-muted-foreground text-xs mt-0.5">
-                      +91-172-2601300
-                    </p>
-                  </div>
-                </div> */}
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Mail className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-foreground text-sm font-semibold">
-                      Email
-                    </p>
-                    <p className="text-muted-foreground text-xs mt-0.5">
+                    <h3 className="text-slate-900 font-black text-sm uppercase tracking-wide">Official Email</h3>
+                    <p className="text-primary text-sm mt-1.5 font-bold underline underline-offset-4">
                       info.dteit@punjab.gov.in
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Clock className="w-4 h-4 text-primary" />
+
+                <div className="flex items-start gap-4 border-t border-slate-100 pt-6">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
+                    <Clock className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-foreground text-sm font-semibold">
-                      Working Hours
-                    </p>
-                    <p className="text-muted-foreground text-xs mt-0.5">
-                      Mon – Fri: 9:00 AM to 5:00 PM
+                    <h3 className="text-slate-900 font-black text-sm uppercase tracking-wide">Business Hours</h3>
+                    <p className="text-slate-700 text-sm mt-1.5 font-medium">
+                      Mon – Fri: 09:00 AM - 05:00 PM
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Contact Form */}
-            <div className="md:col-span-2">
-              <div className="bg-card border border-border rounded-xl p-6 md:p-8">
-                <h2 className="text-foreground font-bold text-lg mb-6">
-                  Send us a Message
+              <div className="mt-12 p-5 rounded-xl bg-slate-50 border border-slate-200">
+                <p className="text-[#64748B] text-xs font-bold leading-relaxed">
+                  For faster processing of your query, please include your Registration ID if applicable.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Official Contact Form */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="lg:col-span-2 bg-white p-8 md:p-12 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200"
+            >
+              <div className="mb-10">
+                <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
+                  Electronic Inquiry Form
                 </h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-foreground text-sm font-medium block mb-1.5">
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        value={form.name}
-                        onChange={(e) =>
-                          setForm({ ...form, name: e.target.value })
-                        }
-                        placeholder="Your full name"
-                        className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="text-foreground text-sm font-medium block mb-1.5">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        value={form.email}
-                        onChange={(e) =>
-                          setForm({ ...form, email: e.target.value })
-                        }
-                        placeholder="your@email.com"
-                        className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-foreground text-sm font-medium block mb-1.5">
-                      Subject
+                <p className="text-slate-600 mt-2 font-medium">
+                  Submit your request through our secure portal. All fields are mandatory.
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-slate-900 text-[11px] font-black uppercase tracking-widest ml-1">
+                      Full Name
                     </label>
                     <input
                       type="text"
-                      value={form.subject}
-                      onChange={(e) =>
-                        setForm({ ...form, subject: e.target.value })
-                      }
-                      placeholder="What is this about?"
-                      className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      placeholder="ENTER FULL NAME"
+                      className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                       required
                     />
                   </div>
-                  <div>
-                    <label className="text-foreground text-sm font-medium block mb-1.5">
-                      Message
+                  <div className="space-y-2">
+                    <label className="text-slate-900 text-[11px] font-black uppercase tracking-widest ml-1">
+                      Email Address
                     </label>
-                    <textarea
-                      value={form.message}
-                      onChange={(e) =>
-                        setForm({ ...form, message: e.target.value })
-                      }
-                      placeholder="Write your message here..."
-                      rows={5}
-                      className="w-full px-4 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                    <input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      placeholder="ENTER EMAIL ADDRESS"
+                      className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                       required
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-slate-900 text-[11px] font-black uppercase tracking-widest ml-1">
+                    Inquiry Subject
+                  </label>
+                  <input
+                    type="text"
+                    value={form.subject}
+                    onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                    placeholder="ENTER SUBJECT"
+                    className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-slate-900 text-[11px] font-black uppercase tracking-widest ml-1">
+                    Message Details
+                  </label>
+                  <textarea
+                    value={form.message}
+                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    placeholder="PROVIDE DETAILED INFORMATION..."
+                    rows={6}
+                    className="w-full px-4 py-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
+                    required
+                  />
+                </div>
+
+                <div className="pt-4 flex justify-end">
                   <button
                     type="submit"
-                    className="bg-secondary text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity inline-flex items-center gap-2"
+                    className="w-full md:w-auto bg-primary text-white px-12 py-4 rounded-lg text-sm font-black uppercase tracking-[0.2em] hover:bg-primary/90 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3"
                   >
-                    <Send className="w-4 h-4" /> Send Message
+                    Submit Request
+                    <Send className="w-4 h-4" />
                   </button>
-                </form>
-              </div>
-            </div>
+                </div>
+              </form>
+            </motion.div>
           </div>
         </div>
       </main>
