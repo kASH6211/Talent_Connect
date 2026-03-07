@@ -8,14 +8,16 @@ import ContactSection from "./ContactSection";
 import RoleSelectModal from "./RoleSelectModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import { useAuth } from "@/lib/AuthProvider";
 
 const HunarPunjabHome = () => {
   const openModal = useSelector((state: RootState) => state?.login?.ui);
+  const { user, role } = useAuth();
 
   return (
     <div className="min-h-screen bg-background">
       <HeroSection2 />
-      <InstitutesSection />
+      {role !== "institute" && <InstitutesSection />}
       <StudentConnectSection />
       <PartnersSection />
       {/* <ContactSection /> */}

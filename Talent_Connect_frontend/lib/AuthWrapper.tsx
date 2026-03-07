@@ -39,8 +39,11 @@ export default function AuthWrapper({
 
     // Logged in → block guest-only routes
     if (user && isPublic) {
-      const dashboard = getDashboardRoute(role);
-      if (pathname !== dashboard) {
+      const guestOnlyRoutes = ["/login", "/signup", "/forgot-password"];
+      const isGuestOnly = guestOnlyRoutes.includes(pathname);
+
+      if (isGuestOnly) {
+        const dashboard = getDashboardRoute(role);
         router.replace(dashboard);
         return;
       }

@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Menu, X, UserCircle, ChevronDown, LogOut, User as UserIcon } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
 import { updateLoginUi } from "@/store/login";
@@ -21,11 +22,14 @@ const Navbar = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user, logout, role } = useAuth();
 
-  const isActive = (to: string) =>
-    typeof window !== "undefined" && window.location.pathname === to;
+  const pathname = usePathname();
+  const isActive = (to: string) => pathname === to;
 
   const navLinks = user
-    ? pageLinks.filter((link) => link.label === "Home" || link.label === "Contact")
+    ? [
+      ...pageLinks.filter((link) => link.label === "Home" || link.label === "Contact"),
+      { label: "Dashboard", to: getDashboardRoute(role) }
+    ]
     : pageLinks;
 
   // Close dropdown when clicking outside
