@@ -5,8 +5,13 @@ import Sidebar from "./Sidebar";
 import { usePathname } from "next/navigation";
 import AuthWrapper from "@/lib/AuthWrapper";
 import { Menu } from "lucide-react";
+import RoleSelectModal from "./landing-page/RoleSelectModal";
+import LoginModal from "./LoginModal";
 import GlobalConfirmModal from "./common/ConfirmDialogHOC";
 import FastTrackOverlay from "./common/FastTrackOverlay";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "@/store/store";
+import { updateLoginUi } from "@/store/login";
 
 export default function AppShell({
   children,
@@ -18,6 +23,8 @@ export default function AppShell({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const dispatch = useDispatch<AppDispatch>();
+  const ui = useSelector((state: RootState) => state.login.ui);
 
   const allowedRoutes = ["/login", "/", "/contact"];
 
@@ -47,6 +54,12 @@ export default function AppShell({
           {children}
           <FastTrackOverlay />
           <GlobalConfirmModal />
+
+          <RoleSelectModal open={ui.roleSelectModal.open} />
+          <LoginModal
+            isOpen={ui.loginModal.open}
+            onClose={() => dispatch(updateLoginUi({ loginModal: { open: false } }))}
+          />
         </>
       ) : (
         <div className="flex h-screen w-screen overflow-hidden">
@@ -97,6 +110,12 @@ export default function AppShell({
           </main>
           <GlobalConfirmModal />
           <FastTrackOverlay />
+
+          <RoleSelectModal open={ui.roleSelectModal.open} />
+          <LoginModal
+            isOpen={ui.loginModal.open}
+            onClose={() => dispatch(updateLoginUi({ loginModal: { open: false } }))}
+          />
         </div>
       )}
     </AuthWrapper>

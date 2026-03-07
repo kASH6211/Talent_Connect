@@ -91,8 +91,12 @@ export default function RoleSelectModal({ open }: RoleSelectModalProps) {
     }
 
     dispatch(setCurrentRole(role));
-    dispatch(updateLoginUi({ roleSelectModal: { open: false } }));
-    router.push("/login");
+    dispatch(
+      updateLoginUi({
+        loginModal: { open: true },
+        roleSelectModal: { open: false },
+      })
+    );
   };
 
   const handleClose = () => {

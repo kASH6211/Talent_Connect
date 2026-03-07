@@ -824,7 +824,6 @@ export default function PublicLandingPage() {
           </div>
         </div>
 
-        <RoleSelectModal open={roleModal?.roleSelectModal?.open} />
       </div>
     </>
   );

@@ -113,19 +113,16 @@ const industryNav = [
 
 const roleBadge: Record<string, { label: string; color: string }> = {
   admin: {
-    label: "Admin",
-    color:
-      "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800",
+    label: "Administrator",
+    color: "bg-primary text-white border-primary/20 shadow-[0_2px_10px_-3px_rgba(var(--p),0.4)]",
   },
   institute: {
-    label: "Institute",
-    color:
-      "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800",
+    label: "Institute Portal",
+    color: "bg-primary text-white border-primary/20 shadow-[0_2px_10px_-3px_rgba(var(--p),0.4)]",
   },
   industry: {
-    label: "Industry",
-    color:
-      "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800",
+    label: "Industry Partner",
+    color: "bg-primary text-white border-primary/20 shadow-[0_2px_10px_-3px_rgba(var(--p),0.4)]",
   },
 };
 
@@ -312,66 +309,64 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* User Profile */}
+        {/* User Profile Section */}
         {!loading && user && (
           <div
             className={clsx(
-              "flex items-center gap-3 p-3 border-b border-base-200 dark:border-base-800",
-              "bg-base-50 dark:bg-base-950/50 transition-all",
-              collapsed ? "justify-center" : "",
+              "px-4 py-6 border-b border-base-200 dark:border-base-800",
+              "transition-all duration-300",
+              collapsed ? "flex flex-col items-center gap-4" : "space-y-4"
             )}
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-base-300 to-base-200 dark:from-base-700 dark:to-base-800 flex items-center justify-center shadow-md flex-shrink-0">
-              <UserCircle
-                size={18}
-                className="text-base-content/70"
-                aria-hidden="true"
-              />
+            <div className={clsx(
+              "flex items-center gap-3.5",
+              collapsed ? "flex-col" : "flex-row"
+            )}>
+              {/* Premium Avatar */}
+              <div className="relative shrink-0">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-[0_8px_16px_-4px_rgba(var(--p),0.3)] ring-2 ring-white dark:ring-base-900 group">
+                  <UserCircle
+                    size={22}
+                    className="text-primary-content opacity-90 group-hover:scale-110 transition-transform"
+                    aria-hidden="true"
+                  />
+                </div>
+                {/* Active Status Indicator */}
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-base-900 shadow-sm" />
+              </div>
+
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-[13px] font-black text-base-content truncate tracking-tight"
+                    title={orgName || ""}
+                  >
+                    {orgName || "Organization"}
+                  </p>
+                  {user.username && (
+                    <p
+                      className="text-[11px] font-bold text-base-content/40 truncate tracking-wide leading-none mt-0.5"
+                      title={user.username}
+                    >
+                      @{user.username}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {!collapsed && (
-              <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                <div
-                  className="text-sm font-semibold text-base-content truncate"
-                  title={orgName || ""}
-                >
-                  {orgName || "Organization"}
-                </div>
-                {user.username && (
-                  <div
-                    className="text-xs font-medium text-base-content/70 truncate"
-                    title={user.username}
-                  >
-                    {user.username}
-                  </div>
+              <div
+                className={clsx(
+                  "inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] border transition-all duration-300 w-full justify-center group cursor-default",
+                  badge.color
                 )}
-
-                <div
-                  className={clsx(
-                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide shadow-sm transition-all duration-300",
-                    // Yellow theme from your global CSS
-                    "bg-[#FFF8E1] text-[#D4A017] border border-[#FFE082]/70",
-                    // Hover: slightly brighter + shadow lift
-                    "hover:bg-[#FFF176] hover:shadow-md hover:shadow-[#FFD400]/30 hover:scale-[1.03]",
-                    // Pulse dot
-                    "relative",
-                  )}
-                >
-                  {/* Pulsing status dot */}
-                  <span
-                    className={clsx(
-                      "absolute -left-1 w-2 h-2 rounded-full bg-[#FFD400] shadow-sm",
-                      "animate-pulse",
-                    )}
-                  />
-
-                  {/* Label */}
-                  <span className="relative z-10">{badge.label}</span>
-                </div>
+              >
+                <span className="opacity-80 group-hover:opacity-100 transition-opacity">
+                  {badge.label}
+                </span>
               </div>
             )}
-
-            {/* {!collapsed && <ThemeToggle />} */}
           </div>
         )}
 
