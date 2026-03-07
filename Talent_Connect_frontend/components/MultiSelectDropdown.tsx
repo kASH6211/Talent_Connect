@@ -94,32 +94,34 @@ export default function MultiSelectDropdown({
                     </div>
                     {/* Options */}
                     <div className="max-h-52 overflow-y-auto">
-                        {filtered.length === 0
-                            ? <div className="px-3 py-3 text-xs text-base-content/40 text-center">No results</div>
-                            : filtered.map(opt => {
-                                const checked = selected.includes(opt.value);
-                                const disabled = disabledOptions.includes(opt.value);
-                                return (
-                                    <button
-                                        key={opt.value}
-                                        type="button"
-                                        onClick={() => !disabled && toggle(opt.value)}
-                                        disabled={disabled}
-                                        className={clsx(
-                                            'w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors',
-                                            disabled ? 'opacity-50 cursor-not-allowed' : checked ? 'bg-primary/10 text-base-content' : 'text-base-content/70 hover:bg-base-300'
-                                        )}
-                                    >
-                                        <span className={clsx(
-                                            'w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all',
-                                            disabled ? 'border-base-content/20' : checked ? 'bg-primary border-primary' : 'border-base-content/30'
-                                        )}>
-                                            {checked && <Check size={10} className={clsx(disabled ? "text-base-content/40" : "text-primary-content")} />}
-                                        </span>
-                                        {opt.label}
-                                    </button>
-                                );
-                            })}
+                        {!options || options.length === 0
+                            ? <div className="px-3 py-4 text-xs text-base-content/50 text-center font-medium">No records found for current filters</div>
+                            : filtered.length === 0
+                                ? <div className="px-3 py-3 text-xs text-base-content/40 text-center">No results</div>
+                                : filtered.map(opt => {
+                                    const checked = selected.includes(opt.value);
+                                    const disabled = disabledOptions.includes(opt.value);
+                                    return (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            onClick={() => !disabled && toggle(opt.value)}
+                                            disabled={disabled}
+                                            className={clsx(
+                                                'w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors',
+                                                disabled ? 'opacity-50 cursor-not-allowed' : checked ? 'bg-primary/10 text-base-content' : 'text-base-content/70 hover:bg-base-300'
+                                            )}
+                                        >
+                                            <span className={clsx(
+                                                'w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all',
+                                                disabled ? 'border-base-content/20' : checked ? 'bg-primary border-primary' : 'border-base-content/30'
+                                            )}>
+                                                {checked && <Check size={10} className={clsx(disabled ? "text-base-content/40" : "text-primary-content")} />}
+                                            </span>
+                                            {opt.label}
+                                        </button>
+                                    );
+                                })}
                     </div>
                     {count > 0 && (
                         <div className="border-t border-base-300 px-3 py-2 flex justify-between items-center">

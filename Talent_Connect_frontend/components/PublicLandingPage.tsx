@@ -155,15 +155,14 @@ export default function PublicLandingPage() {
       .catch((err) => console.error("Error loading Punjab GeoJSON:", err));
   }, []);
 
-  // Load filter options
+  // Load filter options (Static ones)
   useEffect(() => {
     const loadFilters = async () => {
       try {
-        const [types, ownerships, quals, streams] = await Promise.all([
+        const [types, ownerships, quals] = await Promise.all([
           pub.get("/institute-type"),
           pub.get("/institute-ownership-type"),
           pub.get("/qualification"),
-          pub.get("/institute-qualification-mapping/streams-in-use"),
         ]);
 
         setTypeOpts(
@@ -186,13 +185,6 @@ export default function PublicLandingPage() {
             label: q.qualification,
           })),
         );
-
-        setStreamOpts(
-          streams.data.map((s: any) => ({
-            value: s.stream_branch_Id,
-            label: s.stream_branch_name,
-          })),
-        );
       } catch (error) {
         console.error("Failed to load filters:", error);
       }
@@ -200,6 +192,69 @@ export default function PublicLandingPage() {
 
     loadFilters();
   }, []);
+
+  // Cascading Streams Filter
+  useEffect(() => {
+    const loadStreams = async () => {
+      try {
+        let streamsToShow: Option[] = [];
+
+        if (filters.qualification_ids.length > 0) {
+          // 1. Fetch streams for each selected qualification in parallel
+          const streamPromises = filters.qualification_ids.map(id =>
+            pub.get(`/stream-branch?qualification_id=${id}`)
+          );
+          const streamResponses = await Promise.all(streamPromises);
+
+          // 2. Merge and de-duplicate master streams
+          const masterStreamsMap = new Map<number, string>();
+          streamResponses.forEach(res => {
+            res.data.forEach((s: any) => {
+              masterStreamsMap.set(s.stream_branch_Id, s.stream_branch_name);
+            });
+          });
+
+          // 3. Fetch streams currently being offered by institutes
+          const inUseRes = await pub.get("/institute-qualification-mapping/streams-in-use");
+          const inUseIds = new Set(inUseRes.data.map((s: any) => s.stream_branch_Id));
+
+          // 4. Intersect
+          masterStreamsMap.forEach((label, value) => {
+            if (inUseIds.has(value)) {
+              streamsToShow.push({ value, label });
+            }
+          });
+        } else {
+          // No qualification selected: show all active streams in the portal
+          const res = await pub.get("/institute-qualification-mapping/streams-in-use");
+          streamsToShow = res.data.map((s: any) => ({
+            value: s.stream_branch_Id,
+            label: s.stream_branch_name,
+          }));
+        }
+
+        // Sort alphabetically
+        streamsToShow.sort((a, b) => a.label.localeCompare(b.label));
+        setStreamOpts(streamsToShow);
+
+        // 5. Cleanup selected streams that are no longer valid
+        const validIds = new Set(streamsToShow.map(s => s.value));
+        setFilters(prev => {
+          const nextStreams = prev.stream_ids.filter(id => validIds.has(id));
+          if (nextStreams.length !== prev.stream_ids.length) {
+            return { ...prev, stream_ids: nextStreams };
+          }
+          return prev;
+        });
+
+      } catch (error) {
+        console.error("Failed to load cascading streams:", error);
+        setStreamOpts([]);
+      }
+    };
+
+    loadStreams();
+  }, [filters.qualification_ids]);
 
   // Districts cascade
   useEffect(() => {

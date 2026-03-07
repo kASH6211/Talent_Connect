@@ -72,9 +72,9 @@ function calculateAirDistance(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -236,37 +236,60 @@ export default function FindInstitutesPage() {
 
   useEffect(() => {
     const loadStreams = async () => {
-      if (filters.qualification_ids.length > 0) {
-        // When qualification selected, load streams for that qualification from master
-        // but only those that also exist in mapping_institute_qualification
-        const qId = filters.qualification_ids[0];
-        const [masterRes, inUseRes] = await Promise.all([
-          api.get(`/stream-branch?qualification_id=${qId}`),
-          api.get("/institute-qualification-mapping/streams-in-use"),
-        ]);
-        const inUseIds = new Set(
-          inUseRes.data.map((s: any) => s.stream_branch_Id),
-        );
-        const filtered = masterRes.data.filter((s: any) =>
-          inUseIds.has(s.stream_branch_Id),
-        );
-        setStreamOpts(
-          filtered.map((s: any) => ({
+      try {
+        let streamsToShow: Option[] = [];
+
+        if (filters.qualification_ids.length > 0) {
+          // 1. Fetch streams for each selected qualification in parallel
+          const streamPromises = filters.qualification_ids.map(id =>
+            api.get(`/stream-branch?qualification_id=${id}`)
+          );
+          const streamResponses = await Promise.all(streamPromises);
+
+          // 2. Merge and de-duplicate master streams
+          const masterStreamsMap = new Map<number, string>();
+          streamResponses.forEach(res => {
+            res.data.forEach((s: any) => {
+              masterStreamsMap.set(s.stream_branch_Id, s.stream_branch_name);
+            });
+          });
+
+          // 3. Fetch streams currently being offered by institutes
+          const inUseRes = await api.get("/institute-qualification-mapping/streams-in-use");
+          const inUseIds = new Set(inUseRes.data.map((s: any) => s.stream_branch_Id));
+
+          // 4. Intersect
+          masterStreamsMap.forEach((label, value) => {
+            if (inUseIds.has(value)) {
+              streamsToShow.push({ value, label });
+            }
+          });
+        } else {
+          // No qualification selected: show all active streams in the portal
+          const res = await api.get("/institute-qualification-mapping/streams-in-use");
+          streamsToShow = res.data.map((s: any) => ({
             value: s.stream_branch_Id,
             label: s.stream_branch_name,
-          })),
-        );
-      } else {
-        // No qualification selected: show only streams that have institute mappings
-        const res = await api.get(
-          "/institute-qualification-mapping/streams-in-use",
-        );
-        setStreamOpts(
-          res.data.map((s: any) => ({
-            value: s.stream_branch_Id,
-            label: s.stream_branch_name,
-          })),
-        );
+          }));
+        }
+
+        // Sort alphabetically
+        streamsToShow.sort((a, b) => a.label.localeCompare(b.label));
+        setStreamOpts(streamsToShow);
+
+        // 5. Cleanup selected streams that are no longer valid
+        const validIds = new Set(streamsToShow.map(s => s.value));
+        setFilters(prev => {
+          const nextStreams = prev.stream_ids.filter(id => validIds.has(id));
+          if (nextStreams.length !== prev.stream_ids.length) {
+            return { ...prev, stream_ids: nextStreams };
+          }
+          return prev;
+        });
+
+      } catch (error) {
+        console.error("Failed to load cascading streams:", error);
+        setStreamOpts([]);
       }
     };
     loadStreams();
@@ -969,7 +992,7 @@ export default function FindInstitutesPage() {
 
       {/* ── Bulk Offer Modal ── */}
       <OfferModalV2
-        onClose={() => {}}
+        onClose={() => { }}
         isOpen={findInstituteUi?.bulkOffer?.open ?? false}
         selectedIds={Array.from(selected)}
         institutesMap={institutesMap}
