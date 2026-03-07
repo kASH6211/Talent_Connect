@@ -8,7 +8,7 @@ import { Building2, Users, GraduationCap, MapPin } from "lucide-react";
 const Counter = ({ value, suffix = "" }: { value: number; suffix?: string }) => {
     const [displayValue, setDisplayValue] = useState(0);
     const ref = useRef(null);
-    const isInView = useInView(ref, { once: true });
+    const isInView = useInView(ref);
 
     useEffect(() => {
         if (isInView) {
