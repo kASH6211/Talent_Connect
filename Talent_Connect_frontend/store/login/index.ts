@@ -19,6 +19,7 @@ const initialState = {
     registerModal: { open: false },
     forgotPasswordModal: { open: false },
     roleSelectModal: { open: false },
+    authPrompt: { open: false },
     loadingOverlay: { visible: false },
   },
 };
@@ -116,6 +117,7 @@ const authSlice = createSlice({
         registerModal: { open: false },
         forgotPasswordModal: { open: false },
         roleSelectModal: { open: false },
+        authPrompt: { open: false },
         loadingOverlay: { visible: false },
       };
     },

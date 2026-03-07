@@ -7,6 +7,7 @@ import AuthWrapper from "@/lib/AuthWrapper";
 import { Menu } from "lucide-react";
 import RoleSelectModal from "./landing-page/RoleSelectModal";
 import LoginModal from "./LoginModal";
+import LoginPromptModal from "./common/LoginPromptModal";
 import GlobalConfirmModal from "./common/ConfirmDialogHOC";
 import FastTrackOverlay from "./common/FastTrackOverlay";
 import { useDispatch, useSelector } from "react-redux";
@@ -60,6 +61,11 @@ export default function AppShell({
             isOpen={ui.loginModal.open}
             onClose={() => dispatch(updateLoginUi({ loginModal: { open: false } }))}
           />
+          {ui.authPrompt.open && (
+            <LoginPromptModal
+              onClose={() => dispatch(updateLoginUi({ authPrompt: { open: false } }))}
+            />
+          )}
         </>
       ) : (
         <div className="flex h-screen w-screen overflow-hidden">
@@ -116,6 +122,11 @@ export default function AppShell({
             isOpen={ui.loginModal.open}
             onClose={() => dispatch(updateLoginUi({ loginModal: { open: false } }))}
           />
+          {ui.authPrompt.open && (
+            <LoginPromptModal
+              onClose={() => dispatch(updateLoginUi({ authPrompt: { open: false } }))}
+            />
+          )}
         </div>
       )}
     </AuthWrapper>

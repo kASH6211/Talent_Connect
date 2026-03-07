@@ -108,69 +108,20 @@ function MapClickEvent({
   return null;
 }
 
-function LoginPromptModal({ onClose }: { onClose: () => void }) {
-  const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
-
-  // Handle click outside to close
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // If the click is on the backdrop (not on the modal content), close it
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
-      onClick={handleBackdropClick} // ← This enables outside click to close
-    >
-      <div
-        className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 sm:p-8 border border-slate-200"
-        onClick={(e) => e.stopPropagation()} // ← Prevents closing when clicking inside modal
-      >
-        <div className="w-16 h-16 mx-auto bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-          <Shield size={32} className="text-primary" />
-        </div>
-        <h2 className="text-2xl font-bold text-primary text-center mb-2">
-          Authentication Required
-        </h2>
-        <p className="text-slate-600 text-center mb-8 text-sm sm:text-base">
-          Please sign in to contact institutes or send placement offers.
-        </p>
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={() =>
-              dispatch(updateLoginUi({ roleSelectModal: { open: true } }))
-            }
-            className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-primary hover:bg-primary text-white font-semibold rounded-lg transition-colors text-sm sm:text-base"
-          >
-            Sign In
-          </button>
-          <button
-            onClick={onClose}
-            className="w-full px-4 sm:px-6 py-2.5 sm:py-3 border border-slate-300 text-primary hover:bg-slate-50 font-semibold rounded-lg transition-colors text-sm sm:text-base"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+// (Standalone LoginPromptModal has been moved to components/common/LoginPromptModal.tsx)
 
 // ... (rest of your PublicLandingPage component remains exactly the same)
 
 export default function PublicLandingPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
   const roleModal = useSelector((state: RootState) => state?.login?.ui);
 
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [institutes, setInstitutes] = useState<InstituteRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
   const [page, setPage] = useState(1);
 
   const [districtOpts, setDistrictOpts] = useState<Option[]>([]);
@@ -393,7 +344,6 @@ export default function PublicLandingPage() {
 
   return (
     <>
-      {showLogin && <LoginPromptModal onClose={() => setShowLogin(false)} />}
 
       {/* Header & Search Section - Edge-to-Edge */}
       <div className="bg-primary text-primary-content pt-12 pb-24 px-4 lg:px-8 relative overflow-visible">
@@ -612,7 +562,7 @@ export default function PublicLandingPage() {
                             </td>
                             <td className="pl-6 pr-10 py-7 text-right">
                               <button
-                                onClick={() => setShowLogin(true)}
+                                onClick={() => dispatch(updateLoginUi({ authPrompt: { open: true } }))}
                                 className="px-6 py-3 bg-white border-2 border-primary/10 text-primary hover:bg-primary hover:text-white hover:border-primary font-black rounded-xl transition-all duration-500 inline-flex items-center gap-2 text-[10px] uppercase tracking-widest shadow-sm hover:shadow-primary/30 active:scale-95 group/btn"
                               >
                                 <LogIn size={14} className="group-hover/btn:-translate-x-1 transition-transform" />
@@ -651,7 +601,7 @@ export default function PublicLandingPage() {
                             <span className="text-xl font-black text-slate-800">{inst.final_year_student_count ?? "0"}</span>
                           </div>
                         </div>
-                        <button onClick={() => setShowLogin(true)} className="w-full py-5 bg-primary hover:bg-primary-focus text-white font-black rounded-[1.5rem] transition-all flex items-center justify-center gap-3 text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 active:scale-[0.98]">
+                        <button onClick={() => dispatch(updateLoginUi({ authPrompt: { open: true } }))} className="w-full py-5 bg-primary hover:bg-primary-focus text-white font-black rounded-[1.5rem] transition-all flex items-center justify-center gap-3 text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 active:scale-[0.98]">
                           <LogIn size={20} />
                           Secure Contact
                         </button>
