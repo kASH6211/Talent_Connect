@@ -102,7 +102,7 @@ const InstitutesSection = () => {
                     <Icon className="w-8 h-8 text-primary group-hover:text-white transition-colors duration-500" />
                   </div>
 
-                  <h3 className="text-slate-800 font-bold text-lg leading-tight mb-2 group-hover:text-primary transition-colors">
+                  <h3 className="text-slate-800 font-bold text-xl leading-tight mb-2 group-hover:text-primary transition-colors">
                     {inst.name}
                   </h3>
                   <div className="w-8 h-1 bg-slate-100 mx-auto rounded-full group-hover:bg-primary/20 transition-colors"></div>
