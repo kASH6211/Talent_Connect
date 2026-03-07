@@ -64,7 +64,7 @@ export default function ContactSection() {
         <div className="mt-6">
           <Link
             href="/contact-form"
-            className="btn-orange inline-block px-6 py-3 rounded-full text-lg font-semibold"
+            className="btn-yellow px-8 py-3 rounded-lg font-bold text-lg"
           >
             Get in Touch
           </Link>

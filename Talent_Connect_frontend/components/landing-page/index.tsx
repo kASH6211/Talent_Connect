@@ -1,7 +1,7 @@
 "use client";
 
 import Navbar from "./Navbar";
-import HeroSection from "./HeroSection";
+import HeroSection2 from "./HeroSection2";
 import InstitutesSection from "./InstitutesSection";
 import StudentConnectSection from "./StudentConnectSection";
 import PartnersSection from "./PartnersSection";
@@ -17,7 +17,7 @@ const HunarPunjabHome = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <HeroSection />
+      <HeroSection2 />
       <InstitutesSection />
       <StudentConnectSection />
       <PartnersSection />

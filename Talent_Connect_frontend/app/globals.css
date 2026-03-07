@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @source "../app";
 @source "../components";
+
 @plugin "daisyui" {
   themes: hunar, hunar-dark;
 }
@@ -13,24 +14,27 @@
   default: true;
   color-scheme: light;
 
-  /* 🔵 Deep Government Blue */
-  --color-primary: #1c398e;
+  /* 🔵 Custom Blue */
+  --color-primary: #2141a4;
   --color-primary-content: #ffffff;
 
-  /* 🟠 Orange Accent (Buttons) */
-  --color-secondary: #f67812;
+  /* 🟡 Yellow for Buttons */
+  --color-secondary: #fac015;
   --color-secondary-content: #ffffff;
+  --color-secondary-foreground: #ffffff;
 
   --color-accent: #f98c1f;
   --color-accent-content: #ffffff;
 
   /* Layout colors */
-  --color-base-100: #ffffff;
-  --color-base-200: #f4f6f9; /* section background */
-  --color-base-300: #e5e7eb; /* borders */
-  --color-base-content: #1f2937;
+  --color-base-100: #eaeced;
+  --color-base-200: #f4f6f9;
+  /* section background */
+  --color-base-300: #e5e7eb;
+  /* borders */
+  --color-base-content: #000000;
 
-  --color-neutral: #1c398e;
+  --color-neutral: #2141a4;
   --color-neutral-content: #ffffff;
 
   --color-info: #2563eb;
@@ -113,14 +117,19 @@ body {
   @apply bg-white border border-base-300 rounded-xl shadow-sm hover:shadow-md transition;
 }
 
-/* Orange button */
-.btn-orange {
+/* Yellow button */
+.btn-yellow {
   @apply bg-secondary text-secondary-content hover:brightness-110 transition;
 }
 
 /* Blue heading */
 .heading-primary {
   @apply text-primary font-bold;
+}
+
+/* Icon primary */
+.icon-primary {
+  color: #2141a4;
 }
 
 /* Scrollbar */
@@ -138,5 +147,5 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #1c398e40;
+  background: #2141a440;
 }

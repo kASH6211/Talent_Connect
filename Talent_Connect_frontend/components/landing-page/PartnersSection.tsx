@@ -21,9 +21,8 @@ const LogoMarquee = ({
   return (
     <div className="overflow-hidden relative w-full">
       <div
-        className={`flex gap-10 whitespace-nowrap ${
-          direction === "left" ? "animate-scroll-left" : "animate-scroll-right"
-        }`}
+        className={`flex gap-10 whitespace-nowrap ${direction === "left" ? "animate-scroll-left" : "animate-scroll-right"
+          }`}
       >
         {[...partners, ...partners].map((partner, index) => (
           <div
@@ -44,35 +43,54 @@ const LogoMarquee = ({
 
 const PartnersSection = () => {
   return (
-    <section className="py-16 md:py-20 bg-gray-50" id="industries">
-      <div className="max-w-7xl mx-auto px-4 text-center">
-        <h2 className="text-3xl font-extrabold text-blue-900 mb-14">
-          Our Partners
-        </h2>
-
-        {/* CSR Partners */}
-        <div className="flex items-center gap-6 mb-16 overflow-hidden">
-          {/* Left Blue Box */}
-          <div className="bg-blue-900 text-white font-bold px-8 py-10 rounded-2xl w-[250px] flex-shrink-0 text-center shadow-lg">
-            CSR TECH <br /> PARTNERS
-          </div>
-
-          {/* Carousel */}
-          <div className="flex-1 min-w-0">
-            <LogoMarquee partners={csrPartners as any} direction="left" />
-          </div>
+    <section className="py-12 bg-white" id="industries">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-black text-slate-900 mb-2">
+            Strategic Partners
+          </h2>
+          <div className="h-1 w-16 bg-secondary mx-auto rounded-full"></div>
         </div>
 
-        {/* Training & Placement Partners */}
-        <div className="flex items-center gap-6 overflow-hidden">
-          {/* Carousel */}
-          <div className="flex-1 min-w-0">
-            <LogoMarquee partners={trainingPartners as any} direction="right" />
+        <div className="space-y-4">
+          {/* CSR Partners */}
+          <div className="flex flex-col md:flex-row items-stretch gap-2 overflow-hidden bg-slate-50 rounded-3xl p-2 border border-slate-100 shadow-sm">
+            {/* Left Blue Box */}
+            <div className="bg-primary bg-gradient-to-br from-primary to-blue-800 text-white p-6 md:p-8 rounded-2xl md:w-[220px] flex flex-col justify-center items-center text-center shadow-md">
+              <span className="text-[10px] uppercase tracking-[0.3em] opacity-80 mb-1 font-bold">Category</span>
+              <h3 className="font-black text-lg leading-tight">
+                CSR TECH <br /> PARTNERS
+              </h3>
+            </div>
+
+            {/* Carousel with Edge Fades */}
+            <div className="flex-1 min-w-0 relative group">
+              <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
+              <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
+              <div className="py-4">
+                <LogoMarquee partners={csrPartners as any} direction="left" />
+              </div>
+            </div>
           </div>
 
-          {/* Right Orange Box */}
-          <div className="bg-orange-500 text-white font-bold px-8 py-10 rounded-2xl w-[300px] flex-shrink-0 text-center shadow-lg">
-            TRAINING & <br /> PLACEMENT PARTNERS
+          {/* Training & Placement Partners */}
+          <div className="flex flex-col md:flex-row-reverse items-stretch gap-2 overflow-hidden bg-slate-50 rounded-3xl p-2 border border-slate-100 shadow-sm">
+            {/* Right Orange Box */}
+            <div className="bg-secondary bg-gradient-to-br from-secondary to-yellow-500 text-white p-6 md:p-8 rounded-2xl md:w-[260px] flex flex-col justify-center items-center text-center shadow-md">
+              <span className="text-[10px] uppercase tracking-[0.3em] opacity-80 mb-1 font-bold">Category</span>
+              <h3 className="font-black text-lg leading-tight">
+                TRAINING & <br /> PLACEMENT PARTNERS
+              </h3>
+            </div>
+
+            {/* Carousel with Edge Fades */}
+            <div className="flex-1 min-w-0 relative">
+              <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
+              <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
+              <div className="py-4">
+                <LogoMarquee partners={trainingPartners as any} direction="right" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -91,11 +109,11 @@ const PartnersSection = () => {
           }
 
           .animate-scroll-left {
-            animation: scrollLeft 25s linear infinite;
+            animation: scrollLeft 35s linear infinite;
           }
 
           .animate-scroll-right {
-            animation: scrollRight 25s linear infinite;
+            animation: scrollRight 35s linear infinite;
           }
         `}
       </style>

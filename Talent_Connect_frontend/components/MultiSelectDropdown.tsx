@@ -13,9 +13,20 @@ interface Props {
     onChange: (vals: number[]) => void;
     placeholder?: string;
     disabledOptions?: number[];
+    containerClassName?: string;
+    buttonClassName?: string;
 }
 
-export default function MultiSelectDropdown({ label, options, selected, onChange, placeholder, disabledOptions = [] }: Props) {
+export default function MultiSelectDropdown({
+    label,
+    options,
+    selected,
+    onChange,
+    placeholder,
+    disabledOptions = [],
+    containerClassName,
+    buttonClassName
+}: Props) {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
     const ref = useRef<HTMLDivElement>(null);
@@ -38,17 +49,18 @@ export default function MultiSelectDropdown({ label, options, selected, onChange
     const clear = (e: React.MouseEvent) => { e.stopPropagation(); onChange([]); };
 
     return (
-        <div className={clsx("relative", open && "z-50")} ref={ref}>
-            <div className="text-[10px] font-semibold text-base-content/50 uppercase tracking-widest mb-1">{label}</div>
+        <div className={clsx("relative", open && "z-50", containerClassName)} ref={ref}>
+            {label && <div className="text-[10px] font-semibold text-base-content/50 uppercase tracking-widest mb-1">{label}</div>}
             <button
                 type="button"
                 onClick={() => setOpen(!open)}
                 className={clsx(
-                    'w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl border text-sm transition-all',
+                    'w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl border text-sm transition-all shadow-sm',
                     open
                         ? 'border-primary bg-base-300'
                         : 'border-base-300 bg-base-200 hover:border-primary/40',
-                    count > 0 ? 'text-base-content' : 'text-base-content/40'
+                    count > 0 ? 'text-base-content' : 'text-base-content/40',
+                    buttonClassName
                 )}
             >
                 <span className="truncate text-left">

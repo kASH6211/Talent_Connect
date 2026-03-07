@@ -47,81 +47,104 @@ const studentCards = [
 
 const StudentConnectSection = () => {
   return (
-    <section className="py-12 section-alt" id="students">
-      <div className="container px-4 max-w-6xl mx-auto">
+    <section className="py-20 bg-base-100" id="students">
+      <div className="container px-4 max-w-[1600px] mx-auto">
         {/* Heading */}
-        <h2 className="text-center text-3xl md:text-4xl font-extrabold mb-12 heading-primary">
-          Get Started
-        </h2>
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-5xl font-extrabold mb-4 heading-primary">
+            Connect & Grow
+          </h2>
+          <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full"></div>
+        </div>
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 relative">
-          {/* LEFT - INDUSTRIES */}
-          <div>
-            <h3 className="text-lg font-bold mb-6 text-center text-secondary">
+        {/* Two Column Layout with Vertical Divider */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 relative border border-base-300 rounded-[2.5rem] overflow-hidden shadow-xl bg-white">
+
+          {/* LEFT - INDUSTRIES (Theme: Light Blue/Primary) */}
+          <div className="p-10 lg:p-14 bg-slate-50">
+            <h3 className="text-2xl font-black mb-12 text-center text-primary uppercase tracking-[0.2em]">
               For Industries
             </h3>
 
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {industriesCards.map((card) => {
                 const Icon = card.icon;
                 return (
                   <div
                     key={card.title}
-                    className="card-custom p-6 hover:shadow-lg transition"
+                    className="group relative bg-white border border-slate-200 p-6 rounded-2xl hover:border-primary/50 hover:shadow-md transition-all duration-500 cursor-default overflow-hidden flex flex-col items-center text-center h-full min-h-[220px]"
                   >
-                    <div className="flex items-center gap-3 mb-3">
-                      <Icon className="w-6 h-6 text-primary" />
-                      <p className="font-semibold text-base-content">
-                        {card.title}
+                    <div className="mb-6 p-4 bg-primary/10 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                      <Icon className="w-8 h-8" />
+                    </div>
+
+                    <h4 className="font-bold text-lg text-slate-800 mb-3 group-hover:text-primary transition-colors">
+                      {card.title}
+                    </h4>
+
+                    {/* Expandable Description on Hover */}
+                    <div className="max-h-0 opacity-0 group-hover:max-h-32 group-hover:opacity-100 transition-all duration-500 ease-in-out">
+                      <p className="text-sm text-slate-600 leading-relaxed italic mb-4">
+                        {card.desc}
                       </p>
                     </div>
-                    <p className="text-sm text-base-content/70 mb-4">
-                      {card.desc}
-                    </p>
-                    <button className="btn-orange text-xs font-semibold px-4 py-2 rounded">
-                      Explore Now →
-                    </button>
+
+                    <div className="mt-auto pt-4">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 px-4 py-2 rounded-full group-hover:bg-secondary group-hover:text-white transition-colors duration-500">
+                        Coming Soon
+                      </span>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* RIGHT - STUDENTS */}
-          <div>
-            <h3 className="text-lg font-bold mb-6 text-center text-secondary">
+          {/* Vertical Divider (Desktop Only) */}
+          <div className="hidden lg:block absolute left-1/2 top-20 bottom-20 w-px bg-slate-200 -translate-x-1/2"></div>
+
+          {/* Horizontal Divider (Mobile Only) */}
+          <div className="lg:hidden w-full h-px bg-slate-200"></div>
+
+          {/* RIGHT - STUDENTS (Theme: Neutral/Slate) */}
+          <div className="p-10 lg:p-14 bg-white">
+            <h3 className="text-2xl font-black mb-12 text-center text-secondary uppercase tracking-[0.2em]">
               For Students
             </h3>
 
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {studentCards.map((card) => {
                 const Icon = card.icon;
                 return (
                   <div
                     key={card.title}
-                    className="card-custom p-6 hover:shadow-lg transition"
+                    className="group relative bg-slate-50 border border-slate-100 p-6 rounded-2xl hover:border-secondary/50 hover:shadow-md transition-all duration-500 cursor-default overflow-hidden flex flex-col items-center text-center h-full min-h-[220px]"
                   >
-                    <div className="flex items-center gap-3 mb-3">
-                      <Icon className="w-6 h-6 text-primary" />
-                      <p className="font-semibold text-base-content">
-                        {card.title}
+                    <div className="mb-6 p-4 bg-secondary/10 rounded-2xl group-hover:bg-secondary group-hover:text-white transition-all duration-500">
+                      <Icon className="w-8 h-8" />
+                    </div>
+
+                    <h4 className="font-bold text-lg text-slate-800 mb-3 group-hover:text-secondary transition-colors">
+                      {card.title}
+                    </h4>
+
+                    {/* Expandable Description on Hover */}
+                    <div className="max-h-0 opacity-0 group-hover:max-h-32 group-hover:opacity-100 transition-all duration-500 ease-in-out">
+                      <p className="text-sm text-slate-600 leading-relaxed italic mb-4">
+                        {card.desc}
                       </p>
                     </div>
-                    <p className="text-sm text-base-content/70 mb-4">
-                      {card.desc}
-                    </p>
-                    <button className="btn-orange text-xs font-semibold px-4 py-2 rounded">
-                      Explore Now →
-                    </button>
+
+                    <div className="mt-auto pt-4">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 px-4 py-2 rounded-full group-hover:bg-secondary group-hover:text-white transition-colors duration-500">
+                        Coming Soon
+                      </span>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
-
-          {/* Vertical Divider (center) */}
-          <div className="hidden md:block absolute left-1/2 top-0 h-full w-px border-base-300 -translate-x-1/2"></div>
         </div>
       </div>
     </section>
