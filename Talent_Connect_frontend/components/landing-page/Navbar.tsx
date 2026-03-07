@@ -1,31 +1,47 @@
 "use client";
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
-import logo from "../assets/Gov Logo.png";
+import { useState, useRef, useEffect } from "react";
+import { Menu, X, UserCircle, ChevronDown, LogOut, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
 import { updateLoginUi } from "@/store/login";
+import { useAuth } from "@/lib/AuthProvider";
+import { getDashboardRoute } from "@/lib/helper";
 
 const pageLinks = [
   { label: "Home", to: "/" },
   { label: "Institutes", to: "/#institutes" },
-  // { label: "Students", to: "/#students" },
-  // { label: "Industries", to: "/#industries" },
-  // { label: "Placements", to: "/placements" },
   { label: "Contact", to: "/contact" },
 ];
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch<AppDispatch>();
+  const { user, logout, role } = useAuth();
 
   const isActive = (to: string) =>
     typeof window !== "undefined" && window.location.pathname === to;
 
+  const navLinks = user
+    ? pageLinks.filter((link) => link.label === "Home" || link.label === "Contact")
+    : pageLinks;
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <nav className="bg-primary/95 text-white sticky top-0 z-50 backdrop-blur-md shadow-[0_2px_15px_rgba(0,0,0,0.1)] border-b border-white/10">
-      <div className="container mx-auto flex items-center justify-between py-2.5 px-6 lg:px-10">
+    <nav className="bg-primary/95 text-white sticky top-0 z-50 backdrop-blur-md shadow-[0_2px_15px_rgba(0,0,0,0.1)] border-b border-white/10 shrink-0">
+      <div className={`${user ? 'w-full px-6 lg:px-10' : 'container mx-auto px-6 lg:px-10'} flex items-center justify-between py-2.5`}>
         <Link href="/" className="flex items-center gap-4 group transition-transform duration-300 hover:scale-[1.02]">
           <div className="relative">
             <img
@@ -49,7 +65,7 @@ const Navbar = () => {
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-8">
           <div className="flex items-center gap-6">
-            {pageLinks.map((link) =>
+            {navLinks.map((link) =>
               link.to.includes("#") ? (
                 <a
                   key={link.label}
@@ -75,14 +91,66 @@ const Navbar = () => {
 
           <div className="h-8 w-px bg-white/10 mx-2"></div>
 
-          <button
-            onClick={() => {
-              dispatch(updateLoginUi({ roleSelectModal: { open: true } }));
-            }}
-            className="bg-secondary text-white px-7 py-2 rounded-lg text-xs font-black uppercase tracking-widest shadow-lg hover:shadow-secondary/20 hover:scale-105 active:scale-95 transition-all duration-300 border-2 border-transparent hover:border-white/20"
-          >
-            Login
-          </button>
+          {user ? (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                className="flex items-center gap-3 pl-2 pr-4 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all active:scale-95 group/user"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary to-orange-400 flex items-center justify-center text-white shadow-lg overflow-hidden border-2 border-white/20">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xs font-black uppercase">{user.username.charAt(0)}</span>
+                  )}
+                </div>
+                <div className="flex flex-col items-start leading-none gap-0.5">
+                  <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Hi, {user.username}</span>
+                  <span className="text-[11px] font-black text-white uppercase tracking-tight">{role || 'User'}</span>
+                </div>
+                <ChevronDown size={14} className={`text-white/40 transition-transform duration-300 ${userDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {userDropdownOpen && (
+                <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-slate-100 py-3 text-slate-800 animate-in fade-in slide-in-from-top-4 duration-200">
+                  <div className="px-5 py-2 mb-2 border-b border-slate-50">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Details</p>
+                    <p className="text-sm font-black text-primary truncate">{user.username}</p>
+                  </div>
+
+                  <Link
+                    href={getDashboardRoute(user.role)}
+                    className="flex items-center gap-3 px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors"
+                    onClick={() => setUserDropdownOpen(false)}
+                  >
+                    <UserCircle size={18} />
+                    View Profile
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      setUserDropdownOpen(false);
+                      logout();
+                    }}
+                    className="w-full flex items-center gap-3 px-5 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut size={18} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                dispatch(updateLoginUi({ roleSelectModal: { open: true } }));
+              }}
+              className="bg-secondary text-white px-7 py-2 rounded-lg text-xs font-black uppercase tracking-widest shadow-lg hover:shadow-secondary/20 hover:scale-105 active:scale-95 transition-all duration-300 border-2 border-transparent hover:border-white/20"
+            >
+              Login
+            </button>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -94,10 +162,27 @@ const Navbar = () => {
         </button>
       </div>
 
+      {/* Mobile Menu */}
       {mobileOpen && (
         <div className="md:hidden bg-primary border-t border-white/10 px-6 py-6 animate-in slide-in-from-top duration-300">
           <div className="space-y-4">
-            {pageLinks.map((link) =>
+            {user && (
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 mb-6">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-secondary to-orange-400 flex items-center justify-center text-white shadow-lg overflow-hidden border-2 border-white/20">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-sm font-black uppercase">{user.username.charAt(0)}</span>
+                  )}
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Hi, {user.username}</p>
+                  <p className="text-lg font-black text-white uppercase tracking-tight">{role || 'User'}</p>
+                </div>
+              </div>
+            )}
+
+            {navLinks.map((link) =>
               link.to.includes("#") ? (
                 <a
                   key={link.label}
@@ -119,16 +204,40 @@ const Navbar = () => {
                 </Link>
               ),
             )}
+
             <div className="pt-4 mt-4 border-t border-white/10">
-              <button
-                onClick={() => {
-                  dispatch(updateLoginUi({ roleSelectModal: { open: true } }));
-                  setMobileOpen(false);
-                }}
-                className="w-full bg-secondary text-white py-4 rounded-lg text-sm font-black uppercase tracking-widest shadow-xl"
-              >
-                Login to Portal
-              </button>
+              {user ? (
+                <div className="space-y-3">
+                  <Link
+                    href={getDashboardRoute(user.role)}
+                    className="w-full flex items-center justify-center gap-3 bg-white/10 text-white py-4 rounded-lg text-sm font-black uppercase tracking-widest shadow-xl shadow-black/10"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <UserCircle size={20} />
+                    Profile
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setMobileOpen(false);
+                    }}
+                    className="w-full flex items-center justify-center gap-3 bg-red-500/80 text-white py-4 rounded-lg text-sm font-black uppercase tracking-widest shadow-xl shadow-red-900/20"
+                  >
+                    <LogOut size={20} />
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    dispatch(updateLoginUi({ roleSelectModal: { open: true } }));
+                    setMobileOpen(false);
+                  }}
+                  className="w-full bg-secondary text-white py-4 rounded-lg text-sm font-black uppercase tracking-widest shadow-xl"
+                >
+                  Login to Portal
+                </button>
+              )}
             </div>
           </div>
         </div>

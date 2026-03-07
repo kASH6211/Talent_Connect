@@ -20,6 +20,7 @@ import {
   ChevronRight,
   ChevronLeft,
   Mail,
+  X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { clsx } from "clsx";
@@ -167,6 +168,14 @@ function NavGroup({ item, collapsed }: any) {
   const pathname = usePathname();
   const isOpen = item.children?.some((c: any) => pathname.startsWith(c.href));
   const [open, setOpen] = useState(isOpen ?? false);
+
+  // Sync open state with forceOpen (used during search filtering)
+  useEffect(() => {
+    if (item.forceOpen) {
+      setOpen(true);
+    }
+  }, [item.forceOpen]);
+
   const Icon = item.icon;
 
   return (
@@ -238,6 +247,7 @@ export default function Sidebar({
 }: any) {
   const { user, role, logout, loading } = useAuth();
   const [orgName, setOrgName] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (user?.institute_id && role === "institute") {
@@ -253,12 +263,34 @@ export default function Sidebar({
     }
   }, [user, role]);
 
-  const navItems =
+  const rawNavItems =
     role === "institute"
       ? instituteNav
       : role === "industry"
         ? industryNav
         : adminNav;
+
+  const filterNavItems = (items: any[], term: string): any[] => {
+    if (!term) return items;
+    const lowerTerm = term.toLowerCase();
+
+    return items
+      .map((item) => {
+        const matchesLabel = item.label.toLowerCase().includes(lowerTerm);
+        if (item.children) {
+          const filteredChildren = filterNavItems(item.children, term);
+          if (filteredChildren.length > 0 || matchesLabel) {
+            return { ...item, children: filteredChildren, forceOpen: filteredChildren.length > 0 };
+          }
+        } else if (matchesLabel) {
+          return item;
+        }
+        return null;
+      })
+      .filter(Boolean);
+  };
+
+  const navItems = filterNavItems(rawNavItems, searchTerm);
   const badge = role ? (roleBadge[role] ?? roleBadge.admin) : roleBadge.admin;
 
   return (
@@ -273,7 +305,9 @@ export default function Sidebar({
 
       <aside
         className={clsx(
-          "fixed top-0 left-0 h-screen flex flex-col",
+          isMobile ? "h-screen" : "h-full",
+          "flex flex-col",
+          isMobile && "fixed top-0 left-0 z-[100]",
           "bg-base-100 dark:bg-base-900",
           "border-r border-base-200 dark:border-base-800",
           "shadow-lg z-50 transition-all duration-300",
@@ -286,31 +320,47 @@ export default function Sidebar({
               : "w-72 lg:w-64",
         )}
       >
-        {/* Logo Section */}
-        <div className="flex items-center justify-between p-4 border-b border-base-200 dark:border-base-800">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-md">
-              <GraduationCap
-                size={20}
-                className="text-primary-content"
-                aria-hidden="true"
-              />
+        {/* Search Section (Replaces Logo) */}
+        <div className="p-4 border-b border-base-200 dark:border-base-800">
+          <div className={clsx(
+            "relative flex items-center transition-all duration-300",
+            collapsed ? "w-10 h-10 mx-auto justify-center" : "w-full h-11"
+          )}>
+            <div className={clsx(
+              "transition-colors duration-300 z-10",
+              collapsed ? "" : "absolute left-3.5",
+              searchTerm ? "text-primary" : "text-base-content/40"
+            )}>
+              <Search size={18} />
             </div>
             {!collapsed && (
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-base-content leading-tight">
-                  HUNAR PUNJAB
-                </span>
-                <span className="text-[9px] text-base-content/60 leading-tight pr-2">
-                  Hub for Upskilling, Networking & Access to Rozgar
-                </span>
-              </div>
+              <input
+                type="text"
+                placeholder="Search menu..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={clsx(
+                  "w-full h-full pl-11 pr-10 rounded-xl text-[13px] transition-all duration-300 font-medium",
+                  "bg-base-200/50 dark:bg-base-800/50 border-transparent",
+                  "focus:bg-white dark:focus:bg-base-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none",
+                  "placeholder:text-base-content/30"
+                )}
+              />
+            )}
+            {searchTerm && !collapsed && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3.5 text-base-content/30 hover:text-base-content/60 transition-colors p-1"
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
             )}
           </div>
         </div>
 
-        {/* User Profile Section */}
-        {!loading && user && (
+        {/* User Profile Section - Commented out as now in Header */}
+        {/* {!loading && user && (
           <div
             className={clsx(
               "px-4 py-6 border-b border-base-200 dark:border-base-800",
@@ -322,7 +372,6 @@ export default function Sidebar({
               "flex items-center gap-3.5",
               collapsed ? "flex-col" : "flex-row"
             )}>
-              {/* Premium Avatar */}
               <div className="relative shrink-0">
                 <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-[0_8px_16px_-4px_rgba(var(--p),0.3)] ring-2 ring-white dark:ring-base-900 group">
                   <UserCircle
@@ -331,7 +380,6 @@ export default function Sidebar({
                     aria-hidden="true"
                   />
                 </div>
-                {/* Active Status Indicator */}
                 <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-base-900 shadow-sm" />
               </div>
 
@@ -368,22 +416,39 @@ export default function Sidebar({
               </div>
             )}
           </div>
-        )}
+        )} */}
 
         {/* Navigation */}
         <nav className="flex-1 px-2 py-6 space-y-2.5 overflow-y-auto scrollbar-thin scrollbar-thumb-base-300 dark:scrollbar-thumb-base-700 scrollbar-track-transparent">
-          {navItems.map((item: any) =>
-            item.children ? (
-              <NavGroup key={item.label} item={item} collapsed={collapsed} />
-            ) : (
-              <NavLink
-                key={item.href}
-                href={item.href}
-                label={item.label}
-                icon={item.icon}
-                collapsed={collapsed}
-              />
-            ),
+          {navItems.length > 0 ? (
+            navItems.map((item: any) =>
+              item.children ? (
+                <NavGroup key={item.label} item={item} collapsed={collapsed} />
+              ) : (
+                <NavLink
+                  key={item.href}
+                  href={item.href}
+                  label={item.label}
+                  icon={item.icon}
+                  collapsed={collapsed}
+                />
+              ),
+            )
+          ) : (
+            <div className={clsx(
+              "flex flex-col items-center justify-center py-10 px-4 text-center animate-in fade-in slide-in-from-top-2 duration-300",
+              collapsed ? "opacity-0" : "opacity-100"
+            )}>
+              <div className="w-12 h-12 rounded-2xl bg-base-200 dark:bg-base-800 flex items-center justify-center mb-3 text-base-content/20">
+                <Search size={24} />
+              </div>
+              {!collapsed && (
+                <>
+                  <p className="text-xs font-bold text-base-content/50 uppercase tracking-wider">No matches</p>
+                  <p className="text-[10px] text-base-content/30 mt-1 uppercase tracking-widest">Check spelling</p>
+                </>
+              )}
+            </div>
           )}
         </nav>
 
@@ -420,8 +485,8 @@ export default function Sidebar({
             </div>
           </button>
 
-          {/* Logout Button */}
-          <button
+          {/* Logout Button - Commented out as now in Header dropdown */}
+          {/* <button
             onClick={logout}
             className={clsx(
               "group w-full flex items-center justify-center lg:justify-start gap-3 px-3 py-2.5 rounded-lg",
@@ -438,7 +503,7 @@ export default function Sidebar({
                 <span className="text-sm">Sign Out</span>
               </>
             )}
-          </button>
+          </button> */}
         </div>
       </aside>
     </>

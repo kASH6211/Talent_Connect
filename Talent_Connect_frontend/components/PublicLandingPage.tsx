@@ -27,6 +27,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { updateLoginUi } from "@/store/login";
 import RoleSelectModal from "./landing-page/RoleSelectModal";
+import Footer from "./landing-page/Footer";
 
 // Fix Leaflet marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -773,8 +774,8 @@ export default function PublicLandingPage() {
             </div>
           </div>
         </div>
-
       </div>
+      <Footer />
     </>
   );
 }

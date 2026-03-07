@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import AuthWrapper from "@/lib/AuthWrapper";
 import { Menu } from "lucide-react";
 import RoleSelectModal from "./landing-page/RoleSelectModal";
+import Navbar from "./landing-page/Navbar";
 import LoginModal from "./LoginModal";
 import LoginPromptModal from "./common/LoginPromptModal";
 import GlobalConfirmModal from "./common/ConfirmDialogHOC";
@@ -45,90 +46,87 @@ export default function AppShell({
   const home = pathname === "/";
   const searchInstitutes = pathname === "/search-institutes";
 
+  const isDashboardLayout = !allowedRoutes.includes(pathname) && !home && !searchInstitutes && !isLoginPage;
+
   return (
     <AuthWrapper>
-      {allowedRoutes.includes(pathname) ||
-        isLoginPage ||
-        home ||
-        searchInstitutes ? (
-        <>
-          {children}
-          <FastTrackOverlay />
-          <GlobalConfirmModal />
+      <div className="flex flex-col h-screen w-screen overflow-hidden bg-background">
+        <Navbar />
 
-          <RoleSelectModal open={ui.roleSelectModal.open} />
-          <LoginModal
-            isOpen={ui.loginModal.open}
-            onClose={() => dispatch(updateLoginUi({ loginModal: { open: false } }))}
-          />
-          {ui.authPrompt.open && (
-            <LoginPromptModal
-              onClose={() => dispatch(updateLoginUi({ authPrompt: { open: false } }))}
-            />
-          )}
-        </>
-      ) : (
-        <div className="flex h-screen w-screen overflow-hidden">
-          {showSidebar && (
+        <div className="flex-1 flex overflow-hidden relative">
+          {isDashboardLayout ? (
             <>
-              {isMobile && !mobileSidebarOpen && (
-                <button
-                  onClick={() => setMobileSidebarOpen(true)}
-                  aria-label="Open sidebar"
-                  className="fixed top-4 left-4 z-60 p-2 rounded-md bg-primary text-primary-content shadow-lg lg:hidden"
-                >
-                  <Menu size={24} />
-                </button>
+              {showSidebar && (
+                <div className="relative shrink-0 h-full z-40">
+                  {isMobile && !mobileSidebarOpen && (
+                    <button
+                      onClick={() => setMobileSidebarOpen(true)}
+                      aria-label="Open sidebar"
+                      className="fixed top-20 left-4 z-[60] p-2.5 rounded-xl bg-primary text-white shadow-2xl lg:hidden active:scale-95 transition-all"
+                    >
+                      <Menu size={20} />
+                    </button>
+                  )}
+
+                  {(mobileSidebarOpen || !isMobile) && (
+                    <Sidebar
+                      collapsed={sidebarCollapsed}
+                      setCollapsed={setSidebarCollapsed}
+                      mobileSidebarOpen={mobileSidebarOpen}
+                      setMobileSidebarOpen={setMobileSidebarOpen}
+                      isMobile={isMobile}
+                    />
+                  )}
+
+                  {isMobile && mobileSidebarOpen && (
+                    <div
+                      className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[45] lg:hidden animate-in fade-in duration-300"
+                      onClick={() => setMobileSidebarOpen(false)}
+                      aria-hidden="true"
+                    />
+                  )}
+                </div>
               )}
 
-              {(mobileSidebarOpen || !isMobile) && (
-                <Sidebar
-                  collapsed={sidebarCollapsed}
-                  setCollapsed={setSidebarCollapsed}
-                  mobileSidebarOpen={mobileSidebarOpen}
-                  setMobileSidebarOpen={setMobileSidebarOpen}
-                  isMobile={isMobile}
-                />
-              )}
+              <main className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 pt-6 sm:pt-8 lg:pt-10 px-4 sm:px-6 lg:px-8 xl:px-10 pb-10">
+                <div className="max-w-[1600px] mx-auto w-full">
+                  {children}
+                </div>
+                <GlobalConfirmModal />
+                <FastTrackOverlay />
 
-              {isMobile && mobileSidebarOpen && (
-                <div
-                  className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-                  onClick={() => setMobileSidebarOpen(false)}
-                  aria-hidden="true"
+                <RoleSelectModal open={ui.roleSelectModal.open} />
+                <LoginModal
+                  isOpen={ui.loginModal.open}
+                  onClose={() => dispatch(updateLoginUi({ loginModal: { open: false } }))}
                 />
-              )}
+                {ui.authPrompt.open && (
+                  <LoginPromptModal
+                    onClose={() => dispatch(updateLoginUi({ authPrompt: { open: false } }))}
+                  />
+                )}
+              </main>
             </>
-          )}
+          ) : (
+            <div className="flex-1 overflow-auto focus:outline-none">
+              {children}
+              <FastTrackOverlay />
+              <GlobalConfirmModal />
 
-          <main
-            className="flex-1 transition-all duration-500 ease-in-out overflow-auto bg-gray-50 pt-6 sm:pt-8 lg:pt-10 px-4 sm:px-6 lg:px-8 xl:px-10"
-            style={{
-              marginLeft:
-                showSidebar && !isMobile
-                  ? sidebarCollapsed
-                    ? "88px"
-                    : "260px"
-                  : "0px",
-            }}
-          >
-            {children}
-          </main>
-          <GlobalConfirmModal />
-          <FastTrackOverlay />
-
-          <RoleSelectModal open={ui.roleSelectModal.open} />
-          <LoginModal
-            isOpen={ui.loginModal.open}
-            onClose={() => dispatch(updateLoginUi({ loginModal: { open: false } }))}
-          />
-          {ui.authPrompt.open && (
-            <LoginPromptModal
-              onClose={() => dispatch(updateLoginUi({ authPrompt: { open: false } }))}
-            />
+              <RoleSelectModal open={ui.roleSelectModal.open} />
+              <LoginModal
+                isOpen={ui.loginModal.open}
+                onClose={() => dispatch(updateLoginUi({ loginModal: { open: false } }))}
+              />
+              {ui.authPrompt.open && (
+                <LoginPromptModal
+                  onClose={() => dispatch(updateLoginUi({ authPrompt: { open: false } }))}
+                />
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
     </AuthWrapper>
   );
 }

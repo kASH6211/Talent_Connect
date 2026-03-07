@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { MapPin, Mail, Clock, Phone, Send } from "lucide-react";
-import Navbar from "@/components/landing-page/Navbar";
 import Footer from "@/components/landing-page/Footer";
 import RoleSelectModal from "@/components/landing-page/RoleSelectModal";
 import { useSelector } from "react-redux";
@@ -26,7 +25,6 @@ const ContactPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar />
       <main className="flex-1">
         {/* Header */}
         <div className="bg-primary py-12 text-center">
@@ -62,7 +60,7 @@ const ContactPage = () => {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
+                {/* <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <Phone className="w-4 h-4 text-primary" />
                   </div>
@@ -74,7 +72,7 @@ const ContactPage = () => {
                       +91-172-2601300
                     </p>
                   </div>
-                </div>
+                </div> */}
                 <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <Mail className="w-4 h-4 text-primary" />
