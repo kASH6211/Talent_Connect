@@ -46,7 +46,7 @@ const PartnersSection = () => {
     <section className="py-24 bg-[#fcfdfe]" id="industries">
       <div className="max-w-[1600px] mx-auto px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">
+          <h2 className="text-3xl md:text-5xl font-extrabold mb-4 heading-primary">
             STRATEGIC PARTNERS
           </h2>
           <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full"></div>
