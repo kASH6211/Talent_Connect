@@ -43,51 +43,56 @@ const LogoMarquee = ({
 
 const PartnersSection = () => {
   return (
-    <section className="py-12 bg-white" id="industries">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-black text-slate-900 mb-2">
-            Strategic Partners
+    <section className="py-24 bg-[#fcfdfe]" id="industries">
+      <div className="max-w-[1600px] mx-auto px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">
+            STRATEGIC PARTNERS
           </h2>
-          <div className="h-1 w-16 bg-secondary mx-auto rounded-full"></div>
+          <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full"></div>
+          <p className="mt-6 text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">
+            COLLABORATING FOR A SKILLED PUNJAB
+          </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-10">
           {/* CSR Partners */}
-          <div className="flex flex-col md:flex-row items-stretch gap-2 overflow-hidden bg-slate-50 rounded-3xl p-2 border border-slate-100 shadow-sm">
+          <div className="flex flex-col lg:flex-row items-stretch gap-4 overflow-hidden bg-white rounded-[3rem] p-3 border border-slate-100 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.05)]">
             {/* Left Blue Box */}
-            <div className="bg-primary bg-gradient-to-br from-primary to-blue-800 text-white p-6 md:p-8 rounded-2xl md:w-[220px] flex flex-col justify-center items-center text-center shadow-md">
-              <span className="text-[10px] uppercase tracking-[0.3em] opacity-80 mb-1 font-bold">Category</span>
-              <h3 className="font-black text-lg leading-tight">
+            <div className="bg-primary bg-gradient-to-br from-primary via-primary to-blue-900 text-white p-6 md:p-8 rounded-[2.5rem] lg:w-[240px] flex flex-col justify-center items-center text-center shadow-xl relative overflow-hidden group">
+              <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <span className="text-[10px] uppercase tracking-[0.4em] opacity-60 mb-2 font-black">Strategic</span>
+              <h3 className="font-black text-xl leading-tight tracking-tighter">
                 CSR TECH <br /> PARTNERS
               </h3>
             </div>
 
             {/* Carousel with Edge Fades */}
-            <div className="flex-1 min-w-0 relative group">
-              <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
-              <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
-              <div className="py-4">
+            <div className="flex-1 min-w-0 relative group self-center">
+              <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+              <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+              <div className="py-8">
                 <LogoMarquee partners={csrPartners as any} direction="left" />
               </div>
             </div>
           </div>
 
           {/* Training & Placement Partners */}
-          <div className="flex flex-col md:flex-row-reverse items-stretch gap-2 overflow-hidden bg-slate-50 rounded-3xl p-2 border border-slate-100 shadow-sm">
+          <div className="flex flex-col lg:flex-row-reverse items-stretch gap-4 overflow-hidden bg-white rounded-[3rem] p-3 border border-slate-100 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.05)]">
             {/* Right Orange Box */}
-            <div className="bg-secondary bg-gradient-to-br from-secondary to-yellow-500 text-white p-6 md:p-8 rounded-2xl md:w-[260px] flex flex-col justify-center items-center text-center shadow-md">
-              <span className="text-[10px] uppercase tracking-[0.3em] opacity-80 mb-1 font-bold">Category</span>
-              <h3 className="font-black text-lg leading-tight">
-                TRAINING & <br /> PLACEMENT PARTNERS
+            <div className="bg-secondary bg-gradient-to-br from-secondary via-secondary to-yellow-600 text-white p-6 md:p-8 rounded-[2.5rem] lg:w-[280px] flex flex-col justify-center items-center text-center shadow-xl relative overflow-hidden group">
+              <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <span className="text-[10px] uppercase tracking-[0.4em] opacity-60 mb-2 font-black">Institutional</span>
+              <h3 className="font-black text-xl leading-tight tracking-tighter">
+                TRAINING & <br /> PLACEMENT
               </h3>
             </div>
 
             {/* Carousel with Edge Fades */}
-            <div className="flex-1 min-w-0 relative">
-              <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
-              <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
-              <div className="py-4">
+            <div className="flex-1 min-w-0 relative self-center">
+              <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+              <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+              <div className="py-8">
                 <LogoMarquee partners={trainingPartners as any} direction="right" />
               </div>
             </div>
