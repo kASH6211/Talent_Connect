@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
-  Loader2,
   CheckCircle2,
   XCircle,
   Clock,
   Building2,
-  Send,
   CalendarDays,
   Users2,
   MailOpen,
@@ -15,11 +13,20 @@ import {
   Eye,
   TrendingUp,
   AlertCircle,
+  Mail,
+  Check,
+  X,
+  Square,
+  CheckSquare,
+  ArrowRight,
 } from "lucide-react";
 import api from "@/lib/api";
 import OfferViewModal from "@/views/received-offers/view/OfferViewModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import clsx from "clsx";
+import Pagination from "@/components/common/Pagination";
+import { globalNotify } from "@/lib/notification";
 
 /* ─── Types & Helpers ─────────────────────────────────────────────────────── */
 interface Offer {
@@ -70,7 +77,7 @@ function StatusBadge({ status }: { status: string }) {
   const displayStatus = status === "Sent" ? "Received" : status;
   const s = status?.toLowerCase();
   const map: Record<string, { cls: string; Icon: any }> = {
-    sent: { cls: "bg-blue-50 text-blue-700 border-blue-200", Icon: Send },
+    sent: { cls: "bg-blue-50 text-blue-700 border-blue-200", Icon: Mail },
     pending: { cls: "bg-blue-50 text-blue-700 border-blue-200", Icon: Clock },
     discussed: { cls: "bg-warning/15 text-warning border-warning/25", Icon: AlertCircle },
     accepted: { cls: "bg-success/15 text-success border-success/25", Icon: CheckCircle2 },
@@ -80,7 +87,7 @@ function StatusBadge({ status }: { status: string }) {
   };
   const { cls, Icon } = map[s] ?? { cls: "bg-base-200 text-base-content border-base-300", Icon: Clock };
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${cls}`}>
+    <span className={clsx("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border", cls)}>
       <Icon size={11} />
       {displayStatus}
     </span>
@@ -125,12 +132,18 @@ function StatCard({ label, count, active, onClick, icon: Icon, activeColor }: {
   return (
     <button
       onClick={onClick}
-      className={`group relative overflow-hidden rounded-2xl p-5 text-center w-full border-2 transition-all duration-300 cursor-pointer ${active ? `${colorMap[activeColor]} shadow-lg` : "border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 hover:border-base-400 shadow-sm hover:shadow-md"}`}
+      className={clsx(
+        "group relative overflow-hidden rounded-2xl p-5 text-center w-full border-2 transition-all duration-300 cursor-pointer",
+        active ? `${colorMap[activeColor]} shadow-lg` : "border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 hover:border-base-400 shadow-sm hover:shadow-md"
+      )}
     >
-      <div className={`w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 ${active ? iconMap[activeColor] : "bg-base-200 dark:bg-base-800 text-base-content/60"}`}>
+      <div className={clsx(
+        "w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3",
+        active ? iconMap[activeColor] : "bg-base-200 dark:bg-base-800 text-base-content/60"
+      )}>
         <Icon size={18} />
       </div>
-      <div className={`text-3xl font-black leading-none mb-1 tracking-tight ${active ? countMap[activeColor] : "text-base-content"}`}>{count}</div>
+      <div className={clsx("text-3xl font-black leading-none mb-1 tracking-tight", active ? countMap[activeColor] : "text-base-content")}>{count}</div>
       <div className="text-[10px] font-bold tracking-widest uppercase text-base-content/50">{label}</div>
     </button>
   );
@@ -143,109 +156,128 @@ export default function ReceivedOffersPage() {
   const [filter, setFilter] = useState<string>("All");
   const [eoiTypeFilter, setEoiTypeFilter] = useState<string>("All");
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+
+  const [selected, setSelected] = useState<Set<number>>(new Set());
   const [currentOffer, setCurrentOffer] = useState<Offer | null>(null);
   const [viewModal, setViewModal] = useState<boolean>(false);
+  const [updating, setUpdating] = useState(false);
 
   const currentOfferRedirect: any = useSelector((state: RootState) => state?.institutes?.offer);
+
   useEffect(() => {
     if (currentOfferRedirect?.status) setFilter(currentOfferRedirect.status);
   }, [currentOfferRedirect]);
 
-  const load = async () => {
+  const load = useCallback(async (targetPage = page, targetLimit = limit) => {
     setLoading(true);
     try {
-      const res = await api.get("/job-offer/received");
-      setOffers(res.data ?? []);
+      const params = new URLSearchParams({
+        page: targetPage.toString(),
+        limit: targetLimit.toString(),
+      });
+      const res = await api.get(`/job-offer/received?${params}`);
+      setOffers(res.data?.data ?? []);
+      setTotal(res.data?.total ?? 0);
+      setPage(targetPage);
+      setLimit(targetLimit);
+      setSelected(new Set()); // Reset selection on page change
     } catch {
       setOffers([]);
+      setTotal(0);
     }
     setLoading(false);
-  };
+  }, [page, limit]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load(1);
+  }, [load]);
 
   const handleStatusChange = (offerId: number, newStatus: string) => {
     setOffers((prev) => prev.map((o) => o.offer_id === offerId ? { ...o, status: newStatus } : o));
     setViewModal(false);
   };
 
-  /* ── Counters ── */
+  const updateSingleStatus = async (id: number, status: string) => {
+    setUpdating(true);
+    try {
+      await api.patch(`/job-offer/${id}/status`, { status });
+      setOffers(prev => prev.map(o => o.offer_id === id ? { ...o, status } : o));
+      globalNotify(`Set to ${status}`, 'success');
+    } catch {
+      globalNotify("Failed to update status", 'error');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const bulkUpdateStatus = async (status: string) => {
+    if (selected.size === 0) return;
+    setUpdating(true);
+    try {
+      const ids = Array.from(selected);
+      await api.patch('/job-offer/bulk-status', { ids, status });
+      setOffers(prev => prev.map(o => ids.includes(o.offer_id) ? { ...o, status } : o));
+      setSelected(new Set());
+      globalNotify(`Successfully updated ${ids.length} entries to ${status}`, 'success');
+    } catch {
+      globalNotify("Failed to update multiple entries", 'error');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
+  };
+
+  const toggleAllOnPage = () => {
+    if (selected.size === filtered.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map(o => o.offer_id)));
+    }
+  };
+
+  /* ── Counters & Filtering ── */
   const now = useMemo(() => Date.now(), []);
   const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
-  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
-  // 1. Filter by EOI Type first
-  const baseOffers = offers.filter((o) => {
-    return eoiTypeFilter === "All" ||
-      (eoiTypeFilter === "Placement" && o.eoi_type === "Placement") ||
-      (eoiTypeFilter === "Training" && o.eoi_type === "Industrial Training") ||
-      (eoiTypeFilter === "Collaboration" && o.eoi_type === "Collaboration");
-  });
+  const baseOffers = useMemo(() => {
+    return offers.filter((o) => {
+      return eoiTypeFilter === "All" ||
+        (eoiTypeFilter === "Placement" && o.eoi_type === "Placement") ||
+        (eoiTypeFilter === "Training" && o.eoi_type === "Industrial Training") ||
+        (eoiTypeFilter === "Collaboration" && o.eoi_type === "Collaboration");
+    });
+  }, [offers, eoiTypeFilter]);
 
-  const total = baseOffers.length;
   const pendingDisc = baseOffers.filter((o) => (o.status === "Sent" || o.status === "Pending") && now - new Date(o.offer_date ?? 0).getTime() > TWO_DAYS_MS).length;
-  const pendingAcc = baseOffers.filter((o) => o.status === "Discussed").length;
   const discussed = baseOffers.filter((o) => o.status === "Discussed").length;
   const accepted = baseOffers.filter((o) => o.status === "Accepted").length;
 
   const statConfig = [
-    { tab: "All", label: "Total EOI Received", count: total, icon: Users, activeColor: "indigo" },
+    { tab: "All", label: "Registered on Page", count: baseOffers.length, icon: Users, activeColor: "indigo" },
     { tab: "PendingDiscuss", label: "Pending to Discuss (>2d)", count: pendingDisc, icon: Clock, activeColor: "amber" },
-    { tab: "PendingAccept", label: "Pending Accept/Reject (>7d)", count: pendingAcc, icon: AlertCircle, activeColor: "red" },
     { tab: "Discussed", label: "Discussed", count: discussed, icon: CheckCircle2, activeColor: "purple" },
     { tab: "Accepted", label: "Accepted", count: accepted, icon: CheckCircle2, activeColor: "green" },
   ];
 
-  const filtered = filter === "All"
-    ? baseOffers
-    : filter === "PendingDiscuss"
-      ? baseOffers.filter((o) => (o.status === "Sent" || o.status === "Pending") && now - new Date(o.offer_date ?? 0).getTime() > TWO_DAYS_MS)
-      : filter === "PendingAccept"
-        ? baseOffers.filter((o) => o.status === "Discussed")
+  const filtered = useMemo(() => {
+    return filter === "All"
+      ? baseOffers
+      : filter === "PendingDiscuss"
+        ? baseOffers.filter((o) => (o.status === "Sent" || o.status === "Pending") && now - new Date(o.offer_date ?? 0).getTime() > TWO_DAYS_MS)
         : baseOffers.filter((o) => o.status === filter);
+  }, [baseOffers, filter]);
 
   return (
-    <div className="w-full mx-auto" style={{ fontFamily: "'Outfit', sans-serif" }}>
-      <style>{`
-        .sol-btn-eye {
-          background: #f8fafc;
-          padding: 8px 10px;
-          border-radius: 8px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 13px;
-          font-weight: 600;
-          border: 1px solid #e2e8f0;
-          color: #475569;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          overflow: hidden;
-          white-space: nowrap;
-          cursor: pointer;
-        }
-        .sol-btn-text {
-          display: inline-block;
-          max-width: 0;
-          opacity: 0;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          transform: translateX(-5px);
-          overflow: hidden;
-        }
-        .sol-btn-eye:hover {
-          padding: 8px 14px;
-          background: #eef2ff;
-          color: #4f46e5;
-          border-color: #c7d2fe;
-          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
-        }
-        .sol-btn-eye:hover .sol-btn-text {
-          max-width: 100px;
-          opacity: 1;
-          transform: translateX(0);
-          margin-left: 6px;
-        }
-      `}</style>
-
+    <div className="w-full mx-auto pb-24" style={{ fontFamily: "'Outfit', sans-serif" }}>
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3.5">
@@ -262,7 +294,6 @@ export default function ReceivedOffersPage() {
           </div>
         </div>
 
-        {/* Filter */}
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
           <select
             className="select select-bordered select-sm w-full sm:w-auto font-medium"
@@ -277,9 +308,9 @@ export default function ReceivedOffersPage() {
         </div>
       </div>
 
-      {/* ── Stat Cards (5) ── */}
+      {/* ── Stat Cards ── */}
       {!loading && offers.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {statConfig.map(({ tab, label, count, icon, activeColor }) => (
             <StatCard key={tab} label={label} count={count} active={filter === tab}
               onClick={() => setFilter(tab)} icon={icon} activeColor={activeColor} />
@@ -289,97 +320,220 @@ export default function ReceivedOffersPage() {
 
       {/* ── Content ── */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-3 text-base-content/50">
-          <Loader2 size={32} className="animate-spin text-primary" />
-          <p className="text-sm">Loading received EOI…</p>
+        <div className="animate-pulse space-y-4">
+          <div className="hidden lg:block">
+            <div className="h-12 bg-base-300 dark:bg-base-800 rounded-xl mb-4" />
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-16 bg-base-200 dark:bg-base-800/50 rounded-xl mb-2" />
+            ))}
+          </div>
+          <div className="lg:hidden space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-48 rounded-2xl bg-base-300 dark:bg-base-800" />
+            ))}
+          </div>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 rounded-2xl border-2 border-dashed border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <Send size={24} className="text-primary" />
+        <div className="flex flex-col items-center justify-center py-20 rounded-3xl border-2 border-dashed border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 gap-4 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+            <Mail size={30} className="text-primary" />
           </div>
-          <div className="text-center">
-            <p className="font-semibold text-base-content">No EOI found</p>
-            <p className="text-sm text-base-content/50 mt-1">
-              {filter === "All" ? "No EOI have been received yet." : `No ${filter.toLowerCase()} EOI at the moment.`}
-            </p>
+          <div>
+            <p className="font-bold text-base-content text-lg uppercase tracking-tight">No EOI found</p>
+            <p className="text-sm text-base-content/50 mt-1">Try changing filters or wait for new responses</p>
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          {filtered.map((offer, index) => {
-            const salary = salaryStr(offer.salary_min, offer.salary_max);
-            return (
+        <div className="space-y-6">
+          {/* Desktop Table View */}
+          <div className="hidden lg:block rounded-2xl border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 shadow-sm overflow-hidden">
+            <table className="min-w-full divide-y divide-base-200 dark:divide-base-800">
+              <thead className="bg-base-200/50 dark:bg-base-800/50">
+                <tr>
+                  <th className="px-4 py-4 w-10">
+                    <button onClick={toggleAllOnPage} className="w-5 h-5 rounded border border-base-300 flex items-center justify-center text-primary bg-base-100">
+                      {selected.size === filtered.length && filtered.length > 0 ? <CheckSquare size={14} /> : <Square size={14} className="text-base-content/20" />}
+                    </button>
+                  </th>
+                  <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-base-content/40">Industry Partner</th>
+                  <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-base-content/40">EOI Type</th>
+                  <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-base-content/40">Title / Details</th>
+                  <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-base-content/40">Received</th>
+                  <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-base-content/40">Status</th>
+                  <th className="px-5 py-4 text-right text-[10px] font-black uppercase tracking-widest text-base-content/40">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-base-200 dark:divide-base-800">
+                {filtered.map((offer) => (
+                  <tr key={offer.offer_id} className={clsx("hover:bg-base-200/30 dark:hover:bg-base-800/30 transition-colors", selected.has(offer.offer_id) && "bg-primary/5")}>
+                    <td className="px-4 py-4">
+                      <button onClick={() => toggleSelect(offer.offer_id)} className="w-5 h-5 rounded border border-base-300 flex items-center justify-center text-primary bg-base-100">
+                        {selected.has(offer.offer_id) ? <CheckSquare size={14} /> : <Square size={14} className="text-base-content/20" />}
+                      </button>
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                          <Building2 size={16} />
+                        </div>
+                        <span className="text-sm font-bold text-base-content">{offer.industry?.industry_name || "Industry Partner"}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <EoiTypePill type={offer.eoi_type} />
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="text-sm font-medium text-base-content leading-tight line-clamp-1">
+                        {offer.job_title || offer.collaboration_types?.split('|').join(' · ') || "—"}
+                      </p>
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap text-xs text-base-content/60">
+                      {formatDate(offer.offer_date)}
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <StatusBadge status={offer.status} />
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {offer.status === 'Sent' && (
+                          <>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); updateSingleStatus(offer.offer_id, 'Accepted'); }}
+                              className="w-7 h-7 rounded-lg bg-success/10 text-success hover:bg-success hover:text-white flex items-center justify-center transition-all tooltip tooltip-bottom"
+                              data-tip="Accept"
+                            >
+                              <Check size={14} />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); updateSingleStatus(offer.offer_id, 'Rejected'); }}
+                              className="w-7 h-7 rounded-lg bg-error/10 text-error hover:bg-error hover:text-white flex items-center justify-center transition-all tooltip tooltip-bottom"
+                              data-tip="Reject"
+                            >
+                              <X size={14} />
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={() => { setCurrentOffer(offer); setViewModal(true); }}
+                          className="w-7 h-7 rounded-lg bg-base-200 text-base-content/60 hover:bg-primary hover:text-white flex items-center justify-center transition-all tooltip tooltip-bottom"
+                          data-tip="View Details"
+                        >
+                          <Eye size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden space-y-4">
+            {filtered.map((offer) => (
               <div
                 key={offer.offer_id}
-                className="rounded-2xl border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
-                style={{ animationDelay: `${index * 0.05}s` }}
+                onClick={() => { setCurrentOffer(offer); setViewModal(true); }}
+                className={clsx(
+                  "rounded-2xl border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 p-5 shadow-sm active:scale-[0.98] transition-all",
+                  selected.has(offer.offer_id) && "ring-2 ring-primary border-transparent"
+                )}
               >
-                <div className="p-5">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    {/* Left: info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <EoiTypePill type={offer.eoi_type} />
-                        {offer.job_title && (
-                          <h2 className="text-base font-bold text-base-content leading-tight truncate">
-                            {offer.job_title}
-                          </h2>
-                        )}
-                        <StatusBadge status={offer.status} />
-                      </div>
-
-                      <div className="flex items-center gap-1.5 text-sm text-base-content/60 mb-3">
-                        <Building2 size={13} />
-                        <span>{offer.industry?.industry_name || "Industry Partner"}</span>
-                      </div>
-
-                      {/* Meta row */}
-                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-base-content/55">
-                        <span className="flex items-center gap-1">
-                          <CalendarDays size={12} /> Sent: {formatDate(offer.offer_date)}
-                        </span>
-                        {offer.number_of_posts && (
-                          <span className="flex items-center gap-1">
-                            <Users2 size={12} /> {offer.number_of_posts} students needed
-                          </span>
-                        )}
-                        {salary && (
-                          <span className="flex items-center gap-1 text-success font-semibold">{salary}</span>
-                        )}
-                        {offer.nature_of_engagement && (
-                          <span className="text-base-content/50">{offer.nature_of_engagement}</span>
-                        )}
-                      </div>
-
-                      {/* Description or collab types */}
-                      {offer.job_description && (
-                        <p className="mt-3 text-sm text-base-content/60 line-clamp-2 leading-relaxed">
-                          {offer.job_description}
-                        </p>
-                      )}
-                      {offer.collaboration_types && !offer.job_description && (
-                        <p className="mt-3 text-sm text-base-content/60 line-clamp-2">
-                          {offer.collaboration_types.split("|").join(" · ")}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Right: View button */}
-                    <div className="flex items-center gap-2 shrink-0 self-start sm:self-center mt-3 sm:mt-0">
-                      <button
-                        onClick={() => { setCurrentOffer(offer); setViewModal(true); }}
-                        title="View details & update status"
-                        className="sol-btn-eye"
-                      >
-                        <Eye size={16} /> <span className="sol-btn-text">View Details</span>
-                      </button>
-                    </div>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleSelect(offer.offer_id); }}
+                      className="w-5 h-5 rounded border border-base-300 flex items-center justify-center text-primary bg-base-100"
+                    >
+                      {selected.has(offer.offer_id) ? <CheckSquare size={14} /> : <Square size={14} className="text-base-content/20" />}
+                    </button>
+                    <EoiTypePill type={offer.eoi_type} />
                   </div>
+                  <StatusBadge status={offer.status} />
+                </div>
+                <h3 className="font-bold text-base-content mb-1 leading-tight line-clamp-1">
+                  {offer.job_title || offer.collaboration_types?.split('|').join(' · ') || "EOI Request"}
+                </h3>
+                <div className="flex items-center gap-2 text-xs text-base-content/50 mb-4">
+                  <Building2 size={12} /> {offer.industry?.industry_name}
+                </div>
+
+                {offer.status === 'Sent' && (
+                  <div className="grid grid-cols-2 gap-2 mt-4 mb-4">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); updateSingleStatus(offer.offer_id, 'Accepted'); }}
+                      className="btn btn-sm btn-success text-white font-bold rounded-xl"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); updateSingleStatus(offer.offer_id, 'Rejected'); }}
+                      className="btn btn-sm btn-error text-white font-bold rounded-xl"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center pt-4 border-t border-base-200 dark:border-base-800">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-base-content/40">
+                    {formatDate(offer.offer_date)}
+                  </span>
+                  <button className="text-xs font-bold text-primary flex items-center gap-1">
+                    <Eye size={14} /> View Details
+                  </button>
                 </div>
               </div>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <div className="mt-8">
+            <Pagination
+              total={total}
+              page={page}
+              limit={limit}
+              onPageChange={(p) => load(p, limit)}
+              onLimitChange={(l) => load(1, l)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Bulk Action Bar ── */}
+      {selected.size > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
+          <div className="bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-700 shadow-2xl rounded-2xl px-6 py-4 flex items-center gap-8 ring-8 ring-primary/5">
+            <div className="flex items-center gap-3 border-r border-base-300 dark:border-base-700 pr-8">
+              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-content font-black shadow-lg shadow-primary/20">
+                {selected.size}
+              </div>
+              <div className="text-sm font-bold text-base-content tracking-tight">Entries<br /><span className="text-primary opacity-70">Selected</span></div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                disabled={updating}
+                onClick={() => bulkUpdateStatus('Accepted')}
+                className="btn btn-success btn-sm text-white font-bold px-6 rounded-xl shadow-lg shadow-success/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+              >
+                Accept All Selected
+              </button>
+              <button
+                disabled={updating}
+                onClick={() => bulkUpdateStatus('Rejected')}
+                className="btn btn-error btn-sm text-white font-bold px-6 rounded-xl shadow-lg shadow-error/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+              >
+                Reject All
+              </button>
+              <button
+                onClick={() => setSelected(new Set())}
+                className="btn btn-ghost btn-sm font-bold text-base-content/40 hover:text-base-content px-4"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

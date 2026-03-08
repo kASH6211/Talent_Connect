@@ -29,6 +29,8 @@ export class InstituteController {
   @ApiQuery({ name: 'stream_ids', required: false })
   @ApiQuery({ name: 'sort', required: false, enum: ['name', 'student_count'] })
   @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
   search(@Query() q: InstituteSearchQuery) { return this.service.search(q); }
 
   @Public()

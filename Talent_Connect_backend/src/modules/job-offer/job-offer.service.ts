@@ -2,9 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource } from 'typeorm';
 import { JobOffer } from './job-offer.entity';
+import { InstituteService } from '../institute/institute.service';
 
 export interface BulkOfferDto {
     institute_ids: number[];
+    is_select_all?: boolean;
+    district_ids?: string;
+    qualification_ids?: string;
+    stream_ids?: string;
     eoi_type: string;           // 'Placement' | 'Industrial Training' | 'Collaboration'
     job_title?: string;
     job_description?: string;
@@ -31,13 +36,27 @@ export class JobOfferService {
         @InjectRepository(JobOffer)
         private readonly repo: Repository<JobOffer>,
         private readonly dataSource: DataSource,
+        private readonly instituteService: InstituteService,
     ) { }
 
     /** Industry sends EOI to multiple institutes */
     async bulkCreate(dto: BulkOfferDto) {
+        let instituteIds = dto.institute_ids || [];
+
+        if (dto.is_select_all) {
+            // Find all institutes matching the filters
+            const searchResult = await this.instituteService.search({
+                district_ids: dto.district_ids,
+                qualification_ids: dto.qualification_ids,
+                stream_ids: dto.stream_ids,
+                limit: 5000, // Large enough for all Punjab institutes
+            });
+            instituteIds = searchResult.data.map(i => i.institute_id);
+        }
+
         const now = new Date().toISOString();
         const batch_id = Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 9);
-        const offers = dto.institute_ids.map(inst_id => this.repo.create({
+        const offers = instituteIds.map(inst_id => this.repo.create({
             batch_id,
             industry_id: dto.industry_id,
             institute_id: inst_id,
@@ -68,21 +87,35 @@ export class JobOfferService {
     }
 
     /** Sent EOIs for a specific industry */
-    async getSentOffers(industry_id: number) {
-        return this.repo.find({
+    async getSentOffers(industry_id: number, page?: number, limit?: number) {
+        const take = Number(limit) || 10;
+        const skip = ((Number(page) || 1) - 1) * take;
+
+        const [data, total] = await this.repo.findAndCount({
             where: { industry_id },
             relations: ['institute', 'industry', 'institute.district'],
             order: { offer_id: 'DESC' },
+            take,
+            skip,
         });
+
+        return { data, total, page: Number(page) || 1, limit: take };
     }
 
     /** Received EOIs for a specific institute */
-    async getReceivedOffers(institute_id: number) {
-        return this.repo.find({
+    async getReceivedOffers(institute_id: number, page?: number, limit?: number) {
+        const take = Number(limit) || 10;
+        const skip = ((Number(page) || 1) - 1) * take;
+
+        const [data, total] = await this.repo.findAndCount({
             where: { institute_id },
             relations: ['industry', 'institute', 'institute.district'],
             order: { offer_id: 'DESC' },
+            take,
+            skip,
         });
+
+        return { data, total, page: Number(page) || 1, limit: take };
     }
 
     /** Update status */
@@ -91,5 +124,21 @@ export class JobOfferService {
         return this.repo.findOne({ where: { offer_id }, relations: ['industry', 'institute', 'institute.district'] });
     }
 
-    findAll() { return this.repo.find({ relations: ['industry', 'institute', 'institute.district'], order: { offer_id: 'DESC' } }); }
+    /** Bulk update status */
+    async bulkUpdateStatus(ids: number[], status: string) {
+        await this.repo.update({ offer_id: In(ids) }, { status });
+        return { success: true, count: ids.length };
+    }
+
+    async findAll(page?: number, limit?: number) {
+        const take = Number(limit) || 10;
+        const skip = ((Number(page) || 1) - 1) * take;
+        const [data, total] = await this.repo.findAndCount({
+            relations: ['industry', 'institute', 'institute.district'],
+            order: { offer_id: 'DESC' },
+            take,
+            skip,
+        });
+        return { data, total, page: Number(page) || 1, limit: take };
+    }
 }

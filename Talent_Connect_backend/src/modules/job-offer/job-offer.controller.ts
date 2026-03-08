@@ -17,14 +17,18 @@ export class JobOfferController {
 
     /** Offers sent by this industry */
     @Get('sent')
-    getSent(@Request() req: any) {
-        return this.svc.getSentOffers(req.user?.industry_id);
+    @ApiQuery({ name: 'page', required: false })
+    @ApiQuery({ name: 'limit', required: false })
+    getSent(@Request() req: any, @Query('page') page?: number, @Query('limit') limit?: number) {
+        return this.svc.getSentOffers(req.user?.industry_id, page, limit);
     }
 
     /** Offers received by this institute */
     @Get('received')
-    getReceived(@Request() req: any) {
-        return this.svc.getReceivedOffers(req.user?.institute_id);
+    @ApiQuery({ name: 'page', required: false })
+    @ApiQuery({ name: 'limit', required: false })
+    getReceived(@Request() req: any, @Query('page') page?: number, @Query('limit') limit?: number) {
+        return this.svc.getReceivedOffers(req.user?.institute_id, page, limit);
     }
 
     /** Update offer status (Accepted / Rejected / Withdrawn) */
@@ -33,6 +37,16 @@ export class JobOfferController {
         return this.svc.updateStatus(+id, status);
     }
 
+    /** Bulk update status for multiple offers */
+    @Patch('bulk-status')
+    bulkUpdateStatus(@Body() body: { ids: number[], status: string }) {
+        return this.svc.bulkUpdateStatus(body.ids, body.status);
+    }
+
     @Get()
-    findAll() { return this.svc.findAll(); }
+    @ApiQuery({ name: 'page', required: false })
+    @ApiQuery({ name: 'limit', required: false })
+    findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
+        return this.svc.findAll(page, limit);
+    }
 }

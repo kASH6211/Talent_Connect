@@ -56,6 +56,8 @@ export default function InstituteDashboard({
     });
   }, []);
 
+  if (!stats) return <DashboardSkeleton username={username} />;
+
   return (
     <div className="min-h-screen bg-base-200/30">
       <div className="w-full mx-auto">
@@ -71,7 +73,7 @@ export default function InstituteDashboard({
               </div>
               <div>
                 <h1 className="text-2xl lg:text-3xl font-bold tracking-tight leading-tight text-primary-content">
-                  Welcome, {instituteName ?? "Institute Name"} 👋
+                  Welcome, {instituteName || "Institute Name"} 👋
                 </h1>
                 <p className="text-secondary text-sm font-medium mt-1">
                   Institute Portal · {username}
@@ -97,8 +99,7 @@ export default function InstituteDashboard({
           </div>
 
           <p className="mt-5 text-primary-content/70 text-base lg:text-lg max-w-3xl">
-            Manage students, track placements, handle industry requests
-            seamlessly.
+            Manage students, track placements, and handle Expressions of Interest seamlessly.
           </p>
         </div>
 
@@ -106,6 +107,19 @@ export default function InstituteDashboard({
         <div className="mt-8">
           <ReceivedOffersPage />
         </div>
+      </div>
+    </div>
+  );
+}
+function DashboardSkeleton({ username }: { username: string }) {
+  return (
+    <div className="animate-pulse space-y-10">
+      <div className="h-64 rounded-2xl bg-base-300" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map(i => <div key={i} className="h-32 rounded-2xl bg-base-300" />)}
+      </div>
+      <div className="space-y-4">
+        {[1, 2, 3].map(i => <div key={i} className="h-40 rounded-2xl bg-base-300" />)}
       </div>
     </div>
   );

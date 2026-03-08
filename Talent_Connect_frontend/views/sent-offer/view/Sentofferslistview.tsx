@@ -25,9 +25,10 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { setCurrentIndustry } from "@/store/industry";
 import { useAuth } from "@/lib/AuthProvider";
+import dynamic from "next/dynamic";
+import Pagination from "@/components/common/Pagination";
 import clsx from "clsx";
-
-/* ─── Styles ──────────────────────────────────────────────────────────────── */
+import "leaflet/dist/leaflet.css";
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -558,14 +559,14 @@ interface OfferRecord {
   collaboration_types?: string;
   additional_details?: string;
   status:
-    | "Sent"
-    | "Discussed"
-    | "Accepted"
-    | "Rejected"
-    | "Project initiated"
-    | "Project completed"
-    | "Withdrawn"
-    | "Pending";
+  | "Sent"
+  | "Discussed"
+  | "Accepted"
+  | "Rejected"
+  | "Project initiated"
+  | "Project completed"
+  | "Withdrawn"
+  | "Pending";
   institute: {
     institute_id: number;
     institute_name: string;
@@ -998,74 +999,7 @@ const getStatus = (status: string) => {
 };
 
 /* ─── Pagination Component ───────────────────────────────────────────────── */
-function Pagination({
-  currentPage,
-  totalPages,
-  onPageChange,
-}: {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-}) {
-  const maxVisiblePages = 5;
-  const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-  const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-  const pages = [];
-  for (let i = startPage; i <= endPage; i++) {
-    pages.push(i);
-  }
-
-  return (
-    <div className="flex items-center justify-center gap-3 mt-4 pb-6">
-      {/* Previous */}
-      <button
-        className={clsx(
-          "px-3 py-1 rounded-md border transition-colors",
-          currentPage === 1
-            ? "border-base-300 text-base-content/40 cursor-not-allowed"
-            : "border-base-300 text-base-content hover:bg-base-200 hover:border-base-400",
-        )}
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-      >
-        <ChevronLeft size={18} />
-      </button>
-
-      {/* Page numbers */}
-      <div className="flex gap-1">
-        {pages.map((pageNum) => (
-          <button
-            key={pageNum}
-            className={clsx(
-              "px-3 py-1 rounded-md border transition-colors",
-              currentPage === pageNum
-                ? "bg-primary text-primary-content border-primary font-semibold"
-                : "border-base-300 text-base-content hover:bg-base-200 hover:border-base-400",
-            )}
-            onClick={() => onPageChange(pageNum)}
-          >
-            {pageNum}
-          </button>
-        ))}
-      </div>
-
-      {/* Next */}
-      <button
-        className={clsx(
-          "px-3 py-1 rounded-md border transition-colors",
-          currentPage === totalPages
-            ? "border-base-300 text-base-content/40 cursor-not-allowed"
-            : "border-base-300 text-base-content hover:bg-base-200 hover:border-base-400",
-        )}
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-      >
-        <ChevronRight size={18} />
-      </button>
-    </div>
-  );
-}
+// (redundant local Pagination removed)
 
 /* ─── Main Component ─────────────────────────────────────────────────────── */
 export default function SentOffersListView() {
@@ -1077,7 +1011,8 @@ export default function SentOffersListView() {
   const [eoiTypeFilter, setEoiTypeFilter] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const CARDS_PER_PAGE = 5;
+  const [limit, setLimit] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
   const currentIndustry: any = useSelector(
     (state: RootState) => state?.industries?.currentIndustry,
   );
@@ -1099,17 +1034,30 @@ export default function SentOffersListView() {
     };
   }, [currentIndustry]);
 
-  const fetchOffers = useCallback(async () => {
+  const fetchOffers = useCallback(async (page = currentPage, currentLimit = limit) => {
     setLoading(true);
     try {
-      const res = await api.get("/job-offer/sent");
-      setOffers(res.data ?? []);
+      const params = new URLSearchParams();
+      params.set("page", page.toString());
+      params.set("limit", currentLimit.toString());
+      if (searchTerm) params.set("search", searchTerm);
+      // Backend doesn't support full filtering yet, so we'll still do some client-side, 
+      // but we need to handle the new response format.
+      const res = await api.get(`/job-offer/sent?${params}`);
+
+      if (res.data && res.data.data) {
+        setOffers(res.data.data);
+        setTotalRecords(res.data.total);
+      } else {
+        setOffers(Array.isArray(res.data) ? res.data : []);
+        setTotalRecords(Array.isArray(res.data) ? res.data.length : 0);
+      }
     } catch {
       setError("Failed to load sent offers.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [searchTerm, currentPage, limit]);
 
   useEffect(() => {
     fetchOffers();
@@ -1179,23 +1127,18 @@ export default function SentOffersListView() {
     return matchesFilter && matchesSearch;
   });
 
-  const groups = groupOffers(filteredOffers);
-  // const groups = groupOffers(filteredOffers);
+  const groups = useMemo(() => groupOffers(filteredOffers), [filteredOffers]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(groups.length / CARDS_PER_PAGE);
-  const startIndex = (currentPage - 1) * CARDS_PER_PAGE;
-  const endIndex = startIndex + CARDS_PER_PAGE;
-  const paginatedGroups = useMemo(() => {
-    const start = (currentPage - 1) * CARDS_PER_PAGE;
-    return groups.slice(start, start + CARDS_PER_PAGE);
-  }, [groups, currentPage]);
+  const onPageChange = (p: number) => {
+    setCurrentPage(p);
+    fetchOffers(p, limit);
+  };
 
-  useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(1);
-    }
-  }, [totalPages, currentPage]);
+  const onLimitChange = (l: number) => {
+    setLimit(l);
+    setCurrentPage(1);
+    fetchOffers(1, l);
+  };
 
   const handleSearch = () => {
     // console.log("Search for:", searchTerm);
@@ -1357,9 +1300,9 @@ export default function SentOffersListView() {
                 onClick={() => setFilter("All")}
                 active={filter === "All"}
                 icon={TrendingUp}
-                // iconBg="linear-gradient(135deg,#6366f1,#8b5cf6)"
-                // countColor="#6366f1"
-                // activeClass="active-all"
+              // iconBg="linear-gradient(135deg,#6366f1,#8b5cf6)"
+              // countColor="#6366f1"
+              // activeClass="active-all"
               />
               <StatCard
                 label="Discussed"
@@ -1367,9 +1310,9 @@ export default function SentOffersListView() {
                 onClick={() => setFilter("Discussed")}
                 active={filter === "Discussed"}
                 icon={AlertCircle}
-                // iconBg="linear-gradient(135deg,#f59e0b,#fbbf24)"
-                // countColor="#f59e0b"
-                // activeClass="active-discussed"
+              // iconBg="linear-gradient(135deg,#f59e0b,#fbbf24)"
+              // countColor="#f59e0b"
+              // activeClass="active-discussed"
               />
               <StatCard
                 label="Accepted"
@@ -1377,9 +1320,9 @@ export default function SentOffersListView() {
                 onClick={() => setFilter("Accepted")}
                 active={filter === "Accepted"}
                 icon={CheckCircle2}
-                // iconBg="linear-gradient(135deg,#10b981,#34d399)"
-                // countColor="#10b981"
-                // activeClass="active-accepted"
+              // iconBg="linear-gradient(135deg,#10b981,#34d399)"
+              // countColor="#10b981"
+              // activeClass="active-accepted"
               />
               <StatCard
                 label="Pending Discussion (>2d)"
@@ -1387,9 +1330,9 @@ export default function SentOffersListView() {
                 onClick={() => setFilter("PendingDiscuss")}
                 active={filter === "PendingDiscuss"}
                 icon={Clock}
-                // iconBg="linear-gradient(135deg,#ef4444,#f87171)"
-                // countColor="#ef4444"
-                // activeClass="active-rejected"
+              // iconBg="linear-gradient(135deg,#ef4444,#f87171)"
+              // countColor="#ef4444"
+              // activeClass="active-rejected"
               />
               <StatCard
                 label="Pending Accept/Reject (>7d)"
@@ -1397,9 +1340,9 @@ export default function SentOffersListView() {
                 onClick={() => setFilter("PendingAccept")}
                 active={filter === "PendingAccept"}
                 icon={Ban}
-                // iconBg="linear-gradient(135deg,#8b5cf6,#a78bfa)"
-                // countColor="#8b5cf6"
-                // activeClass="active-project"
+              // iconBg="linear-gradient(135deg,#8b5cf6,#a78bfa)"
+              // countColor="#8b5cf6"
+              // activeClass="active-project"
               />
             </div>
 
@@ -1460,32 +1403,36 @@ export default function SentOffersListView() {
                   </div>
                 </div>
               ) : (
-                paginatedGroups.map((g, i) => (
-                  <div
-                    key={g.key}
-                    style={{ animationDelay: `${0.1 + i * 0.05}s` }}
-                  >
-                    <OfferGroupCard
-                      group={g}
-                      onWithdraw={handleWithdraw}
-                      onEyeClick={(g) => {
-                        setSelectedOffer(g);
-                        setModalOpen(true);
-                      }}
-                    />
-                  </div>
-                ))
+                <div className="flex flex-col gap-6">
+                  {groups.map((g, i) => (
+                    <div
+                      key={g.key}
+                      style={{ animationDelay: `${0.1 + i * 0.05}s` }}
+                    >
+                      <OfferGroupCard
+                        group={g}
+                        onWithdraw={handleWithdraw}
+                        onEyeClick={(g) => {
+                          setSelectedOffer(g);
+                          setModalOpen(true);
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
+            {/* Global Pagination */}
+            <div className="mt-12">
               <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
+                total={totalRecords}
+                page={currentPage}
+                limit={limit}
+                onPageChange={onPageChange}
+                onLimitChange={onLimitChange}
               />
-            )}
+            </div>
           </>
         )}
       </div>
@@ -1638,16 +1585,16 @@ export default function SentOffersListView() {
               {/* Additional Details */}
               {(selectedOffer.rows[0]?.job_description ||
                 selectedOffer.rows[0]?.additional_details) && (
-                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 text-sm">
-                    Additional Information
+                  <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 text-sm">
+                      Additional Information
+                    </div>
+                    <div className="p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {selectedOffer.rows[0]?.job_description ||
+                        selectedOffer.rows[0]?.additional_details}
+                    </div>
                   </div>
-                  <div className="p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {selectedOffer.rows[0]?.job_description ||
-                      selectedOffer.rows[0]?.additional_details}
-                  </div>
-                </div>
-              )}
+                )}
             </div>
 
             {/* Footer */}

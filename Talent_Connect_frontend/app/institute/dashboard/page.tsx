@@ -9,14 +9,12 @@ import SpinnerFallback from "@/components/Spinner";
 const page = () => {
   const { user, role, loading } = useAuth();
   const userName = user?.username ?? "Institute";
-  const [instituteName, setInstituteName] = useState("Top University");
-
-  if (loading) {
-    return <SpinnerFallback />;
-  }
+  const [instituteName, setInstituteName] = useState<string | undefined>(undefined);
+  const [nameLoading, setNameLoading] = useState(false);
 
   useEffect(() => {
     if (user?.institute_id) {
+      setNameLoading(true);
       api
         .get(`/institute/${user.institute_id}`)
         .then((res) => {
@@ -24,9 +22,14 @@ const page = () => {
             setInstituteName(res.data.institute_name);
           }
         })
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => setNameLoading(false));
     }
   }, [user?.institute_id]);
+
+  if (loading || nameLoading) {
+    return <SpinnerFallback title="Loading Dashboard..." />;
+  }
 
   return (
     <div>

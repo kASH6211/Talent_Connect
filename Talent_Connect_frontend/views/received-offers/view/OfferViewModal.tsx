@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   DollarSign,
@@ -17,28 +18,15 @@ import {
   Send,
   TrendingUp,
   Loader2,
+  MapPin,
+  Info,
+  ChevronRight,
 } from "lucide-react";
 import api from "@/lib/api";
+import clsx from "clsx";
+import { globalNotify } from "@/lib/notification";
 
-const ALL_STATUSES = [
-  "Discussed",
-  "Accepted",
-  "Rejected",
-  "Project initiated",
-  "Project completed",
-];
-
-const STATUS_COLORS: Record<string, { bg: string; text: string; icon: LucideIcon }> = {
-  Sent: { bg: "bg-blue-50", text: "text-blue-700", icon: Send },
-  Pending: { bg: "bg-blue-50", text: "text-blue-700", icon: Clock },
-  Discussed: { bg: "bg-amber-100", text: "text-amber-800", icon: Clock },
-  Accepted: { bg: "bg-emerald-100", text: "text-emerald-800", icon: CheckCircle2 },
-  Rejected: { bg: "bg-rose-100", text: "text-rose-800", icon: XCircle },
-  "Project initiated": { bg: "bg-purple-100", text: "text-purple-800", icon: TrendingUp },
-  "Project completed": { bg: "bg-green-100", text: "text-green-800", icon: CheckCircle2 },
-  Withdrawn: { bg: "bg-gray-100", text: "text-gray-700", icon: X },
-};
-
+/* ─── Types & Constants ─────────────────────────────────────────────────── */
 interface Offer {
   offer_id: number;
   eoi_type?: string;
@@ -58,263 +46,262 @@ interface Offer {
   collaboration_types?: string;
   additional_details?: string;
   status: string;
-  required_qualification_ids?: string;
-  required_stream_ids?: string;
   industry?: {
     industry_name?: string;
     emailId?: string;
   };
 }
 
-interface OfferViewModalProps {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  offer?: Offer | null;
-  onStatusChange?: (offerId: number, newStatus: string) => void;
-}
+const ALL_STATUSES = [
+  "Discussed",
+  "Accepted",
+  "Rejected",
+  "Project initiated",
+  "Project completed",
+];
 
+const STATUS_CONFIG: Record<string, { bg: string; text: string; icon: LucideIcon; light: string }> = {
+  Sent: { bg: "bg-blue-600", text: "text-blue-600", light: "bg-blue-50 dark:bg-blue-500/10", icon: Send },
+  Discussed: { bg: "bg-amber-600", text: "text-amber-600", light: "bg-amber-50 dark:bg-amber-500/10", icon: Clock },
+  Accepted: { bg: "bg-emerald-600", text: "text-emerald-600", light: "bg-emerald-50 dark:bg-emerald-500/10", icon: CheckCircle2 },
+  Rejected: { bg: "bg-rose-600", text: "text-rose-600", light: "bg-rose-50 dark:bg-rose-500/10", icon: XCircle },
+  "Project initiated": { bg: "bg-purple-600", text: "text-purple-600", light: "bg-purple-50 dark:bg-purple-500/10", icon: TrendingUp },
+  "Project completed": { bg: "bg-green-600", text: "text-green-600", light: "bg-green-50 dark:bg-green-500/10", icon: CheckCircle2 },
+};
+
+/* ─── Styles ───────────────────────────────────────────────────────────── */
+const sectionTitleCls = "text-[10px] font-black uppercase tracking-[0.2em] text-base-content/40 mb-3 flex items-center gap-2";
+const cardCls = "p-5 rounded-2xl border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 shadow-sm transition-all hover:border-primary/20";
+const infoRowCls = "flex items-start gap-3 py-2 text-sm border-b border-base-200 dark:border-base-800 last:border-0";
+
+/* ─── Main Component ───────────────────────────────────────────────────── */
 export default function OfferViewModal({
   open,
   setOpen,
   offer,
   onStatusChange,
-}: OfferViewModalProps) {
-  const [changingStatus, setChangingStatus] = useState(false);
+}: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  offer?: Offer | null;
+  onStatusChange?: (offerId: number, newStatus: string) => void;
+}) {
+  const [updating, setUpdating] = useState(false);
   const [pendingStatus, setPendingStatus] = useState("");
-  const [statusError, setStatusError] = useState("");
+  const [mounted, setMounted] = useState(false);
 
-  const modalRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { setMounted(true); }, []);
 
-  if (!open || !offer) return null;
-
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) setOpen(false);
-  };
+  if (!mounted || !open || !offer) return null;
 
   const formatDate = (d?: string) =>
-    d
-      ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-      : "—";
+    d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
   const formatSalary = () => {
-    const min = offer.salary_min ? Number(offer.salary_min) : null;
-    const max = offer.salary_max ? Number(offer.salary_max) : null;
-    if (min === null && max === null) return "Not disclosed";
-
-    const fmt = (n: number) => {
-      const k = n / 1000;
-      return `₹${Number.isInteger(k) ? k : k.toFixed(1)}K`;
-    };
-
-    if (min !== null && max !== null) return `${fmt(min)} – ${fmt(max)}`;
-    if (min !== null) return `From ${fmt(min)}`;
-    return `Up to ${fmt(max!)}`;
+    const min = Number(offer.salary_min) || null;
+    const max = Number(offer.salary_max) || null;
+    if (!min && !max) return "Not disclosed";
+    const fmt = (n: number) => `₹${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}K`;
+    if (min && max) return `${fmt(min)} – ${fmt(max)}`;
+    return min ? `From ${fmt(min)}` : `Up to ${fmt(max!)}`;
   };
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (!newStatus || newStatus === offer.status) return;
+  const updateStatus = async (newStatus: string) => {
+    if (newStatus === offer.status) return;
+    setUpdating(true);
     setPendingStatus(newStatus);
-    setChangingStatus(true);
-    setStatusError("");
     try {
       await api.patch(`/job-offer/${offer.offer_id}/status`, { status: newStatus });
       onStatusChange?.(offer.offer_id, newStatus);
+      globalNotify(`Status updated to ${newStatus}`, "success");
       setOpen(false);
     } catch (e: any) {
-      setStatusError(e?.response?.data?.message ?? "Failed to update status");
+      globalNotify(e?.response?.data?.message ?? "Failed to update status", "error");
     } finally {
-      setChangingStatus(false);
+      setUpdating(false);
       setPendingStatus("");
     }
   };
 
-  const StatusConfig = STATUS_COLORS[offer.status] ?? STATUS_COLORS["Pending"];
-  const StatusIcon = StatusConfig.icon;
-
-  const eoiTypeLabel =
-    offer.eoi_type === "Placement"
-      ? "🎓 Hire Students (Placement)"
-      : offer.eoi_type === "Industrial Training"
-        ? "🏭 Industrial Training"
-        : offer.eoi_type === "Collaboration"
-          ? "🤝 Collaboration"
-          : offer.eoi_type;
-
+  const config = STATUS_CONFIG[offer.status] || STATUS_CONFIG.Sent;
+  const StatusIcon = config.icon;
   const collabList = offer.collaboration_types?.split("|").filter(Boolean) ?? [];
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      onClick={handleBackdropClick}
-    >
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Backdrop */}
       <div
-        ref={modalRef}
-        className="relative w-full max-w-lg sm:max-w-xl md:max-w-2xl bg-white rounded-xl shadow-xl overflow-hidden max-h-[90vh] overflow-y-auto"
-      >
-        {/* Close button */}
-        <button
-          onClick={() => setOpen(false)}
-          className="absolute top-3 right-3 p-2 rounded-full bg-white/90 hover:bg-gray-100 text-gray-600 hover:text-gray-900 z-10"
-        >
-          <X size={20} />
-        </button>
+        className="absolute inset-0 bg-base-content/40 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
+        onClick={() => setOpen(false)}
+      />
 
-        {/* Header */}
-        <div className="px-5 sm:px-7 pt-6 pb-4 border-b bg-gray-50/70">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center">
-              <Briefcase size={24} className="text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              {eoiTypeLabel && (
-                <span className="inline-block mb-2 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
-                  {eoiTypeLabel}
-                </span>
-              )}
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
-                {offer.job_title || "Expression of Interest"}
-              </h2>
-              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
-                <div className="flex items-center gap-1.5">
-                  <Building2 size={16} />
-                  {offer.industry?.industry_name || "Company"}
+      {/* Modal */}
+      <div className="relative w-full max-w-5xl bg-base-100 dark:bg-base-950 border border-base-300 dark:border-base-700 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 fade-in duration-300">
+
+        {/* Header Section */}
+        <div className="relative flex-shrink-0 bg-gradient-to-br from-primary via-primary/95 to-secondary p-10 sm:p-12">
+          <button
+            onClick={() => setOpen(false)}
+            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center backdrop-blur-md transition-all z-20"
+          >
+            <X size={20} />
+          </button>
+
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center text-white shadow-lg backdrop-blur-md">
+                <Briefcase size={28} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="px-3 py-1 bg-white/10 border border-white/20 rounded-full text-[10px] font-black uppercase tracking-widest text-white/90">
+                    {offer.eoi_type}
+                  </span>
+                  <div className={clsx(
+                    "flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm",
+                    offer.status === "Accepted" || offer.status === "Project completed" ? "bg-emerald-100 text-emerald-700" :
+                      offer.status === "Rejected" ? "bg-rose-100 text-rose-700" :
+                        offer.status === "Discussed" ? "bg-amber-100 text-amber-700" :
+                          offer.status === "Project initiated" ? "bg-purple-100 text-purple-700" :
+                            "bg-white text-primary"
+                  )}>
+                    <StatusIcon size={12} />
+                    {offer.status === "Sent" ? "Received" : offer.status}
+                  </div>
                 </div>
-                {offer.industry?.emailId && (
-                  <div className="flex items-center gap-1.5">
-                    <Mail size={16} />
-                    <span className="font-mono truncate max-w-[220px]">
-                      {offer.industry.emailId}
+                <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight tracking-tight">
+                  {offer.job_title || offer.collaboration_types?.split('|').join(' · ') || "EOI Request"}
+                </h2>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-6 pt-2">
+              <div className="flex items-center gap-2 text-white/80">
+                <Building2 size={18} className="text-white" />
+                <span className="text-sm font-bold tracking-tight">{offer.industry?.industry_name}</span>
+              </div>
+              {offer.industry?.emailId && (
+                <div className="flex items-center gap-2 text-white/80">
+                  <Mail size={18} className="text-white" />
+                  <span className="text-sm font-medium tracking-tight opacity-90">{offer.industry.emailId}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Content Section */}
+        <div className="flex-1 overflow-y-auto p-10 sm:p-14 space-y-12 custom-scrollbar">
+
+          {/* Quick Info Grid - 4 columns on large screens */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <QuickInfo color="text-emerald-600" bg="bg-emerald-50 dark:bg-emerald-500/10" icon={DollarSign} label="Compensation" value={formatSalary()} />
+            <QuickInfo color="text-indigo-600" bg="bg-indigo-50 dark:bg-indigo-500/10" icon={Users} label="Students Required" value={offer.number_of_posts?.toString() || "—"} />
+            <QuickInfo color="text-amber-600" bg="bg-amber-50 dark:bg-amber-500/10" icon={CalendarDays} label="Eol Sent Date" value={formatDate(offer.offer_date)} />
+            <QuickInfo color="text-purple-600" bg="bg-purple-50 dark:bg-purple-500/10" icon={CalendarClock} label="Expected Start" value={formatDate(offer.start_date)} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column: Engagement Details */}
+            <div className="space-y-8">
+              <section>
+                <h3 className={sectionTitleCls}><Info size={14} /> Engagement Details</h3>
+                <div className={cardCls}>
+                  <div className={infoRowCls}>
+                    <span className="w-24 font-bold text-base-content/40">Nature</span>
+                    <span className="font-semibold text-base-content">{offer.nature_of_engagement || "—"}</span>
+                  </div>
+                  <div className={infoRowCls}>
+                    <span className="w-24 font-bold text-base-content/40">Experience</span>
+                    <span className="font-semibold text-base-content">{offer.experience_required || "—"}</span>
+                  </div>
+                  <div className={infoRowCls}>
+                    <span className="w-24 font-bold text-base-content/40">Location</span>
+                    <span className="font-semibold text-base-content flex items-center gap-1.5">
+                      <MapPin size={14} className="text-primary" />
+                      {offer.location || "—"} {offer.is_remote && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">Remote</span>}
                     </span>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+                  <div className={infoRowCls}>
+                    <span className="w-24 font-bold text-base-content/40">Duration</span>
+                    <span className="font-semibold text-base-content">{offer.duration || "—"}</span>
+                  </div>
+                </div>
+              </section>
 
-        {/* Quick stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-5 sm:px-7 py-5 border-b">
-          {offer.salary_min || offer.salary_max ? (
-            <QuickStat icon={DollarSign} label="Salary/Stipend" value={formatSalary()} color="text-emerald-700" />
-          ) : null}
-          {offer.number_of_posts ? (
-            <QuickStat icon={Users} label="Students Required" value={offer.number_of_posts.toString()} color="text-indigo-700" />
-          ) : null}
-          {offer.offer_date ? (
-            <QuickStat icon={CalendarDays} label="Sent On" value={formatDate(offer.offer_date)} color="text-amber-700" />
-          ) : null}
-          {offer.start_date ? (
-            <QuickStat icon={CalendarClock} label="Start Date" value={formatDate(offer.start_date)} color="text-purple-700" />
-          ) : null}
-        </div>
-
-        {/* Main content */}
-        <div className="p-5 sm:p-7 space-y-6">
-
-          {/* Engagement details for Placement / Training */}
-          {(offer.nature_of_engagement || offer.experience_required || offer.location) && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Engagement Details</h3>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-gray-700">
-                {offer.nature_of_engagement && (
-                  <div><span className="text-gray-500">Nature:</span> {offer.nature_of_engagement}</div>
-                )}
-                {offer.experience_required && (
-                  <div><span className="text-gray-500">Experience:</span> {offer.experience_required}</div>
-                )}
-                {offer.location && (
-                  <div><span className="text-gray-500">Location:</span> {offer.location}{offer.is_remote ? " (Remote OK)" : ""}</div>
-                )}
-                {offer.duration && (
-                  <div><span className="text-gray-500">Duration:</span> {offer.duration}</div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Job description */}
-          {offer.job_description && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Description</h3>
-              <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{offer.job_description}</div>
-            </div>
-          )}
-
-          {/* Collaboration types */}
-          {collabList.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Collaboration Type(s)</h3>
-              <ul className="space-y-1">
-                {collabList.map((c) => (
-                  <li key={c} className="flex items-center gap-2 text-sm text-gray-700">
-                    <CheckCircle2 size={14} className="text-indigo-600 flex-shrink-0" /> {c}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Additional details */}
-          {offer.additional_details && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Additional Details</h3>
-              <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{offer.additional_details}</div>
-            </div>
-          )}
-
-          {/* Status & Actions */}
-          <div className="pt-4 border-t space-y-3">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-sm font-semibold text-gray-700">Current Status:</span>
-              <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${StatusConfig.bg} ${StatusConfig.text}`}>
-                <StatusIcon size={15} />
-                {offer.status === "Sent" ? "Received" : offer.status}
-              </div>
+              {collabList.length > 0 && (
+                <section>
+                  <h3 className={sectionTitleCls}><TrendingUp size={14} /> Collaborations</h3>
+                  <div className="space-y-2">
+                    {collabList.map(item => (
+                      <div key={item} className="flex items-center gap-3 p-3 rounded-xl border border-base-200 dark:border-base-800 bg-base-200/50 dark:bg-base-900/50 text-xs font-bold text-base-content/70">
+                        <CheckCircle2 size={16} className="text-emerald-500" />
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
 
-            {/* Status Change (Institute can update) */}
-            <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Update Status</p>
-              <div className="flex flex-wrap gap-2">
-                {ALL_STATUSES.filter((s) => s !== offer.status).map((s) => {
-                  const cfg = STATUS_COLORS[s] ?? STATUS_COLORS.Pending;
-                  const Ico = cfg.icon;
-                  return (
-                    <button
-                      key={s}
-                      onClick={() => handleStatusChange(s)}
-                      disabled={changingStatus}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${cfg.bg} ${cfg.text} border-current/20 hover:brightness-95 disabled:opacity-50`}
-                    >
-                      {changingStatus && pendingStatus === s ? (
-                        <Loader2 size={12} className="animate-spin" />
-                      ) : (
-                        <Ico size={12} />
-                      )}
-                      {s}
-                    </button>
-                  );
-                })}
-              </div>
-              {statusError && (
-                <p className="text-xs text-red-600 mt-2">{statusError}</p>
+            {/* Right Column: Description & Notes */}
+            <div className="space-y-8">
+              <section>
+                <h3 className={sectionTitleCls}><Briefcase size={14} /> Overview</h3>
+                <div className={clsx(cardCls, "min-h-[140px] italic text-base-content/70 leading-relaxed text-sm")}>
+                  {offer.job_description || "No specific job description provided."}
+                </div>
+              </section>
+
+              {offer.additional_details && (
+                <section>
+                  <h3 className={sectionTitleCls}><Info size={14} /> Additional Notes</h3>
+                  <div className="p-5 rounded-2xl bg-base-200/50 dark:bg-base-900/50 border border-base-300 dark:border-base-800 text-sm leading-relaxed text-base-content/60">
+                    {offer.additional_details}
+                  </div>
+                </section>
               )}
             </div>
           </div>
+
+          {/* Action Center */}
+          <section className="pt-6 border-t border-base-200 dark:border-base-800">
+            <h3 className={sectionTitleCls}><Send size={14} /> Action Center</h3>
+            <div className="flex flex-wrap gap-3">
+              {ALL_STATUSES.filter(s => s !== offer.status).map(status => (
+                <button
+                  key={status}
+                  disabled={updating}
+                  onClick={() => updateStatus(status)}
+                  className={clsx(
+                    "flex-1 min-w-[140px] px-5 py-3 rounded-2xl border text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm whitespace-nowrap",
+                    updating && pendingStatus === status ? "bg-base-200 text-base-content opacity-50" :
+                      status === "Accepted" ? "bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700 hover:scale-[1.02] active:scale-95" :
+                        status === "Rejected" ? "bg-rose-600 border-rose-600 text-white hover:bg-rose-700 hover:scale-[1.02] active:scale-95" :
+                          "bg-base-100 dark:bg-base-900 border-base-300 dark:border-base-700 text-base-content hover:border-primary hover:text-primary hover:scale-[1.02] active:scale-95"
+                  )}
+                >
+                  {updating && pendingStatus === status ? <Loader2 size={14} className="animate-spin" /> : <ChevronRight size={14} />}
+                  {status}
+                </button>
+              ))}
+            </div>
+          </section>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
-interface QuickStatProps { icon: LucideIcon; label: string; value: string; color: string; }
-function QuickStat({ icon: Icon, label, value, color }: QuickStatProps) {
+function QuickInfo({ icon: Icon, label, value, color, bg }: { icon: LucideIcon; label: string; value: string; color: string; bg: string }) {
   return (
-    <div className="text-center sm:text-left">
-      <div className={`flex items-center justify-center sm:justify-start gap-1.5 text-sm font-medium ${color}`}>
-        <Icon size={16} />{label}
+    <div className="flex-1 min-w-[120px] p-4 rounded-3xl bg-base-200/50 dark:bg-base-900 border border-base-300 dark:border-base-800 flex flex-col items-center justify-center text-center group transition-all hover:bg-base-100">
+      <div className={clsx("w-10 h-10 rounded-2xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110", bg, color)}>
+        <Icon size={20} />
       </div>
-      <div className="mt-0.5 text-base sm:text-lg font-semibold text-gray-900">{value}</div>
+      <p className="text-[9px] font-black uppercase tracking-widest text-base-content/40 mb-1">{label}</p>
+      <p className="font-black text-sm text-base-content tracking-tight">{value}</p>
     </div>
   );
 }

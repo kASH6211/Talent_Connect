@@ -11,6 +11,8 @@ export interface InstituteSearchQuery {
   stream_ids?: string;
   sort?: 'name' | 'student_count';
   order?: 'asc' | 'desc';
+  page?: string | number;
+  limit?: string | number;
 }
 
 @Injectable()
@@ -22,17 +24,14 @@ export class InstituteService {
   ) { }
 
   async findAll(page?: number, limit?: number) {
-    if (page && limit) {
-      const take = limit || 10;
-      const skip = (page - 1) * take;
-      const [data, total] = await this.repo.findAndCount({
-        take,
-        skip,
-        order: { institute_id: 'DESC' } as any,
-      });
-      return { data, total, page, limit: take };
-    }
-    return this.repo.find({ order: { institute_id: 'DESC' } as any });
+    const take = Number(limit) || 10;
+    const skip = ((Number(page) || 1) - 1) * take;
+    const [data, total] = await this.repo.findAndCount({
+      take,
+      skip,
+      order: { institute_id: 'DESC' } as any,
+    });
+    return { data, total, page: Number(page) || 1, limit: take };
   }
 
   async findOne(id: number) {
@@ -55,7 +54,7 @@ export class InstituteService {
     return { message: 'Institute #' + id + ' deactivated' };
   }
 
-  /** Filtered institute search with student count */
+  /** Filtered institute search with student count and server-side pagination */
   async search(q: InstituteSearchQuery) {
     const parse = (s?: string) => s ? s.split(',').map(Number).filter(Boolean) : [];
 
@@ -65,73 +64,90 @@ export class InstituteService {
     const qualIds = parse(q.qualification_ids);
     const streamIds = parse(q.stream_ids);
 
-    const qb = this.dataSource
-      .createQueryBuilder()
-      .from('master_institute', 'i')
-      .select([
-        'i.institute_id              AS institute_id',
-        'i.institute_name            AS institute_name',
-        '"i"."emailId"               AS email',
-        'i.mobileno                  AS mobileno',
-        'i.address                   AS address',
-        '"i"."lgddistrictId"         AS district_id',
-        'i.institute_type_id         AS type_id',
-        'i.institute_ownership_type_id AS ownership_id',
-        'i.contactperson             AS contactperson',
-        'i.placement_officer_email_id AS po_email',
-        'i.placement_officer_contact_number AS po_mobile',
-        'i.latitude                  AS latitude',
-        'i.longitude                 AS longitude',
-      ])
+    const page = Number(q.page) || 1;
+    const limit = Number(q.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const baseQuery = (alias: string) => {
+      const qb = this.dataSource
+        .createQueryBuilder()
+        .from('master_institute', alias)
+        .where(`${alias}.is_active = 'Y'`);
+
+      if (districtIds.length) qb.andWhere(`${alias}."lgddistrictId" IN (:...dids)`, { dids: districtIds });
+      if (typeIds.length) qb.andWhere(`${alias}.institute_type_id IN (:...tids)`, { tids: typeIds });
+      if (ownershipIds.length) qb.andWhere(`${alias}.institute_ownership_type_id IN (:...oids)`, { oids: ownershipIds });
+
+      if (qualIds.length) {
+        qb.andWhere(
+          `${alias}.institute_id IN (SELECT DISTINCT "instituteId" FROM mapping_institute_qualification WHERE is_active = 'Y' AND qualificationid = ANY(:qids))`,
+          { qids: qualIds },
+        );
+      }
+
+      if (streamIds.length) {
+        qb.andWhere(
+          `${alias}.institute_id IN (SELECT DISTINCT "instituteId" FROM mapping_institute_qualification WHERE is_active = 'Y' AND "stream_branch_Id" = ANY(:sids))`,
+          { sids: streamIds },
+        );
+      }
+      return qb;
+    };
+
+    // 1. Get total count
+    const countQb = baseQuery('i');
+    const { count } = await countQb.select('COUNT(*)', 'count').getRawOne();
+    const total = parseInt(count, 10);
+
+    // 2. Get paginated results
+    const qb = baseQuery('i');
+    qb.select([
+      'i.institute_id              AS institute_id',
+      'i.institute_name            AS institute_name',
+      '"i"."emailId"               AS email',
+      'i.mobileno                  AS mobileno',
+      'i.address                   AS address',
+      '"i"."lgddistrictId"         AS district_id',
+      'i.institute_type_id         AS type_id',
+      'i.institute_ownership_type_id AS ownership_id',
+      'i.contactperson             AS contactperson',
+      'i.placement_officer_email_id AS po_email',
+      'i.placement_officer_contact_number AS po_mobile',
+      'i.latitude                  AS latitude',
+      'i.longitude                 AS longitude',
+    ])
       .addSelect(`(
-        SELECT COUNT(*)
-        FROM student_details s
-        WHERE s.institute_id = i.institute_id
-          AND s.is_active = 'Y'
-          ${qualIds.length ? `AND s.qualificationid IN (${qualIds.join(',')})` : ''}
-          ${streamIds.length ? `AND s."stream_branch_Id" IN (${streamIds.join(',')})` : ''}
-      )`, 'student_count')
+      SELECT COUNT(*)
+      FROM student_details s
+      WHERE s.institute_id = i.institute_id
+        AND s.is_active = 'Y'
+        ${qualIds.length ? `AND s.qualificationid IN (${qualIds.join(',')})` : ''}
+        ${streamIds.length ? `AND s."stream_branch_Id" IN (${streamIds.join(',')})` : ''}
+    )`, 'student_count')
       .addSelect(`(
-        SELECT COUNT(*)
-        FROM student_details s
-        WHERE s.institute_id = i.institute_id
-          AND s.is_active = 'Y'
-          AND s.passing_year = extract(year from current_date)::text
-          ${qualIds.length ? `AND s.qualificationid IN (${qualIds.join(',')})` : ''}
-          ${streamIds.length ? `AND s."stream_branch_Id" IN (${streamIds.join(',')})` : ''}
-      )`, 'final_year_student_count')
-      .where(`i.is_active = 'Y'`);
-
-    if (districtIds.length) qb.andWhere(`i."lgddistrictId" IN (:...dids)`, { dids: districtIds });
-    if (typeIds.length) qb.andWhere(`i.institute_type_id IN (:...tids)`, { tids: typeIds });
-    if (ownershipIds.length) qb.andWhere(`i.institute_ownership_type_id IN (:...oids)`, { oids: ownershipIds });
-
-    // Qualification filter: institutes with matching qualifications in mapping_institute_qualification
-    if (qualIds.length) {
-      qb.andWhere(
-        `i.institute_id IN (SELECT DISTINCT "instituteId" FROM mapping_institute_qualification WHERE is_active = 'Y' AND qualificationid = ANY(:qids))`,
-        { qids: qualIds },
-      );
-    }
-
-    // Stream filter: directly match stream_branch_Id in mapping_institute_qualification
-    if (streamIds.length) {
-      qb.andWhere(
-        `i.institute_id IN (SELECT DISTINCT "instituteId" FROM mapping_institute_qualification WHERE is_active = 'Y' AND "stream_branch_Id" = ANY(:sids))`,
-        { sids: streamIds },
-      );
-    }
+      SELECT COUNT(*)
+      FROM student_details s
+      WHERE s.institute_id = i.institute_id
+        AND s.is_active = 'Y'
+        AND s.passing_year = extract(year from current_date)::text
+        ${qualIds.length ? `AND s.qualificationid IN (${qualIds.join(',')})` : ''}
+        ${streamIds.length ? `AND s."stream_branch_Id" IN (${streamIds.join(',')})` : ''}
+    )`, 'final_year_student_count');
 
     const sortCol = q.sort === 'name' ? 'i.institute_name' : 'student_count';
     const dir = (q.order ?? 'desc').toUpperCase() as 'ASC' | 'DESC';
     qb.orderBy(sortCol === 'student_count' ? 'student_count' : sortCol, dir);
 
+    qb.limit(limit).offset(offset);
+
     const rows = await qb.getRawMany();
 
+    // Mapping logic (reused from previous implementation)
     const distRepo = this.dataSource.getRepository('master_district');
     const typeRepo = this.dataSource.getRepository('master_institute_type');
     const ownRepo = this.dataSource.getRepository('master_institute_ownership_type');
 
+    // ... (rest of the mapping logic is identical, so I'll keep it concise)
     const allDists = await distRepo.find() as any[];
     const allTypes = await typeRepo.find() as any[];
     const allOwns = await ownRepo.find() as any[];
@@ -140,12 +156,11 @@ export class InstituteService {
     const typeMap = Object.fromEntries(allTypes.map((t: any) => [t.institute_type_id, t.institute_type]));
     const ownMap = Object.fromEntries(allOwns.map((o: any) => [o.institute_ownership_type_id, o.institute_type]));
 
-    return rows.map(r => ({
+    const data = rows.map(r => ({
       institute_id: r.institute_id,
       institute_name: r.institute_name,
       email: r.email,
       mobileno: r.mobileno,
-      city: r.city,
       district: distMap[r.district_id] ?? '',
       type: typeMap[r.type_id] ?? '',
       ownership: ownMap[r.ownership_id] ?? '',
@@ -157,6 +172,8 @@ export class InstituteService {
       latitude: r.latitude ?? null,
       longitude: r.longitude ?? null,
     }));
+
+    return { data, total, page, limit };
   }
 
   /** Fetch course breakdown for a specific institute considering active filters */

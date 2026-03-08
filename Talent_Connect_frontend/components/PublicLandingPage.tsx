@@ -28,6 +28,7 @@ import { AppDispatch, RootState } from "@/store/store";
 import { updateLoginUi } from "@/store/login";
 import RoleSelectModal from "./landing-page/RoleSelectModal";
 import Footer from "./landing-page/Footer";
+import Pagination from "@/components/common/Pagination";
 
 // Fix Leaflet marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -124,6 +125,8 @@ export default function PublicLandingPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
 
   const [districtOpts, setDistrictOpts] = useState<Option[]>([]);
   const [typeOpts, setTypeOpts] = useState<Option[]>([]);
@@ -140,12 +143,6 @@ export default function PublicLandingPage() {
   const [mapSearchLoading, setMapSearchLoading] = useState(false);
   const [mapSearchError, setMapSearchError] = useState("");
   const [mapSearchSuccess, setMapSearchSuccess] = useState(false);
-
-  const totalPages = Math.ceil(institutes.length / PAGE_SIZE);
-  const currentPageItems = institutes.slice(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE,
-  );
 
   // Load Punjab GeoJSON
   useEffect(() => {
@@ -288,10 +285,11 @@ export default function PublicLandingPage() {
     }
   }, [typeOpts, searchParams]);
 
-  const handleSearch = useCallback(async () => {
+  const handleSearch = useCallback(async (targetPage = 1, targetLimit = limit) => {
     setLoading(true);
     setSearched(true);
-    setPage(1);
+    setPage(targetPage);
+    setLimit(targetLimit);
 
     const params = new URLSearchParams();
     if (filters.state_ids.length)
@@ -307,22 +305,26 @@ export default function PublicLandingPage() {
     if (filters.stream_ids.length)
       params.set("stream_ids", filters.stream_ids.join(","));
 
+    params.set("page", targetPage.toString());
+    params.set("limit", targetLimit.toString());
     params.set("sort", "student_count");
     params.set("order", "desc");
 
     try {
       const res = await pub.get(`/institute/search?${params}`);
-      setInstitutes(res.data || []);
+      setInstitutes(res.data?.data || []);
+      setTotal(res.data?.total || 0);
     } catch {
       setInstitutes([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, limit]);
 
   // Auto-search on mount
   useEffect(() => {
-    handleSearch();
+    handleSearch(1, limit);
   }, [handleSearch]);
 
   const resetFilters = () => {
@@ -480,7 +482,7 @@ export default function PublicLandingPage() {
                 </button>
 
                 <button
-                  onClick={handleSearch}
+                  onClick={() => handleSearch()}
                   disabled={loading}
                   className="flex-[2] sm:flex-none px-12 py-4 bg-secondary hover:bg-yellow-500 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-4 disabled:opacity-50 text-xs uppercase tracking-widest shadow-2xl shadow-secondary/30 hover:shadow-secondary/50 hover:-translate-y-1 active:translate-y-0 active:scale-95"
                 >
@@ -545,10 +547,10 @@ export default function PublicLandingPage() {
               <div className="mb-10 flex flex-col sm:flex-row justify-between items-end gap-6 border-b border-slate-100 pb-8">
                 <div>
                   <h2 className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight leading-none mb-2">
-                    {institutes.length} <span className="text-primary/40">Institutes Found</span>
+                    {total} <span className="text-primary/40">Institutes Found</span>
                   </h2>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
-                    Showing Page {page} of {totalPages} Results
+                    Showing Page {page} of {Math.ceil(total / limit)} Results
                   </p>
                 </div>
               </div>
@@ -571,7 +573,7 @@ export default function PublicLandingPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
-                        {currentPageItems.map((inst) => (
+                        {institutes.map((inst) => (
                           <tr key={inst.institute_id} className="hover:bg-primary/[0.02] transition-colors group">
                             <td className="pl-10 pr-6 py-7">
                               <div className="flex items-center gap-5">
@@ -625,66 +627,13 @@ export default function PublicLandingPage() {
                     </table>
                   </div>
 
-                  {/* Enhanced Mobile View */}
-                  <div className="md:hidden space-y-6 mb-8">
-                    {currentPageItems.map((inst) => (
-                      <div key={inst.institute_id} className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50">
-                        <div className="flex items-center gap-5 mb-8">
-                          <div className="w-16 h-16 bg-primary/5 rounded-3xl flex items-center justify-center flex-shrink-0 border border-primary/5 shadow-inner">
-                            <Building2 size={28} className="text-primary/80" />
-                          </div>
-                          <div>
-                            <h3 className="font-black text-slate-800 text-lg leading-[1.1] mb-2">{inst.institute_name}</h3>
-                            <div className="flex items-center gap-2">
-                              <span className="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-400 uppercase tracking-widest">{inst.district}</span>
-                              <span className="px-3 py-1 bg-primary/5 rounded-lg text-[10px] font-black text-primary uppercase tracking-widest">{inst.type}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 mb-8">
-                          <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100 shadow-sm">
-                            <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">Capacity</span>
-                            <span className="text-xl font-black text-primary">{inst.student_count}</span>
-                          </div>
-                          <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100 shadow-sm">
-                            <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">Graduating</span>
-                            <span className="text-xl font-black text-slate-800">{inst.final_year_student_count ?? "0"}</span>
-                          </div>
-                        </div>
-                        <button onClick={() => dispatch(updateLoginUi({ authPrompt: { open: true } }))} className="w-full py-5 bg-primary hover:bg-primary-focus text-white font-black rounded-[1.5rem] transition-all flex items-center justify-center gap-3 text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 active:scale-[0.98]">
-                          <LogIn size={20} />
-                          Secure Contact
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Premium Pagination */}
-                  {totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-6 mt-12 mb-16">
-                      <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="w-14 h-14 bg-white border border-slate-200 text-slate-300 hover:text-primary hover:border-primary/30 hover:bg-primary/5 rounded-2xl transition-all disabled:opacity-20 flex items-center justify-center shadow-sm">
-                        <ChevronLeft size={24} />
-                      </button>
-                      <div className="flex gap-3">
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
-                          if (totalPages > 6 && Math.abs(page - p) > 2 && p !== 1 && p !== totalPages) return null;
-                          if (totalPages > 6 && Math.abs(page - p) === 3) return <span key={p} className="flex items-center text-slate-300 px-1 font-bold">...</span>;
-                          return (
-                            <button
-                              key={p}
-                              onClick={() => setPage(p)}
-                              className={`w-14 h-14 rounded-2xl font-black transition-all text-xs tracking-widest shadow-sm ${page === p ? "bg-primary text-white scale-110 shadow-xl shadow-primary/30" : "bg-white border border-slate-200 text-slate-400 hover:border-primary/40 hover:text-primary"}`}
-                            >
-                              {p.toString().padStart(2, '0')}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="w-14 h-14 bg-white border border-slate-200 text-slate-300 hover:text-primary hover:border-primary/30 hover:bg-primary/5 rounded-2xl transition-all disabled:opacity-20 flex items-center justify-center shadow-sm">
-                        <ChevronRight size={24} />
-                      </button>
-                    </div>
-                  )}
+                  <Pagination
+                    total={total}
+                    page={page}
+                    limit={limit}
+                    onPageChange={(p) => handleSearch(p, limit)}
+                    onLimitChange={(l) => handleSearch(1, l)}
+                  />
                 </div>
 
                 {/* Right Side: Visual Map Intelligence (22% Width) */}

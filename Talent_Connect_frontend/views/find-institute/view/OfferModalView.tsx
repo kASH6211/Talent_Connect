@@ -110,6 +110,9 @@ export function OfferModalV2({
   onSent,
   prefilledQualIds = [],
   prefilledStreamIds = [],
+  isSelectAll = false,
+  searchFilters = {},
+  searchSort = "student_count",
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -120,6 +123,9 @@ export function OfferModalV2({
   onSent: () => void;
   prefilledQualIds?: number[];
   prefilledStreamIds?: number[];
+  isSelectAll?: boolean;
+  searchFilters?: any;
+  searchSort?: string;
 }) {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -202,12 +208,16 @@ export function OfferModalV2({
     if (eoiType === "Collaboration" && collabTypes.length === 0) {
       setError("Select at least one collaboration type"); return;
     }
-    if (selectedIds.length === 0) { setError("Select at least one institute"); return; }
+    if (!isSelectAll && selectedIds.length === 0) { setError("Select at least one institute"); return; }
 
     setSending(true);
     try {
       await api.post("/job-offer/bulk", {
-        institute_ids: selectedIds,
+        institute_ids: isSelectAll ? [] : selectedIds,
+        is_select_all: isSelectAll,
+        district_ids: searchFilters?.district_ids?.join(","),
+        qualification_ids: searchFilters?.qualification_ids?.join(","),
+        stream_ids: searchFilters?.stream_ids?.join(","),
         eoi_type: eoiType,
         job_title: jobTitle || undefined,
         nature_of_engagement: natureOfEngagement || undefined,
@@ -293,33 +303,47 @@ export function OfferModalV2({
           {/* Send to */}
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-base-content/50 mb-2.5">
-              Send to · {selectedIds.length} institute{selectedIds.length !== 1 ? "s" : ""}
+              Send to · {isSelectAll ? "All matching institutes" : `${selectedIds.length} institute${selectedIds.length !== 1 ? "s" : ""}`}
             </p>
-            <div className="flex flex-wrap gap-2">
-              {previewIds.map((id) => (
-                <span key={id} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 text-xs font-medium text-base-content/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                  {institutesMap.get(id) || `#${id}`}
-                </span>
-              ))}
-              {remainingCount > 0 && (
-                <button
-                  onClick={() => setShowAllInstitutes((v) => !v)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
-                >
-                  {showAllInstitutes ? <><ChevronUp size={12} /> Show less</> : <><ChevronDown size={12} /> +{remainingCount} more</>}
-                </button>
-              )}
-            </div>
-            {showAllInstitutes && remainingCount > 0 && (
-              <div className="mt-3 p-3 rounded-xl bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 max-h-36 overflow-y-auto">
+            {!isSelectAll ? (
+              <>
                 <div className="flex flex-wrap gap-2">
-                  {selectedIds.slice(PREVIEW_COUNT).map((id) => (
-                    <span key={id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-700 text-xs font-medium text-base-content/70">
-                      <Building2 size={10} className="text-primary flex-shrink-0" />
+                  {previewIds.map((id) => (
+                    <span key={id} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 text-xs font-medium text-base-content/80">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                       {institutesMap.get(id) || `#${id}`}
                     </span>
                   ))}
+                  {remainingCount > 0 && (
+                    <button
+                      onClick={() => setShowAllInstitutes((v) => !v)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
+                    >
+                      {showAllInstitutes ? <><ChevronUp size={12} /> Show less</> : <><ChevronDown size={12} /> +{remainingCount} more</>}
+                    </button>
+                  )}
+                </div>
+                {showAllInstitutes && remainingCount > 0 && (
+                  <div className="mt-3 p-3 rounded-xl bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 max-h-36 overflow-y-auto">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedIds.slice(PREVIEW_COUNT).map((id) => (
+                        <span key={id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-700 text-xs font-medium text-base-content/70">
+                          <Building2 size={10} className="text-primary flex-shrink-0" />
+                          {institutesMap.get(id) || `#${id}`}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-primary">All matching institutes</p>
+                  <p className="text-xs text-base-content/50">Your EOI will be sent to every institute matching your current search criteria.</p>
                 </div>
               </div>
             )}
@@ -527,7 +551,7 @@ export function OfferModalV2({
               {sending ? (
                 <><Loader2 size={15} className="animate-spin" /> Sending…</>
               ) : (
-                <><Send size={15} /> Send EOI to {selectedIds.length}</>
+                <><Send size={15} /> Send EOI to {isSelectAll ? "All" : selectedIds.length}</>
               )}
             </button>
           </div>
