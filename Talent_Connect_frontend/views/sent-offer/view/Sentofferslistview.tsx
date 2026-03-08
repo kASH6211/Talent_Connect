@@ -1380,7 +1380,7 @@ export default function SentOffersListView() {
             <div
               style={{ display: "flex", flexDirection: "column", gap: "18px" }}
             >
-              {paginatedGroups.length === 0 ? (
+              {groups.length === 0 ? (
                 <div className="sol-empty">
                   <div className="sol-empty-icon">
                     <Send size={28} color="#6366f1" />
