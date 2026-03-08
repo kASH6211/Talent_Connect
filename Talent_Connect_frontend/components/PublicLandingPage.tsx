@@ -408,20 +408,14 @@ export default function PublicLandingPage() {
         <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-secondary/10 rounded-full -translate-y-1/2 -translate-x-1/4 blur-[80px] pointer-events-none" />
 
         <div className="relative z-10 w-full px-2">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="bg-white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 shadow-inner">
-              <Shield size={24} className="text-white" />
+          <div className="flex items-center gap-6 mb-12">
+            <div className="bg-white/10 p-3.5 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner">
+              <Building2 size={32} className="text-secondary" />
             </div>
-            <div>
-              <span className="block text-[10px] font-black tracking-[0.3em] uppercase opacity-70 leading-none mb-1">Punjab State</span>
-              <span className="block text-xs font-bold text-secondary tracking-widest uppercase">Education Portal</span>
-            </div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-none text-white uppercase">
+              Discover <span className="text-secondary">Institutes</span>
+            </h1>
           </div>
-
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black mb-12 tracking-tight leading-[0.9] max-w-4xl text-white">
-            Discover <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white/90 to-white/60">Institutes</span>
-          </h1>
 
           {/* Ultra-Wide Search Box with Overflow Visible */}
           <div className="bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 shadow-[0_25px_80px_-15px_rgba(0,0,0,0.3)] p-8 overflow-visible">

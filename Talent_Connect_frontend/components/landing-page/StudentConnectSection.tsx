@@ -47,7 +47,7 @@ const studentCards = [
 
 const StudentConnectSection = () => {
   return (
-    <section className="py-20 bg-base-100" id="students">
+    <section className="py-20" id="students">
       <div className="container px-4 max-w-[1600px] mx-auto">
         {/* Heading */}
         <div className="text-center mb-16">

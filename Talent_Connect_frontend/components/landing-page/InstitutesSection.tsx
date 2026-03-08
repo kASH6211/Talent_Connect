@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Wrench,
   BookOpen,
@@ -9,6 +10,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 const institutes = [
   {
@@ -18,6 +20,7 @@ const institutes = [
     pvt: 183,
     students: 35150,
     courses: 69,
+    ref: "P-ITI-01",
   },
   {
     icon: BookOpen,
@@ -26,30 +29,35 @@ const institutes = [
     pvt: 66,
     students: 2415,
     courses: 30,
+    ref: "P-POL-02",
   },
   {
     icon: Lightbulb,
-    name: "Skilling & Vocational Institutes",
-    gov: "Coming Soon",
-    pvt: "Coming Soon",
+    name: "Skilling & Vocational",
+    gov: "-",
+    pvt: "-",
+    ref: "P-SKL-03",
   },
   {
     icon: GraduationCap,
     name: "Engineering College",
-    gov: "Coming Soon",
-    pvt: "Coming Soon",
+    gov: "-",
+    pvt: "-",
+    ref: "P-ENG-04",
   },
   {
     icon: HeartPulse,
     name: "Medical College",
-    gov: "Coming Soon",
-    pvt: "Coming Soon",
+    gov: "-",
+    pvt: "-",
+    ref: "P-MED-05",
   },
   {
     icon: Award,
-    name: "Professional Degree College",
-    gov: "Coming Soon",
-    pvt: "Coming Soon",
+    name: "Degree College",
+    gov: "-",
+    pvt: "-",
+    ref: "P-DEG-06",
   },
 ];
 
@@ -57,160 +65,112 @@ const InstitutesSection = () => {
   const router = useRouter();
 
   return (
-    <section className="py-24 bg-slate-50 relative overflow-hidden" id="institutes">
-      {/* Background Decorations */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 pointer-events-none"></div>
-      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-3xl translate-y-1/2 pointer-events-none"></div>
-
+    <section className="py-24 relative overflow-hidden" id="institutes">
       <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-full mb-6 shadow-sm animate-fade-in-down">
-            <div className="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Government of Punjab</span>
-          </div>
-          <h2 className="text-3xl md:text-5xl font-bold text-primary mb-4 tracking-tight">
-            Explore Punjab Institutes
+        <div className="text-center mb-20">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-slate-200 rounded-lg mb-6 shadow-sm"
+          >
+            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Resource Directory</span>
+          </motion.div>
+
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight uppercase leading-[0.9]">
+            Empowering <span className="text-primary italic">Punjab</span> <br /> Through Knowledge
           </h2>
-          <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full"></div>
+          <div className="h-1 w-20 bg-primary mx-auto rounded-full" />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-[1600px] mx-auto">
           {institutes.map((inst, index) => {
             const Icon = inst.icon;
+            const isActive = inst.gov !== "-";
 
             return (
-              <div
+              <motion.div
                 key={inst.name}
-                style={{ animationDelay: `${index * 100}ms` }}
-                onClick={
-                  inst.name === "ITI" || inst.name === "Polytechnic"
-                    ? () => {
-                      router.push(`/search-institutes?type=${inst.name}`);
-                    }
-                    : undefined
-                }
-                className={`group relative overflow-hidden rounded-[1.5rem] bg-white shadow-sm hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2 border border-slate-100 animate-fade-in-up ${inst.name === "ITI" || inst.name === "Polytechnic"
-                  ? "cursor-pointer"
-                  : ""
-                  }`}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                onClick={isActive ? () => router.push(`/search-institutes?type=${inst.name}`) : undefined}
+                className={`group relative min-h-[320px] bg-white border border-slate-200 rounded-xl p-8 transition-all duration-500 overflow-hidden flex flex-col shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_-15px_rgba(30,64,175,0.15)] hover:border-primary/20 ${isActive ? 'cursor-pointer' : 'cursor-default'}`}
               >
-                {/* Accent Top Bar */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-                {/* Top Section */}
-                <div className="p-6 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center mb-6 mx-auto group-hover:bg-primary transition-all duration-500 shadow-inner">
-                    <Icon className="w-8 h-8 text-primary group-hover:text-white transition-colors duration-500" />
+                {/* Reference Identifier & Icon */}
+                <div className="flex justify-between items-start mb-8">
+                  <div className={`w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center transition-all duration-500 shadow-sm ${isActive ? 'group-hover:bg-primary group-hover:shadow-primary/30' : ''}`}>
+                    <Icon className={`w-6 h-6 text-primary transition-all duration-500 ${isActive ? 'group-hover:text-white group-hover:scale-110' : ''}`} />
                   </div>
+                  <span className="text-[9px] font-bold font-mono text-slate-300 uppercase tracking-widest leading-none mt-1">
+                    {inst.ref}
+                  </span>
+                </div>
 
-                  <h3 className="text-slate-800 font-bold text-xl leading-tight mb-2 group-hover:text-primary transition-colors">
+                <div className="flex-1">
+                  <h3 className={`text-lg font-black mb-2 leading-tight uppercase transition-colors tracking-tight text-slate-900 ${isActive ? 'group-hover:text-primary' : ''}`}>
                     {inst.name}
                   </h3>
-                  <div className="w-8 h-1 bg-slate-100 mx-auto rounded-full group-hover:bg-primary/20 transition-colors"></div>
+                  <div className={`h-0.5 w-6 bg-slate-100 transition-all duration-500 ${isActive ? 'group-hover:w-12 group-hover:bg-primary/30' : ''}`} />
                 </div>
 
-                {/* Info Section (Integrated look) */}
-                <div className="relative h-20 w-full overflow-hidden bg-white border-t border-slate-50">
-                  {/* Default View (Counter) */}
-                  <div className="absolute inset-0 flex items-center justify-center gap-10 transition-all duration-500 ease-in-out group-hover:opacity-0 group-hover:-translate-y-8">
-                    <div className="text-center">
-                      <p className="text-xl font-bold text-primary">{inst.gov}</p>
-                      <p className="text-[9px] uppercase tracking-widest font-bold text-slate-400">Govt.</p>
-                    </div>
-
-                    <div className="h-6 w-px bg-slate-100"></div>
-
-                    <div className="text-center">
-                      <p className="text-xl font-bold text-primary">{inst.pvt}</p>
-                      <p className="text-[9px] uppercase tracking-widest font-bold text-slate-400">Pvt.</p>
-                    </div>
+                {/* Technical Statistics Grid */}
+                <div className="grid grid-cols-2 border-t border-slate-50 pt-6 gap-x-6">
+                  <div className="space-y-1">
+                    <p className="text-xl font-black tracking-tighter tabular-nums leading-none text-slate-900">
+                      {inst.gov}
+                    </p>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Government</p>
                   </div>
+                  <div className="space-y-1 border-l border-slate-100 pl-6">
+                    <p className="text-xl font-black tracking-tighter tabular-nums leading-none text-slate-900">
+                      {inst.pvt}
+                    </p>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Private</p>
+                  </div>
+                </div>
 
-                  {/* Hover View (Detail) */}
-                  <div className="absolute inset-0 flex items-center justify-center gap-8 bg-primary px-6 translate-y-full transition-all duration-500 ease-in-out group-hover:translate-y-0">
-                    {inst.students ? (
-                      <>
-                        <div className="text-center">
-                          <p className="text-[9px] uppercase tracking-widest font-bold text-white/60 mb-0.5">Students</p>
-                          <p className="text-base font-bold text-white italic tracking-wider">
-                            {inst.students.toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="w-px h-5 bg-white/20"></div>
-                        <div className="text-center">
-                          <p className="text-[9px] uppercase tracking-widest font-bold text-white/60 mb-0.5">Courses</p>
-                          <p className="text-base font-bold text-white italic tracking-wider">
-                            {inst.courses}
-                          </p>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex items-center gap-3">
-                        <div className="w-6 h-6 rounded-full border-2 border-dashed border-white/30 animate-spin"></div>
-                        <span className="text-sm font-bold text-secondary tracking-[0.2em] uppercase italic">Coming Soon</span>
+                {/* Hover Overlay */}
+                <div className={`absolute inset-x-0 bottom-0 py-4 px-8 translate-y-full group-hover:translate-y-0 transition-transform duration-500 flex justify-between items-center ${isActive ? 'bg-primary' : 'bg-slate-50'}`}>
+                  {isActive ? (
+                    <>
+                      <div className="flex flex-col">
+                        <span className="text-[7px] font-black text-white/50 uppercase tracking-widest leading-none mb-1">Impact Factor</span>
+                        <span className="text-[10px] font-black text-white leading-none tabular-nums">
+                          {inst.students?.toLocaleString()}+ Enrolled
+                        </span>
                       </div>
-                    )}
-                  </div>
+                      <ArrowRight size={14} className="text-white" />
+                    </>
+                  ) : (
+                    <div className="w-full flex justify-center items-center">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] leading-none">Coming Soon</span>
+                    </div>
+                  )}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
 
-        {/* Explore All Institutes CTA */}
-        <div className="mt-16 text-center animate-fade-in-up" style={{ animationDelay: '800ms' }}>
-          <button
+        {/* Professional Footer Reference */}
+        <div className="mt-10 flex flex-col items-center">
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mb-8" />
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/search-institutes")}
-            className="group relative inline-flex items-center gap-3 px-8 py-4 bg-primary text-white rounded-xl shadow-lg hover:shadow-primary/20 hover:-translate-y-1 transition-all duration-300"
+            className="flex items-center gap-4 text-xs font-black text-slate-500 uppercase tracking-[0.3em] hover:text-primary transition-colors group"
           >
-            <span className="text-sm font-bold uppercase tracking-widest">
-              Explore all institutes
-            </span>
-            <div className="p-1 rounded-md bg-white/20 group-hover:bg-secondary transition-colors duration-300">
-              <ArrowRight className="w-4 h-4" />
+            Find all Institutes
+            <div className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center group-hover:border-primary/20 group-hover:bg-primary/5 transition-all">
+              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </div>
-          </button>
-          <p className="mt-4 text-slate-500 text-xs font-medium uppercase tracking-widest opacity-60">
-            Across all districts of Punjab
-          </p>
+          </motion.button>
         </div>
       </div>
-
-      <style>
-        {`
-          @keyframes fadeInUp {
-            from {
-              opacity: 0;
-              transform: translateY(20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          @keyframes fadeInDown {
-            from {
-              opacity: 0;
-              transform: translateY(-10px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          .animate-fade-in-up {
-            opacity: 0;
-            animation: fadeInUp 0.6s ease-out forwards;
-          }
-
-          .animate-fade-in-down {
-            opacity: 0;
-            animation: fadeInDown 0.6s ease-out forwards;
-          }
-        `}
-      </style>
     </section>
   );
 };

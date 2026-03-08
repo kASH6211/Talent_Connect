@@ -43,7 +43,7 @@ const LogoMarquee = ({
 
 const PartnersSection = () => {
   return (
-    <section className="py-24 bg-[#fcfdfe]" id="industries">
+    <section className="py-24 relative overflow-hidden" id="industries">
       <div className="max-w-[1600px] mx-auto px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-extrabold mb-4 heading-primary">
