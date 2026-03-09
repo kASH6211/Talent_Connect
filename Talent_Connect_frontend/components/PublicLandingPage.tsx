@@ -4,28 +4,31 @@ import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
 import {
-  MapPin,
-  BookOpen,
-  Globe,
-  X,
-  Building2,
+  Search,
   Filter,
-  Eye,
+  MapPin,
+  Users,
+  Building2,
   LogIn,
+  X,
   ChevronLeft,
   ChevronRight,
+  Shield,
+  Globe,
+  BookOpen,
+  AlertCircle,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useMapEvents, useMap } from "react-leaflet";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
 import { updateLoginUi } from "@/store/login";
+import RoleSelectModal from "./landing-page/RoleSelectModal";
 import Footer from "./landing-page/Footer";
 import Pagination from "@/components/common/Pagination";
-import { useAuth } from "@/lib/AuthProvider";
 
 // Fix Leaflet marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -36,6 +39,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+// Dynamic imports for Leaflet components
 const MapContainer = dynamic(
   () => import("react-leaflet").then((m) => m.MapContainer),
   { ssr: false },
@@ -68,16 +72,6 @@ interface InstituteRow {
   mobileno?: string;
   student_count: number;
   final_year_student_count?: number;
-  address?: string;
-  latitude?: string;
-  longitude?: string;
-}
-
-interface CourseRow {
-  stream_branch_Id: number;
-  stream_branch_name: string;
-  student_count: number;
-  available_for_placement: number;
 }
 
 interface Filters {
@@ -98,18 +92,9 @@ const EMPTY_FILTERS: Filters = {
   stream_ids: [],
 };
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
-// Debounce utility
-function debounce<T extends (...args: any[]) => void>(func: T, delay: number) {
-  let timeoutId: NodeJS.Timeout;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), delay);
-  };
-}
-
-// Map click handler
+// Map click handler component
 function MapClickEvent({
   setUserLocation,
 }: {
@@ -125,270 +110,27 @@ function MapClickEvent({
   return null;
 }
 
-// View Profile Modal (unchanged)
-function ViewProfileModal({
-  institute,
-  onClose,
-  isOpen,
-  onConnect,
-}: {
-  institute: InstituteRow | null;
-  onClose: () => void;
-  isOpen: boolean;
-  onConnect: () => void;
-}) {
-  if (!isOpen || !institute) return null;
+// (Standalone LoginPromptModal has been moved to components/common/LoginPromptModal.tsx)
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
-        {/* Header */}
-        <div className="sticky top-0 bg-blue-600 text-white p-6 flex items-center justify-between border-b border-blue-700">
-          <div>
-            <h2 className="text-2xl font-bold">{institute.institute_name}</h2>
-            <p className="text-blue-100 text-sm mt-1">
-              {institute.type === "ITI" ? "ITI" : "Polytechnic"}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-8 space-y-8">
-          {/* Key Stats */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <p className="text-3xl font-bold text-blue-600">
-                {institute.student_count}
-              </p>
-              <p className="text-xs text-slate-600 mt-2 font-semibold">
-                STUDENTS
-              </p>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <p className="text-3xl font-bold text-blue-600">
-                {institute.final_year_student_count || 0}
-              </p>
-              <p className="text-xs text-slate-600 mt-2 font-semibold">
-                PLACEMENT POOL
-              </p>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <p className="text-3xl font-bold text-slate-400">—</p>
-              <p className="text-xs text-slate-600 mt-2 font-semibold">
-                RANK (Coming Soon)
-              </p>
-            </div>
-          </div>
-
-          {/* Institute Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <MapPin size={20} className="text-blue-600" />
-              Location
-            </h3>
-            <div className="space-y-2 text-sm">
-              <div>
-                <p className="text-slate-600 font-semibold">District</p>
-                <p className="text-slate-900">{institute.district || "—"}</p>
-              </div>
-              <div>
-                <p className="text-slate-600 font-semibold">Address</p>
-                <p className="text-slate-900">
-                  {institute.address || "Address not available"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Contact Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Building2 size={20} className="text-blue-600" />
-              Contact Information
-            </h3>
-            <div className="space-y-2 text-sm">
-              <div>
-                <p className="text-slate-600 font-semibold">Email</p>
-                <p className="text-slate-900">{institute.email || "—"}</p>
-              </div>
-              <div>
-                <p className="text-slate-600 font-semibold">Mobile</p>
-                <p className="text-slate-900">{institute.mobileno || "—"}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Institute Type & Ownership */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-slate-50 rounded-lg p-4">
-              <p className="text-xs text-slate-600 font-semibold mb-2">
-                SUB TYPE
-              </p>
-              <p className="text-slate-900 font-semibold">
-                {institute.type === "ITI" ? "ITI" : "Polytechnic"}
-              </p>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4">
-              <p className="text-xs text-slate-600 font-semibold mb-2">
-                OWNERSHIP
-              </p>
-              <p className="text-slate-900 font-semibold">
-                {institute.ownership || "Government"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer Actions */}
-        <div className="sticky bottom-0 bg-slate-50 border-t border-slate-200 p-6 flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 px-6 py-3 border border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold rounded-lg transition-colors"
-          >
-            Close
-          </button>
-          <button
-            onClick={() => {
-              onConnect();
-              onClose();
-            }}
-            className="flex-1 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-          >
-            <LogIn size={18} />
-            Connect
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Courses View Modal (unchanged)
-function CoursesViewModal({
-  institute,
-  onClose,
-  isOpen,
-}: {
-  institute: InstituteRow | null;
-  onClose: () => void;
-  isOpen: boolean;
-}) {
-  const [courses, setCourses] = useState<CourseRow[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (isOpen && institute) {
-      setLoading(true);
-      pub
-        .get(`/institute/${institute.institute_id}/courses`)
-        .then((res) => setCourses(res.data || []))
-        .catch(() => setCourses([]))
-        .finally(() => setLoading(false));
-    }
-  }, [isOpen, institute]);
-
-  if (!isOpen || !institute) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
-        {/* Header */}
-        <div className="sticky top-0 bg-blue-600 text-white p-6 flex items-center justify-between border-b border-blue-700">
-          <div>
-            <h2 className="text-2xl font-bold">Courses Offered</h2>
-            <p className="text-blue-100 text-sm mt-1">
-              {institute.institute_name}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-6">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-            </div>
-          ) : courses.length === 0 ? (
-            <p className="text-center text-slate-600 py-12">
-              No courses available
-            </p>
-          ) : (
-            <div className="overflow-x-auto rounded-lg border border-slate-200">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-slate-100 border-b border-slate-200">
-                    <th className="px-6 py-4 text-left text-sm font-bold text-slate-900">
-                      Course / Trade
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-slate-900">
-                      Students on Roll
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-bold text-slate-900">
-                      Available for Placement
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {courses.map((course) => (
-                    <tr
-                      key={course.stream_branch_Id}
-                      className="hover:bg-slate-50"
-                    >
-                      <td className="px-6 py-4 text-sm text-slate-900 font-semibold">
-                        {course.stream_branch_name}
-                      </td>
-                      <td className="px-6 py-4 text-center text-sm font-semibold text-blue-600">
-                        {course.student_count}
-                      </td>
-                      <td className="px-6 py-4 text-center text-sm font-semibold text-slate-900">
-                        {course.available_for_placement}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-slate-50 border-t border-slate-200 p-6">
-          <button
-            onClick={onClose}
-            className="w-full px-6 py-3 border border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold rounded-lg transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+// ... (rest of your PublicLandingPage component remains exactly the same)
 
 export default function PublicLandingPage() {
+  const searchParams = useSearchParams();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const { user } = useAuth();
+  const roleModal = useSelector((state: RootState) => state?.login?.ui);
 
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [institutes, setInstitutes] = useState<InstituteRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
 
   const [districtOpts, setDistrictOpts] = useState<Option[]>([]);
+  const [typeOpts, setTypeOpts] = useState<Option[]>([]);
+  const [ownershipOpts, setOwnershipOpts] = useState<Option[]>([]);
   const [qualOpts, setQualOpts] = useState<Option[]>([]);
   const [streamOpts, setStreamOpts] = useState<Option[]>([]);
 
@@ -396,19 +138,11 @@ export default function PublicLandingPage() {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(
     null,
   );
+  const [searchGeoTerm, setSearchGeoTerm] = useState("");
   const [punjabGeoJson, setPunjabGeoJson] = useState<any>(null);
-
-  // Modal states
-  const [viewProfileInstitute, setViewProfileInstitute] =
-    useState<InstituteRow | null>(null);
-  const [viewCoursesInstitute, setViewCoursesInstitute] =
-    useState<InstituteRow | null>(null);
-
-  const totalPages = Math.ceil(institutes.length / PAGE_SIZE);
-  const currentPageItems = institutes.slice(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE,
-  );
+  const [mapSearchLoading, setMapSearchLoading] = useState(false);
+  const [mapSearchError, setMapSearchError] = useState("");
+  const [mapSearchSuccess, setMapSearchSuccess] = useState(false);
 
   // Load Punjab GeoJSON
   useEffect(() => {
@@ -418,7 +152,7 @@ export default function PublicLandingPage() {
       .catch((err) => console.error("Error loading Punjab GeoJSON:", err));
   }, []);
 
-  // Load filter options - Only ITI Certificate & Diploma
+  // Load filter options (Static ones)
   useEffect(() => {
     const loadFilters = async () => {
       try {
@@ -554,101 +288,162 @@ export default function PublicLandingPage() {
       .catch((error) => console.error("Failed to load districts:", error));
   }, [filters.state_ids]);
 
-  // Main search function
-  const handleSearch = useCallback(async () => {
-    setLoading(true);
-    setPage(1);
-
-    const params = new URLSearchParams();
-    if (filters.state_ids.length)
-      params.set("state_ids", filters.state_ids.join(","));
-    if (filters.district_ids.length)
-      params.set("district_ids", filters.district_ids.join(","));
-    if (filters.qualification_ids.length)
-      params.set("qualification_ids", filters.qualification_ids.join(","));
-    if (filters.stream_ids.length)
-      params.set("stream_ids", filters.stream_ids.join(","));
-
-    params.set("sort", "student_count");
-    params.set("order", "desc");
-
-    try {
-      const res = await pub.get(`/institute/search?${params}`);
-      setInstitutes(res.data || []);
-      setSelected(new Set());
-    } catch {
-      setInstitutes([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
-
-  // Auto-search on filter change
+  // Handle initial type filter from URL
   useEffect(() => {
-    handleSearch();
+    const typeParam = searchParams?.get("type");
+    if (typeParam && typeOpts.length > 0) {
+      const match = typeOpts.find(
+        (t) => t.label.toLowerCase() === typeParam.toLowerCase(),
+      );
+      if (match) {
+        setFilters((prev) => ({ ...prev, type_ids: [match.value] }));
+      }
+    }
+  }, [typeOpts, searchParams]);
+
+  const handleSearch = useCallback(
+    async (targetPage = 1, targetLimit = limit) => {
+      setLoading(true);
+      setSearched(true);
+      setPage(targetPage);
+      setLimit(targetLimit);
+
+      const params = new URLSearchParams();
+      if (filters.state_ids.length)
+        params.set("state_ids", filters.state_ids.join(","));
+      if (filters.district_ids.length)
+        params.set("district_ids", filters.district_ids.join(","));
+      if (filters.type_ids.length)
+        params.set("type_ids", filters.type_ids.join(","));
+      if (filters.ownership_ids.length)
+        params.set("ownership_ids", filters.ownership_ids.join(","));
+      if (filters.qualification_ids.length)
+        params.set("qualification_ids", filters.qualification_ids.join(","));
+      if (filters.stream_ids.length)
+        params.set("stream_ids", filters.stream_ids.join(","));
+
+      params.set("page", targetPage.toString());
+      params.set("limit", targetLimit.toString());
+      params.set("sort", "student_count");
+      params.set("order", "desc");
+
+      try {
+        const res = await pub.get(`/institute/search?${params}`);
+        setInstitutes(res.data?.data || []);
+        setTotal(res.data?.total || 0);
+      } catch {
+        setInstitutes([]);
+        setTotal(0);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [filters, limit],
+  );
+
+  // Auto-search on mount
+  useEffect(() => {
+    handleSearch(1, limit);
   }, [handleSearch]);
 
   const resetFilters = () => {
     setFilters(EMPTY_FILTERS);
     setPage(1);
-    setSelected(new Set());
   };
 
-  const toggleSelect = (id: number) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
-  // Connect handler – opens login modal if not authenticated
-  const handleConnect = (instituteId: number) => {
-    if (!user) {
-      dispatch(updateLoginUi({ authPrompt: { open: true } }));
+  // Handle Geocoding Search with better error handling
+  const handleGeoSearch = async () => {
+    const term = searchGeoTerm.trim();
+    if (!term) {
+      setMapSearchError("Please enter a city, area, or pincode");
       return;
     }
 
-    // User is logged in → proceed
-    const selectedIds = selected.has(instituteId)
-      ? Array.from(selected)
-      : [instituteId];
-    router.push(`/industry/send-offers?institutes=${selectedIds.join(",")}`);
+    setMapSearchLoading(true);
+    setMapSearchError("");
+    setMapSearchSuccess(false);
+
+    try {
+      // Add Punjab context to search for better results
+      const searchQuery = `${term}, Punjab, India`;
+      const encodedQuery = encodeURIComponent(searchQuery);
+
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedQuery}&limit=1`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Search service temporarily unavailable");
+      }
+
+      const data = await response.json();
+
+      if (!data || data.length === 0) {
+        setMapSearchError(
+          `No location found for "${term}". Try a different city or area.`,
+        );
+        setMapSearchLoading(false);
+        return;
+      }
+
+      const result = data[0];
+      const lat = parseFloat(result.lat);
+      const lon = parseFloat(result.lon);
+
+      // Validate coordinates are within Punjab bounds
+      if (lat < 29 || lat > 33 || lon < 73 || lon > 77) {
+        setMapSearchError(
+          "Location is outside Punjab. Please search for places in Punjab.",
+        );
+        setMapSearchLoading(false);
+        return;
+      }
+
+      setUserLocation([lat, lon]);
+      setMapSearchSuccess(true);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setMapSearchSuccess(false), 3000);
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      setMapSearchError(
+        "Unable to search location. Please try again or click on the map.",
+      );
+    } finally {
+      setMapSearchLoading(false);
+    }
   };
 
   return (
     <>
-      {/* Modals */}
-      <ViewProfileModal
-        institute={viewProfileInstitute}
-        onClose={() => setViewProfileInstitute(null)}
-        isOpen={!!viewProfileInstitute}
-        onConnect={() => handleConnect(viewProfileInstitute!.institute_id)}
-      />
-      <CoursesViewModal
-        institute={viewCoursesInstitute}
-        onClose={() => setViewCoursesInstitute(null)}
-        isOpen={!!viewCoursesInstitute}
-      />
-      {/* Professional Header */}
-      <div className="bg-primary text-white py-10 md:py-12 px-4 sm:px-6 lg:px-8 relative">
-        {/* Subtle background pattern/gradient overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.12)_0%,transparent_60%)] pointer-events-none" />
+      {/* Header & Search Section - Edge-to-Edge */}
+      <div className="bg-primary text-primary-content pt-12 pb-24 px-4 lg:px-8 relative overflow-visible">
+        {/* Subtle background gradients for depth */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4 blur-[100px] pointer-events-none" />
+        <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-secondary/10 rounded-full -translate-y-1/2 -translate-x-1/4 blur-[80px] pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto relative z-10">
-          {/* Main Title */}
-          <div className="text-center pb-8 md:pb-10">
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-medium tracking-tight ">
-              Find Institutes
-            </h2>
+        <div className="relative z-10 w-full px-2">
+          <div className="flex items-center gap-6 mb-12">
+            <div className="bg-white/10 p-3.5 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner">
+              <Building2 size={32} className="text-secondary" />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-none text-white uppercase">
+              Discover <span className="text-secondary">Institutes</span>
+            </h1>
           </div>
 
-          {/* Filter Bar – moved outside the dark hero for better contrast */}
-          <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 border border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  District
+          {/* Ultra-Wide Search Box with Overflow Visible */}
+          <div className="bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 shadow-[0_25px_80px_-15px_rgba(0,0,0,0.3)] p-8 overflow-visible">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10 overflow-visible">
+              <div className="space-y-3 overflow-visible">
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/50 ml-1">
+                  <MapPin size={12} className="text-secondary" />
+                  District / Location
                 </label>
                 <MultiSelectDropdown
                   label=""
@@ -657,14 +452,14 @@ export default function PublicLandingPage() {
                   onChange={(v) =>
                     setFilters((f) => ({ ...f, district_ids: v }))
                   }
-                  placeholder="Select districts…"
-                  buttonClassName="w-full text-base border-gray-300 focus:border-primary focus:ring-primary/30"
+                  placeholder="All Locations"
+                  buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/30 h-14 rounded-2xl hover:bg-white/20 active:bg-white/15 transition-all shadow-none"
                 />
               </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Qualification Level
+              <div className="space-y-3 overflow-visible">
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/50 ml-1">
+                  <BookOpen size={12} className="text-secondary" />
+                  Institute Level
                 </label>
                 <MultiSelectDropdown
                   label=""
@@ -673,200 +468,215 @@ export default function PublicLandingPage() {
                   onChange={(v) =>
                     setFilters((f) => ({ ...f, qualification_ids: v }))
                   }
-                  placeholder="Select qualifications…"
-                  buttonClassName="w-full text-base border-gray-300 focus:border-primary focus:ring-primary/30"
+                  placeholder="All Qualifications"
+                  buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/30 h-14 rounded-2xl hover:bg-white/20 active:bg-white/15 transition-all shadow-none"
                 />
               </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
-                  Course / Trade
+              <div className="space-y-3 overflow-visible">
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/50 ml-1">
+                  <Globe size={12} className="text-secondary" />
+                  Specialization
                 </label>
                 <MultiSelectDropdown
                   label=""
                   options={streamOpts}
                   selected={filters.stream_ids}
                   onChange={(v) => setFilters((f) => ({ ...f, stream_ids: v }))}
-                  placeholder="Select courses…"
-                  buttonClassName="w-full text-base border-gray-300 focus:border-primary focus:ring-primary/30"
+                  placeholder="All Specializations"
+                  buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/30 h-14 rounded-2xl hover:bg-white/20 active:bg-white/15 transition-all shadow-none"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={resetFilters}
-                className="group flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-600 hover:text-red-700 transition-colors"
-                title="Clear all filters"
-              >
-                <X
-                  size={16}
-                  className="group-hover:scale-110 transition-transform"
-                />
-                Reset filters
-              </button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center border-t border-white/5 pt-8">
+              <p className="text-xs text-white/40 font-medium">
+                Refine results by selecting multiple criteria above
+              </p>
+              <div className="flex gap-4 w-full sm:w-auto">
+                <button
+                  onClick={resetFilters}
+                  className="flex-1 sm:flex-none px-8 py-4 border border-white/10 text-white/80 hover:text-white hover:bg-white/5 font-bold rounded-2xl transition-all flex items-center justify-center gap-3 text-xs uppercase tracking-widest active:scale-95"
+                >
+                  <X size={18} />
+                  Reset
+                </button>
+
+                <button
+                  onClick={() => handleSearch()}
+                  disabled={loading}
+                  className="flex-[2] sm:flex-none px-12 py-4 bg-secondary hover:bg-yellow-500 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-4 disabled:opacity-50 text-xs uppercase tracking-widest shadow-2xl shadow-secondary/30 hover:shadow-secondary/50 hover:-translate-y-1 active:translate-y-0 active:scale-95"
+                >
+                  {loading ? (
+                    <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Search size={18} />
+                      Perform Search
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Results Section */}
-      <div className="bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 min-h-screen">
-        <div className="max-w-[1400px] mx-auto">
-          {loading ? (
-            <div className="flex justify-center items-center py-20">
+      {/* Results Section - Full Width, No Constraints */}
+      <div className="bg-[#f8faff] py-12 px-2 lg:px-4">
+        <div className="w-full">
+          {loading && (
+            <div className="flex justify-center items-center py-16 sm:py-20">
               <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-                <p className="text-slate-600 font-medium">
+                <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+                <p className="text-base-content/70 font-medium text-sm sm:text-base">
                   Searching institutes...
                 </p>
               </div>
             </div>
-          ) : institutes.length === 0 ? (
-            <div className="text-center py-20">
-              <Building2 size={64} className="mx-auto mb-6 text-slate-300" />
-              <p className="text-2xl font-semibold text-slate-900 mb-3">
+          )}
+
+          {!searched && !loading && (
+            <div className="text-center py-16 sm:py-20">
+              <Filter
+                size={40}
+                className="sm:w-12 sm:h-12 mx-auto mb-4 text-base-content/40"
+              />
+              <p className="text-lg sm:text-xl text-base-content/70 font-medium px-4">
+                Use the filters above to search for institutes
+              </p>
+            </div>
+          )}
+
+          {searched && !loading && institutes.length === 0 && (
+            <div className="text-center py-16 sm:py-20">
+              <Building2
+                size={40}
+                className="sm:w-12 sm:h-12 mx-auto mb-4 text-base-content/40"
+              />
+              <p className="text-lg sm:text-xl font-semibold text-base-content mb-2">
                 No institutes found
               </p>
-              <p className="text-lg text-slate-600">
+              <p className="text-base-content/70 text-sm sm:text-base px-4">
                 Try adjusting your filter criteria
               </p>
             </div>
-          ) : (
-            <>
-              <div className="mb-8 flex flex-col sm:flex-row justify-between items-center gap-6">
-                <h2 className="text-3xl font-bold text-slate-900">
-                  {institutes.length} Institutes Found
-                </h2>
-                <p className="text-slate-600">
-                  Page {page} of {totalPages}
-                </p>
+          )}
+
+          {searched && !loading && institutes.length > 0 && (
+            <div className="pb-20">
+              <div className="mb-10 flex flex-col sm:flex-row justify-between items-end gap-6 border-b border-slate-100 pb-8">
+                <div>
+                  <h2 className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight leading-none mb-2">
+                    {total}{" "}
+                    <span className="text-primary/40">Institutes Found</span>
+                  </h2>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+                    Showing Page {page} of {Math.ceil(total / limit)} Results
+                  </p>
+                </div>
               </div>
 
-              {/* Split Layout */}
-              <div className="flex gap-8 flex-col lg:flex-row">
-                {/* Left: Table */}
-                <div className="flex-1">
-                  {/* Desktop Table */}
-                  <div className="hidden md:block overflow-hidden rounded-xl border border-slate-200 shadow bg-white">
+              {/* Split Layout Container for Table and Map (Ultra Wide) */}
+              <div className="flex flex-col xl:flex-row gap-8 items-start">
+                {/* Left Side: Master Table View (78% Width) */}
+                <div className="w-full xl:w-[78%]">
+                  <div className="hidden md:block bg-white rounded-[2.5rem] border border-slate-200 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.05)] overflow-hidden">
                     <table className="w-full table-auto">
                       <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200">
-                          <th className="w-10 px-4 py-4 text-left">
-                            <input
-                              type="checkbox"
-                              checked={currentPageItems.every((i) =>
-                                selected.has(i.institute_id),
-                              )}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  const newSelected = new Set(selected);
-                                  currentPageItems.forEach((i) =>
-                                    newSelected.add(i.institute_id),
-                                  );
-                                  setSelected(newSelected);
-                                } else {
-                                  const newSelected = new Set(selected);
-                                  currentPageItems.forEach((i) =>
-                                    newSelected.delete(i.institute_id),
-                                  );
-                                  setSelected(newSelected);
-                                }
-                              }}
-                              className="w-4 h-4 rounded border-slate-300 text-primary"
-                            />
+                        <tr className="bg-slate-50/50 border-b border-slate-100">
+                          <th className="pl-10 pr-6 py-8 text-left text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                            Institute Details
                           </th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                            Institute Name
+                          <th className="px-6 py-8 text-left text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                            Location
                           </th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">
-                            District
+                          <th className="px-6 py-8 text-left text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                            Category
                           </th>
-                          <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900">
-                            Courses
+                          <th className="px-6 py-8 text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                            Trainees
                           </th>
-                          <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900">
-                            Students On Roll
+                          <th className="px-6 py-8 text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                            Placement Pool
                           </th>
-                          <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900">
-                            Available for Placement
-                          </th>
-                          <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900">
-                            Action
+                          <th className="pl-6 pr-10 py-8 text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                            Connectivity
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-200">
-                        {currentPageItems.map((inst) => (
+                      <tbody className="divide-y divide-slate-50">
+                        {institutes.map((inst) => (
                           <tr
                             key={inst.institute_id}
-                            className="hover:bg-slate-50 transition-colors"
+                            className="hover:bg-primary/[0.02] transition-colors group"
                           >
-                            <td className="px-4 py-4">
-                              <input
-                                type="checkbox"
-                                checked={selected.has(inst.institute_id)}
-                                onChange={() => toggleSelect(inst.institute_id)}
-                                className="w-4 h-4 rounded border-slate-300 text-primary"
-                              />
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <td className="pl-10 pr-6 py-7">
+                              <div className="flex items-center gap-5">
+                                <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-500 shadow-sm">
                                   <Building2
-                                    size={18}
-                                    className="text-primary"
+                                    size={24}
+                                    className="text-slate-400 group-hover:text-primary transition-colors"
                                   />
                                 </div>
-                                <div>
-                                  <div className="font-semibold text-slate-900 text-sm">
+                                <div className="min-w-0">
+                                  <h4 className="font-black text-slate-800 text-sm tracking-tight mb-1 group-hover:text-primary transition-colors">
                                     {inst.institute_name}
-                                  </div>
-                                  {inst.email && (
-                                    <div className="text-xs text-slate-500">
-                                      {inst.email}
-                                    </div>
-                                  )}
+                                  </h4>
+                                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                                    <div className="w-1 h-1 rounded-full bg-slate-300" />
+                                    {inst.email || "Verification Pending"}
+                                  </span>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 text-sm text-slate-700">
-                              {inst.district || "—"}
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <button
-                                onClick={() => setViewCoursesInstitute(inst)}
-                                className="px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-semibold rounded-lg transition-colors text-xs inline-flex items-center gap-1"
-                              >
-                                <Eye size={14} />
-                                View
-                              </button>
-                            </td>
-                            <td className="px-6 py-4 text-center font-semibold text-primary text-sm">
-                              {inst.student_count}
-                            </td>
-                            <td className="px-6 py-4 text-center font-semibold text-slate-900 text-sm">
-                              {inst.final_year_student_count ?? "—"}
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                <button
-                                  onClick={() => setViewProfileInstitute(inst)}
-                                  className="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg transition-colors text-xs flex items-center gap-1"
-                                >
-                                  <Eye size={14} />
-                                  View
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleConnect(inst.institute_id)
-                                  }
-                                  className="px-3 py-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-colors text-xs inline-flex items-center gap-1"
-                                >
-                                  <LogIn size={14} />
-                                  Connect
-                                </button>
+                            <td className="px-6 py-7 font-bold text-xs text-slate-500">
+                              <div className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_8px_rgba(242,166,44,0.5)]" />
+                                {inst.district || "N/A"}
                               </div>
+                            </td>
+                            <td className="px-6 py-7">
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100/50 px-3 py-1.5 rounded-lg border border-slate-100">
+                                {inst.type || "Professional"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-7 text-center">
+                              <div className="inline-flex flex-col">
+                                <span className="text-base font-black text-primary leading-none mb-1">
+                                  {inst.student_count}
+                                </span>
+                                <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">
+                                  Total Students
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-7 text-center">
+                              <div className="inline-flex flex-col">
+                                <span className="text-base font-black text-slate-800 leading-none mb-1">
+                                  {inst.final_year_student_count ?? "0"}
+                                </span>
+                                <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">
+                                  Final Year
+                                </span>
+                              </div>
+                            </td>
+                            <td className="pl-6 pr-10 py-7 text-right">
+                              <button
+                                onClick={() =>
+                                  dispatch(
+                                    updateLoginUi({
+                                      authPrompt: { open: true },
+                                    }),
+                                  )
+                                }
+                                className="px-6 py-3 bg-white border-2 border-primary/10 text-primary hover:bg-primary hover:text-white hover:border-primary font-black rounded-xl transition-all duration-500 inline-flex items-center gap-2 text-[10px] uppercase tracking-widest shadow-sm hover:shadow-primary/30 active:scale-95 group/btn"
+                              >
+                                <LogIn
+                                  size={14}
+                                  className="group-hover/btn:-translate-x-1 transition-transform"
+                                />
+                                Contact
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -874,175 +684,163 @@ export default function PublicLandingPage() {
                     </table>
                   </div>
 
-                  {/* Mobile Card View */}
-                  <div className="md:hidden space-y-4">
-                    {currentPageItems.map((inst) => (
-                      <div
-                        key={inst.institute_id}
-                        className="bg-white border border-slate-200 rounded-lg p-5 hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex items-start gap-4 mb-4">
-                          <input
-                            type="checkbox"
-                            checked={selected.has(inst.institute_id)}
-                            onChange={() => toggleSelect(inst.institute_id)}
-                            className="w-5 h-5 rounded border-slate-300 text-primary mt-1"
-                          />
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-slate-900 mb-1">
-                              {inst.institute_name}
-                            </h3>
-                            {inst.email && (
-                              <p className="text-sm text-slate-600">
-                                {inst.email}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                          <div>
-                            <p className="text-slate-500">District</p>
-                            <p className="font-medium">
-                              {inst.district || "—"}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500">Students</p>
-                            <p className="font-semibold text-primary">
-                              {inst.student_count}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500">Placement Pool</p>
-                            <p className="font-semibold">
-                              {inst.final_year_student_count ?? "—"}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => setViewCoursesInstitute(inst)}
-                            className="flex-1 px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg"
-                          >
-                            Courses
-                          </button>
-                          <button
-                            onClick={() => setViewProfileInstitute(inst)}
-                            className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg"
-                          >
-                            View
-                          </button>
-                          <button
-                            onClick={() => handleConnect(inst.institute_id)}
-                            className="flex-1 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg"
-                          >
-                            Connect
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-4 mt-10">
-                      <button
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                        className="p-3 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        <ChevronLeft size={20} />
-                      </button>
-
-                      <div className="flex items-center gap-2">
-                        {Array.from(
-                          { length: totalPages },
-                          (_, i) => i + 1,
-                        ).map((p) => (
-                          <button
-                            key={p}
-                            onClick={() => setPage(p)}
-                            className={`w-10 h-10 rounded-lg font-semibold transition-colors ${
-                              page === p
-                                ? "bg-primary text-white"
-                                : "border border-slate-300 text-slate-700 hover:bg-slate-100"
-                            }`}
-                          >
-                            {p}
-                          </button>
-                        ))}
-                      </div>
-
-                      <button
-                        onClick={() =>
-                          setPage((p) => Math.min(totalPages, p + 1))
-                        }
-                        disabled={page === totalPages}
-                        className="p-3 border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        <ChevronRight size={20} />
-                      </button>
-                    </div>
-                  )}
+                  <Pagination
+                    total={total}
+                    page={page}
+                    limit={limit}
+                    onPageChange={(p) => handleSearch(p, limit)}
+                    onLimitChange={(l) => handleSearch(1, l)}
+                  />
                 </div>
 
-                {/* Right: Map Section */}
-                <div className="lg:w-[30%] h-fit lg:sticky lg:top-20">
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-md overflow-hidden">
-                    <div className=" h-[400px] w-[500px]">
+                {/* Right Side: Visual Map Intelligence (22% Width) */}
+                <div className="w-full xl:w-[22%] sticky top-8">
+                  <div className="bg-white rounded-[3rem] border border-slate-200 shadow-[0_25px_60px_rgba(0,0,0,0.06)] p-10 group overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none" />
+
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary shadow-inner">
+                        <MapPin size={24} />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-black text-slate-800 tracking-tight leading-none mb-1">
+                          Spatial View
+                        </h3>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          Punjab Intelligence
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-5 mb-8">
+                      <div className="relative group/search">
+                        <input
+                          type="text"
+                          placeholder="District / Area..."
+                          className="w-full pl-12 pr-4 py-5 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/40 focus:bg-white transition-all text-xs font-black text-slate-700 placeholder:text-slate-300"
+                          value={searchGeoTerm}
+                          onChange={(e) => setSearchGeoTerm(e.target.value)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && handleGeoSearch()
+                          }
+                        />
+                        <Search
+                          size={20}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-200 group-focus-within/search:text-primary transition-colors"
+                        />
+                      </div>
+
+                      <div className="flex gap-3">
+                        <button
+                          onClick={handleGeoSearch}
+                          disabled={mapSearchLoading}
+                          className="px-6 py-5 bg-slate-800 hover:bg-black disabled:bg-slate-200 text-white font-black rounded-2xl transition-all text-[10px] uppercase tracking-[0.2em] flex-1 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-95"
+                        >
+                          {mapSearchLoading ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            "Verify Location"
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setUserLocation(null)}
+                          className="p-5 bg-slate-50 border border-slate-100 text-slate-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 rounded-2xl transition-all shadow-sm active:scale-90"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="w-full h-[600px] rounded-[2.5rem] border-4 border-slate-50 overflow-hidden shadow-inner bg-slate-100 relative group/map">
                       <MapContainer
                         center={userLocation || [31.1471, 75.3412]}
                         zoom={userLocation ? 13 : 7}
                         scrollWheelZoom={true}
                         style={{ height: "100%", width: "100%" }}
+                        className="grayscale-[0.2] hover:grayscale-0 transition-all duration-700"
                       >
-                        <TileLayer
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                        />
+                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                         {punjabGeoJson && (
                           <GeoJSON
                             data={punjabGeoJson}
                             style={() => ({
                               color: "#1e40af",
-                              weight: 2,
+                              weight: 3,
                               fillColor: "#1e40af",
-                              fillOpacity: 0.08,
+                              fillOpacity: 0.1,
                             })}
                           />
                         )}
                         {userLocation && <Marker position={userLocation} />}
                         <MapClickEvent setUserLocation={setUserLocation} />
                       </MapContainer>
+
+                      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full border border-white shadow-xl pointer-events-none transition-transform group-hover/map:-translate-y-2">
+                        <span className="text-[9px] font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+                          Geo-Spatial Context Active
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Bottom Bar - Visible when institutes selected */}
-      {selected.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-primary text-white py-4 px-4 sm:px-6 lg:px-8 shadow-2xl z-50">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <p className="font-semibold">
-              Connect with {selected.size} selected institute
-              {selected.size !== 1 ? "s" : ""}
-            </p>
-            <button
-              onClick={() => handleConnect(Array.from(selected)[0])}
-              className="px-6 py-2.5 bg-white text-primary font-bold rounded-lg hover:bg-slate-100 transition-colors"
-            >
-              Connect Now
-            </button>
+      {/* Info Section - Ultra Wide */}
+      <div className="bg-white border-t border-slate-100 py-24 px-4 lg:px-8">
+        <div className="w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-16">
+            {/* Item 1 */}
+            <div className="flex items-start gap-8 border-l-4 border-primary pl-10 py-4">
+              <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center flex-shrink-0 text-primary shadow-inner">
+                <Shield size={32} />
+              </div>
+              <div>
+                <h3 className="font-black text-slate-800 text-lg mb-2 tracking-tight">
+                  Verified Data
+                </h3>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] leading-loose">
+                  Government Validated <br /> 100% Authenticity
+                </p>
+              </div>
+            </div>
+
+            {/* Item 2 */}
+            <div className="flex items-start gap-8 border-l-4 border-secondary pl-10 py-4">
+              <div className="w-16 h-16 rounded-2xl bg-secondary/5 flex items-center justify-center flex-shrink-0 text-secondary shadow-inner">
+                <BookOpen size={32} />
+              </div>
+              <div>
+                <h3 className="font-black text-slate-800 text-lg mb-2 tracking-tight">
+                  Deep Catalog
+                </h3>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] leading-loose">
+                  500+ Specializations <br /> Across Punjab
+                </p>
+              </div>
+            </div>
+
+            {/* Item 3 */}
+            <div className="flex items-start gap-8 border-l-4 border-slate-800 pl-10 py-4">
+              <div className="w-16 h-16 rounded-2xl bg-slate-800/5 flex items-center justify-center flex-shrink-0 text-slate-800 shadow-inner">
+                <Globe size={32} />
+              </div>
+              <div>
+                <h3 className="font-black text-slate-800 text-lg mb-2 tracking-tight">
+                  Direct Access
+                </h3>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] leading-loose">
+                  FastTrack Integration <br /> Instant Verification
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-      )}
-
+      </div>
       <Footer />
     </>
   );
