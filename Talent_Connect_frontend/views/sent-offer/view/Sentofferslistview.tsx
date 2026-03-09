@@ -560,14 +560,14 @@ interface OfferRecord {
   collaboration_types?: string;
   additional_details?: string;
   status:
-    | "Sent"
-    | "Discussed"
-    | "Accepted"
-    | "Rejected"
-    | "Project initiated"
-    | "Project completed"
-    | "Withdrawn"
-    | "Pending";
+  | "Sent"
+  | "Discussed"
+  | "Accepted"
+  | "Rejected"
+  | "Project initiated"
+  | "Project completed"
+  | "Withdrawn"
+  | "Pending";
   institute: {
     institute_id: number;
     institute_name: string;
@@ -1047,13 +1047,11 @@ export default function SentOffersListView() {
         // but we need to handle the new response format.
         const res = await api.get(`/job-offer/sent?${params}`);
 
-        if (res.data && res.data.data) {
-          setOffers(res.data.data);
-          setTotalRecords(res.data.total);
-        } else {
-          setOffers(Array.isArray(res.data) ? res.data : []);
-          setTotalRecords(Array.isArray(res.data) ? res.data.length : 0);
-        }
+        let data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+        if (!Array.isArray(data)) data = [];
+
+        setOffers(data);
+        setTotalRecords(res.data?.total || data.length);
       } catch {
         setError("Failed to load sent offers.");
       } finally {
@@ -1620,16 +1618,16 @@ export default function SentOffersListView() {
               {/* Additional Details */}
               {(selectedOffer.rows[0]?.job_description ||
                 selectedOffer.rows[0]?.additional_details) && (
-                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 text-sm">
-                    Additional Information
+                  <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 text-sm">
+                      Additional Information
+                    </div>
+                    <div className="p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {selectedOffer.rows[0]?.job_description ||
+                        selectedOffer.rows[0]?.additional_details}
+                    </div>
                   </div>
-                  <div className="p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {selectedOffer.rows[0]?.job_description ||
-                      selectedOffer.rows[0]?.additional_details}
-                  </div>
-                </div>
-              )}
+                )}
             </div>
 
             {/* Footer */}

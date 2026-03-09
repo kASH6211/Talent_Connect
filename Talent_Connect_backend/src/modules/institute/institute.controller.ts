@@ -36,6 +36,9 @@ export class InstituteController {
   @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'min_enrollment', required: false })
+  @ApiQuery({ name: 'min_placement', required: false })
   search(@Query() q: InstituteSearchQuery) { return this.service.search(q); }
 
   @Public()

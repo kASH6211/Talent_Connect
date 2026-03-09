@@ -603,7 +603,7 @@ export default function IndustryLandingPage() {
     loadStreams();
   }, [filters.qualification_ids]);
 
-  const setFilter = (key: keyof Filters) => (vals: number[]) =>
+  const setFilter = (key: keyof Filters) => (vals: (number | string)[]) =>
     setFilters((f) => ({ ...f, [key]: vals }));
 
   const handleSearch = useCallback(async () => {
@@ -616,7 +616,12 @@ export default function IndustryLandingPage() {
     });
     try {
       const res = await api.get(`/institute/search?${params}`);
-      let data = res.data ?? [];
+      const responseData = res.data;
+      let data = Array.isArray(responseData?.data)
+        ? responseData.data
+        : Array.isArray(responseData)
+          ? responseData
+          : [];
 
       if (userLocation) {
         data = data.map((inst: InstituteRow) => {

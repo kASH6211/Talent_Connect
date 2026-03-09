@@ -13,6 +13,9 @@ export interface InstituteSearchQuery {
   order?: 'asc' | 'desc';
   page?: string | number;
   limit?: string | number;
+  search?: string;
+  min_enrollment?: string | number;
+  min_placement?: string | number;
 }
 
 @Injectable()
@@ -98,6 +101,25 @@ export class InstituteService {
           { sids: streamIds },
         );
       }
+
+      if (q.search) {
+        qb.andWhere(`(${alias}.institute_name ILIKE :s OR ${alias}.address ILIKE :s)`, { s: `%${q.search}%` });
+      }
+
+      if (q.min_enrollment) {
+        qb.andWhere(
+          `(SELECT COUNT(*) FROM student_details s WHERE s.institute_id = ${alias}.institute_id AND s.is_active = 'Y') >= :minE`,
+          { minE: Number(q.min_enrollment) }
+        );
+      }
+
+      if (q.min_placement) {
+        qb.andWhere(
+          `(SELECT COUNT(*) FROM student_details s WHERE s.institute_id = ${alias}.institute_id AND s.is_active = 'Y' AND s.passing_year = extract(year from current_date)::text) >= :minP`,
+          { minP: Number(q.min_placement) }
+        );
+      }
+
       return qb;
     };
 

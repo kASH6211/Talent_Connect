@@ -71,9 +71,9 @@ function calculateAirDistance(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -134,7 +134,8 @@ export default function FindInstitutesPage() {
 
   const [sentSuccess, setSentSuccess] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [total, setTotal] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState<number | "all">(10);
 
   const [viewInstitute, setViewInstitute] = useState<boolean>(false);
   const [viewCourses, setViewCourses] = useState<boolean>(false);
@@ -169,24 +170,13 @@ export default function FindInstitutesPage() {
   }, [sentSuccess]);
 
   useEffect(() => {
-    const load = async () => {
-      const [qual] = await Promise.all([
-        api
-          .get("/qualification")
-          .then((r) =>
-            r.data.map((q: any) => ({
-              value: q.qualificationid,
-              label: q.qualification,
-            })),
-          )
-          .catch(() => []),
-      ]);
-      setQualOpts(qual);
+    const loadStaticOptions = async () => {
       try {
         const [qualRes, distRes] = await Promise.all([
           api.get("/qualification"),
           api.get("/district?state_id=3"),
         ]);
+
         const qData = Array.isArray(qualRes.data)
           ? qualRes.data
           : qualRes.data?.data || [];
@@ -200,6 +190,7 @@ export default function FindInstitutesPage() {
             label: q.qualification,
           })),
         );
+
         setDistrictOpts(
           dData
             .map((d: any) => ({
@@ -209,128 +200,90 @@ export default function FindInstitutesPage() {
             .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
         );
       } catch (err) {
-        console.error("Error loading options:", err);
+        console.error("Error loading static options:", err);
       }
     };
-    load();
+
+    loadStaticOptions();
   }, []);
 
-  useEffect(() => {
-    const loadDistricts = async () => {
-      try {
-        const res = await api.get(`/district?state_id=3`);
-        setDistrictOpts(
-          res.data
-            .map((d: any) => ({ value: d.districtid, label: d.districtname }))
-            .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
-        );
-      } catch {
-        setDistrictOpts([]);
-      }
-    };
-    loadDistricts();
-  }, []);
 
   useEffect(() => {
     const loadStreams = async () => {
-      if (filters.qualification_ids.length > 0) {
-        const qId = filters.qualification_ids[0];
-        const [masterRes, inUseRes] = await Promise.all([
-          api.get(`/stream-branch?qualification_id=${qId}`),
-          api.get("/institute-qualification-mapping/streams-in-use"),
-        ]);
-        const inUseIds = new Set(
-          inUseRes.data.map((s: any) => s.stream_branch_Id),
-        );
-        const filtered = masterRes.data.filter((s: any) =>
-          inUseIds.has(s.stream_branch_Id),
-        );
-        setStreamOpts(
-          filtered.map((s: any) => ({
-            value: s.stream_branch_Id,
-            label: s.stream_branch_name,
-          })),
-        );
-      } else {
-        const res = await api.get(
-          "/institute-qualification-mapping/streams-in-use",
-        );
-        setStreamOpts(
-          res.data.map((s: any) => ({
-            value: s.stream_branch_Id,
-            label: s.stream_branch_name,
-          })),
-        );
-        try {
+      try {
+        setStreamOpts([]); // Clear previous options during load
+
+        // 1. Get streams currently in use by institutes
+        const inUseRes = await api.get("/institute-qualification-mapping/streams-in-use");
+        const inUseData = Array.isArray(inUseRes.data) ? inUseRes.data : inUseRes.data?.data || [];
+        const inUseIds = new Set(inUseData.map((s: any) => s.stream_branch_Id));
+
+        let finalOptions: Option[] = [];
+
+        // 2. Filter if a qualification is selected
+        if (filters.qualification_ids.length > 0) {
           const masterStreamsMap = new Map<string, number[]>();
-          if (filters.qualification_ids.length > 0) {
-            const streamPromises = filters.qualification_ids.map((id: any) =>
-              api.get(`/stream-branch?qualification_id=${id}`),
-            );
-            const streamResponses = await Promise.all(streamPromises);
-            streamResponses.forEach((res) => {
-              res.data.forEach((s: any) => {
-                const ids = masterStreamsMap.get(s.stream_branch_name) || [];
-                if (!ids.includes(s.stream_branch_Id))
-                  ids.push(s.stream_branch_Id);
-                masterStreamsMap.set(s.stream_branch_name, ids);
-              });
-            });
-          } else {
-            // If no qualification selected, we skip master fetch or handle differently?
-            // The previous logic fetched from "streams-in-use" directly.
-          }
-
-          const inUseRes = await api.get(
-            "/institute-qualification-mapping/streams-in-use",
-          );
-          const inUseIds = new Set(
-            inUseRes.data.map((s: any) => s.stream_branch_Id),
+          const streamPromises = filters.qualification_ids.map((id: any) =>
+            api.get(`/stream-branch?qualification_id=${id}`)
           );
 
-          if (filters.qualification_ids.length === 0) {
-            // Flatten inUseRes into the map
-            inUseRes.data.forEach((s: any) => {
+          const streamResponses = await Promise.all(streamPromises);
+
+          streamResponses.forEach((res) => {
+            const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+            data.forEach((s: any) => {
               const ids = masterStreamsMap.get(s.stream_branch_name) || [];
-              if (!ids.includes(s.stream_branch_Id))
+              if (!ids.includes(s.stream_branch_Id)) {
                 ids.push(s.stream_branch_Id);
+              }
               masterStreamsMap.set(s.stream_branch_name, ids);
             });
-          }
+          });
 
           const sortedNames = Array.from(masterStreamsMap.keys()).sort();
-          const finalOptions: Option[] = [];
-
           sortedNames.forEach((name) => {
             const ids = masterStreamsMap.get(name)!;
             const validIdsInPortal = ids.filter((id) => inUseIds.has(id));
             if (validIdsInPortal.length > 0) {
-              const groupedValue =
-                validIdsInPortal.length === 1
-                  ? validIdsInPortal[0]
-                  : validIdsInPortal.join(",");
+              const groupedValue = validIdsInPortal.length === 1 ? validIdsInPortal[0] : validIdsInPortal.join(",");
               finalOptions.push({ value: groupedValue, label: name });
             }
           });
-
-          setStreamOpts(finalOptions);
-
-          // Cleanup
-          const validValues = new Set(finalOptions.map((s) => String(s.value)));
-          setFilters((prev) => {
-            const nextStreams = prev.stream_ids.filter((id) =>
-              validValues.has(String(id)),
-            );
-            return nextStreams.length !== prev.stream_ids.length
-              ? { ...prev, stream_ids: nextStreams }
-              : prev;
+        } else {
+          // 3. If no qualification selected, just show all streams in use
+          const masterStreamsMap = new Map<string, number[]>();
+          inUseData.forEach((s: any) => {
+            const ids = masterStreamsMap.get(s.stream_branch_name) || [];
+            if (!ids.includes(s.stream_branch_Id)) {
+              ids.push(s.stream_branch_Id);
+            }
+            masterStreamsMap.set(s.stream_branch_name, ids);
           });
-        } catch (error) {
-          console.error("Failed to load cascading streams:", error);
-          setStreamOpts([]);
+
+          const sortedNames = Array.from(masterStreamsMap.keys()).sort();
+          sortedNames.forEach((name) => {
+            const ids = masterStreamsMap.get(name)!;
+            // All in map are already "in use"
+            const groupedValue = ids.length === 1 ? ids[0] : ids.join(",");
+            finalOptions.push({ value: groupedValue, label: name });
+          });
         }
+
+        setStreamOpts(finalOptions);
+
+        // 4. Cleanup invalid stream selections from filters state
+        const validValues = new Set(finalOptions.map((s) => String(s.value)));
+        setFilters((prev) => {
+          const nextStreams = prev.stream_ids.filter((id) => validValues.has(String(id)));
+          return nextStreams.length !== prev.stream_ids.length
+            ? { ...prev, stream_ids: nextStreams }
+            : prev;
+        });
+
+      } catch (error) {
+        console.error("Failed to load generic streams:", error);
+        setStreamOpts([]);
       }
-      loadStreams();
     };
   }, []);
 
@@ -341,8 +294,7 @@ export default function FindInstitutesPage() {
     setLoading(true);
     setSearched(true);
     setSelected(new Set());
-    setSearchTerm("");
-    setCurrentPage(1);
+    // setSearchTerm(""); // Don't clear search term on every search
 
     const params = new URLSearchParams();
     if (filters.district_ids.length)
@@ -351,14 +303,19 @@ export default function FindInstitutesPage() {
       params.set("qualification_ids", filters.qualification_ids.join(","));
     if (filters.stream_ids.length)
       params.set("stream_ids", filters.stream_ids.join(","));
+    if (searchTerm.trim())
+      params.set("search", searchTerm.trim());
     params.set("sort", sort);
     params.set("order", order);
+    params.set("page", String(currentPage));
+    params.set("limit", itemsPerPage === "all" ? String(total || 1000) : String(itemsPerPage));
 
     try {
       const res = await api.get(`/institute/search?${params}`);
-      let data = res.data;
+      let data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      const totalCount = res.data?.total || 0;
 
-      if (userLocation) {
+      if (userLocation && Array.isArray(data)) {
         data = data.map((inst: InstituteRow) => {
           if (inst.latitude && inst.longitude) {
             const air = calculateAirDistance(
@@ -374,11 +331,13 @@ export default function FindInstitutesPage() {
       }
 
       setInstitutes(data);
+      setTotal(totalCount);
     } catch {
       setInstitutes([]);
+      setTotal(0);
     }
     setLoading(false);
-  }, [filters, sort, order, userLocation]);
+  }, [filters, sort, order, userLocation, currentPage, searchTerm, itemsPerPage, total]);
 
   useEffect(() => {
     handleSearch();
@@ -386,8 +345,9 @@ export default function FindInstitutesPage() {
 
   useEffect(() => {
     if (!userLocation || institutes.length === 0) return;
-    setInstitutes((prev) =>
-      prev.map((inst) => {
+    setInstitutes((prev) => {
+      if (!Array.isArray(prev)) return [];
+      return prev.map((inst) => {
         if (inst.latitude && inst.longitude) {
           const air = calculateAirDistance(
             userLocation[0],
@@ -398,8 +358,8 @@ export default function FindInstitutesPage() {
           return { ...inst, air_distance: air };
         }
         return inst;
-      }),
-    );
+      });
+    });
   }, [userLocation]);
 
   const handleGeoSearch = async () => {
@@ -438,48 +398,25 @@ export default function FindInstitutesPage() {
     });
 
   const allSelected =
+    Array.isArray(institutes) &&
     institutes.length > 0 &&
     institutes.every((i) => selected.has(i.institute_id));
   const toggleAll = () =>
     setSelected(
-      allSelected ? new Set() : new Set(institutes.map((i) => i.institute_id)),
+      allSelected
+        ? new Set()
+        : new Set((Array.isArray(institutes) ? institutes : []).map((i) => i.institute_id)),
     );
 
   const institutesMap = new Map(
-    institutes.map((i) => [i.institute_id, i.institute_name]),
+    (Array.isArray(institutes) ? institutes : []).map((i) => [i.institute_id, i.institute_name]),
   );
 
-  const filteredInstitutes = institutes.filter(
-    (inst) =>
-      inst.institute_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inst.district?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const sortedInstitutes = institutes; // Using server-side sort for now
 
-  const sortedInstitutes = filteredInstitutes.sort((a, b) => {
-    let aVal, bVal;
-
-    if (sort === "name") {
-      aVal = a.institute_name.toLowerCase();
-      bVal = b.institute_name.toLowerCase();
-      return aVal.localeCompare(bVal);
-    } else if (sort === "name-rev") {
-      aVal = a.institute_name.toLowerCase();
-      bVal = b.institute_name.toLowerCase();
-      return bVal.localeCompare(aVal);
-    } else {
-      return order === "desc"
-        ? b.student_count - a.student_count
-        : a.student_count - b.student_count;
-    }
-  });
-
-  const totalItems = sortedInstitutes.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedInstitutes = sortedInstitutes.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+  // Calculate actual limit for pagination math
+  const currentLimit = itemsPerPage === "all" ? total : itemsPerPage;
+  const totalPages = Math.ceil(total / currentLimit);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) setCurrentPage(page);
@@ -585,16 +522,33 @@ export default function FindInstitutesPage() {
                     <Square size={16} />
                   )}
                 </button>
-                <p className="text-sm font-semibold text-slate-900">
-                  {institutes.length} institute
-                  {institutes.length !== 1 ? "s" : ""} found
-                  <span className="text-slate-600 font-normal ml-1.5">
-                    • click rows to select
-                  </span>
-                </p>
+                <div className="flex flex-col">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {total} institute{total !== 1 ? "s" : ""} found
+                    <span className="text-slate-600 font-normal ml-1.5 hidden sm:inline">
+                      • click rows to select
+                    </span>
+                  </p>
+                </div>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-600 font-medium">
+                  <span>Show:</span>
+                  <select
+                    className="bg-transparent border-0 outline-none text-slate-900 font-bold cursor-pointer"
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(e.target.value === "all" ? "all" : Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    {[5, 10, 20, 25, 50, 100].map(size => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                    <option value="all">All</option>
+                  </select>
+                </div>
                 <div className="relative flex-1 min-w-[240px] max-w-sm group">
                   <input
                     type="text"
@@ -697,7 +651,7 @@ export default function FindInstitutesPage() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200">
-                          {paginatedInstitutes.map((inst) => {
+                          {institutes.map((inst) => {
                             const isSelected = selected.has(inst.institute_id);
                             return (
                               <tr
@@ -804,7 +758,7 @@ export default function FindInstitutesPage() {
 
                     {/* Mobile Cards */}
                     <div className="md:hidden flex flex-col divide-y divide-slate-200">
-                      {paginatedInstitutes.map((inst) => {
+                      {institutes.map((inst) => {
                         const isSelected = selected.has(inst.institute_id);
                         return (
                           <div
@@ -922,7 +876,7 @@ export default function FindInstitutesPage() {
                   {totalPages > 1 && (
                     <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-3 mt-4 shadow-sm">
                       <button
-                        onClick={() => goToPage(currentPage - 1)}
+                        onClick={() => goToPage(Math.max(1, currentPage - 1))}
                         disabled={currentPage === 1}
                         className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
                       >
@@ -933,13 +887,13 @@ export default function FindInstitutesPage() {
                         Page {currentPage} of {totalPages}
                         <span className="hidden sm:inline">
                           {" "}
-                          · {filteredInstitutes.length} institutes
+                          · {total} institutes
                         </span>
                       </span>
 
                       <button
                         onClick={() => goToPage(currentPage + 1)}
-                        disabled={currentPage === totalPages}
+                        disabled={currentPage >= totalPages}
                         className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
                       >
                         Next <ChevronRight size={14} />
@@ -1048,7 +1002,7 @@ export default function FindInstitutesPage() {
 
       {/* Modals */}
       <OfferModalV2
-        onClose={() => {}}
+        onClose={() => { }}
         isOpen={findInstituteUi?.bulkOffer?.open ?? false}
         selectedIds={Array.from(selected)}
         institutesMap={institutesMap}

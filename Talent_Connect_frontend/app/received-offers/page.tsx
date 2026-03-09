@@ -179,8 +179,12 @@ export default function ReceivedOffersPage() {
         limit: targetLimit.toString(),
       });
       const res = await api.get(`/job-offer/received?${params}`);
-      setOffers(res.data?.data ?? []);
-      setTotal(res.data?.total ?? 0);
+
+      let data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      if (!Array.isArray(data)) data = [];
+
+      setOffers(data);
+      setTotal(res.data?.total || data.length);
       setPage(targetPage);
       setLimit(targetLimit);
       setSelected(new Set()); // Reset selection on page change

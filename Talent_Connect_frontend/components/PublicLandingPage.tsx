@@ -81,6 +81,8 @@ interface Filters {
   ownership_ids: (number | string)[];
   qualification_ids: (number | string)[];
   stream_ids: (number | string)[];
+  min_enrollment?: number;
+  min_placement?: number;
 }
 
 const EMPTY_FILTERS: Filters = {
@@ -90,6 +92,8 @@ const EMPTY_FILTERS: Filters = {
   ownership_ids: [],
   qualification_ids: [],
   stream_ids: [],
+  min_enrollment: undefined,
+  min_placement: undefined,
 };
 
 const PAGE_SIZE = 5;
@@ -321,6 +325,10 @@ export default function PublicLandingPage() {
         params.set("qualification_ids", filters.qualification_ids.join(","));
       if (filters.stream_ids.length)
         params.set("stream_ids", filters.stream_ids.join(","));
+      if (filters.min_enrollment)
+        params.set("min_enrollment", String(filters.min_enrollment));
+      if (filters.min_placement)
+        params.set("min_placement", String(filters.min_placement));
 
       params.set("page", targetPage.toString());
       params.set("limit", targetLimit.toString());
@@ -421,261 +429,189 @@ export default function PublicLandingPage() {
 
   return (
     <>
-      {/* Header & Search Section - Edge-to-Edge */}
-      <div className="bg-primary text-primary-content pt-12 pb-24 px-4 lg:px-8 relative overflow-visible">
-        {/* Subtle background gradients for depth */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4 blur-[100px] pointer-events-none" />
-        <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-secondary/10 rounded-full -translate-y-1/2 -translate-x-1/4 blur-[80px] pointer-events-none" />
+      {/* Header & Search Section - Centered & Compact */}
+      <div className="bg-primary text-white pt-10 pb-16 px-4 lg:px-8 relative overflow-visible border-b border-white/5">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl" />
+        </div>
 
-        <div className="relative z-10 w-full px-2">
-          <div className="flex items-center gap-6 mb-12">
-            <div className="bg-white/10 p-3.5 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner">
-              <Building2 size={32} className="text-secondary" />
-            </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-none text-white uppercase">
-              Discover <span className="text-secondary">Institutes</span>
+        <div className="max-w-5xl mx-auto relative z-10 text-center">
+          <div className="flex flex-col items-center gap-4 mb-10">
+
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
+              Find Institutes
             </h1>
+            <p className="text-slate-400 text-sm max-w-2xl">
+              Search and connect with educational institutes across Punjab. Filter by location, qualification, and specialization.
+            </p>
           </div>
 
-          {/* Ultra-Wide Search Box with Overflow Visible */}
-          <div className="bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 shadow-[0_25px_80px_-15px_rgba(0,0,0,0.3)] p-8 overflow-visible">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10 overflow-visible">
-              <div className="space-y-3 overflow-visible">
-                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/50 ml-1">
-                  <MapPin size={12} className="text-secondary" />
+          {/* Compact Filter Section */}
+          <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 shadow-2xl overflow-visible">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2 text-left">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">
                   District / Location
                 </label>
                 <MultiSelectDropdown
                   label=""
                   options={districtOpts}
                   selected={filters.district_ids}
-                  onChange={(v) =>
-                    setFilters((f) => ({ ...f, district_ids: v }))
-                  }
+                  onChange={(v) => {
+                    setFilters((f) => ({ ...f, district_ids: v }));
+                    setPage(1);
+                  }}
                   placeholder="All Locations"
-                  buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/30 h-14 rounded-2xl hover:bg-white/20 active:bg-white/15 transition-all shadow-none"
+                  buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/40 h-11 rounded-xl hover:bg-white/20 transition-all text-xs"
                 />
               </div>
-              <div className="space-y-3 overflow-visible">
-                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/50 ml-1">
-                  <BookOpen size={12} className="text-secondary" />
-                  Institute Level
+              <div className="space-y-2 text-left">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">
+                  Qualification
                 </label>
                 <MultiSelectDropdown
                   label=""
                   options={qualOpts}
                   selected={filters.qualification_ids}
-                  onChange={(v) =>
-                    setFilters((f) => ({ ...f, qualification_ids: v }))
-                  }
+                  onChange={(v) => {
+                    setFilters((f) => ({ ...f, qualification_ids: v }));
+                    setPage(1);
+                  }}
                   placeholder="All Qualifications"
-                  buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/30 h-14 rounded-2xl hover:bg-white/20 active:bg-white/15 transition-all shadow-none"
+                  buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/40 h-11 rounded-xl hover:bg-white/20 transition-all text-xs"
                 />
               </div>
-              <div className="space-y-3 overflow-visible">
-                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/50 ml-1">
-                  <Globe size={12} className="text-secondary" />
+              <div className="space-y-2 text-left">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">
                   Specialization
                 </label>
                 <MultiSelectDropdown
                   label=""
                   options={streamOpts}
                   selected={filters.stream_ids}
-                  onChange={(v) => setFilters((f) => ({ ...f, stream_ids: v }))}
+                  onChange={(v) => {
+                    setFilters((f) => ({ ...f, stream_ids: v }));
+                    setPage(1);
+                  }}
                   placeholder="All Specializations"
-                  buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/30 h-14 rounded-2xl hover:bg-white/20 active:bg-white/15 transition-all shadow-none"
+                  buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/40 h-11 rounded-xl hover:bg-white/20 transition-all text-xs"
                 />
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center border-t border-white/5 pt-8">
-              <p className="text-xs text-white/40 font-medium">
-                Refine results by selecting multiple criteria above
-              </p>
-              <div className="flex gap-4 w-full sm:w-auto">
-                <button
-                  onClick={resetFilters}
-                  className="flex-1 sm:flex-none px-8 py-4 border border-white/10 text-white/80 hover:text-white hover:bg-white/5 font-bold rounded-2xl transition-all flex items-center justify-center gap-3 text-xs uppercase tracking-widest active:scale-95"
-                >
-                  <X size={18} />
-                  Reset
-                </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-white/5">
+              <div className="space-y-2 text-left">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">
+                  Min Total Enrollment
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g. 100"
+                  className="w-full h-11 px-4 bg-white/10 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/20 transition-all text-white text-xs font-medium placeholder:text-white/40"
+                  value={filters.min_enrollment || ""}
+                  onChange={(e) => {
+                    setFilters((f) => ({ ...f, min_enrollment: e.target.value ? Number(e.target.value) : undefined }));
+                    setPage(1);
+                  }}
+                />
+              </div>
+              <div className="space-y-2 text-left">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">
+                  Min Placement Pool
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g. 50"
+                  className="w-full h-11 px-4 bg-white/10 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/20 transition-all text-white text-xs font-medium placeholder:text-white/40"
+                  value={filters.min_placement || ""}
+                  onChange={(e) => {
+                    setFilters((f) => ({ ...f, min_placement: e.target.value ? Number(e.target.value) : undefined }));
+                    setPage(1);
+                  }}
+                />
+              </div>
+            </div>
 
-                <button
-                  onClick={() => handleSearch()}
-                  disabled={loading}
-                  className="flex-[2] sm:flex-none px-12 py-4 bg-secondary hover:bg-yellow-500 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-4 disabled:opacity-50 text-xs uppercase tracking-widest shadow-2xl shadow-secondary/30 hover:shadow-secondary/50 hover:-translate-y-1 active:translate-y-0 active:scale-95"
-                >
-                  {loading ? (
-                    <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Search size={18} />
-                      Perform Search
-                    </>
-                  )}
-                </button>
+            <div className="flex justify-between items-center mt-6 pt-5 border-t border-white/5">
+              <button
+                onClick={resetFilters}
+                className="text-[10px] font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-2"
+              >
+                <X size={14} />
+                Reset Filters
+              </button>
+              <div className="text-[10px] font-medium text-slate-500 italic">
+                {loading ? "Searching..." : `Showing ${total} institutes`}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Results Section - Full Width, No Constraints */}
-      <div className="bg-[#f8faff] py-12 px-2 lg:px-4">
-        <div className="w-full">
-          {loading && (
-            <div className="flex justify-center items-center py-16 sm:py-20">
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-                <p className="text-base-content/70 font-medium text-sm sm:text-base">
-                  Searching institutes...
-                </p>
-              </div>
-            </div>
-          )}
-
-          {!searched && !loading && (
-            <div className="text-center py-16 sm:py-20">
-              <Filter
-                size={40}
-                className="sm:w-12 sm:h-12 mx-auto mb-4 text-base-content/40"
-              />
-              <p className="text-lg sm:text-xl text-base-content/70 font-medium px-4">
-                Use the filters above to search for institutes
-              </p>
-            </div>
-          )}
-
-          {searched && !loading && institutes.length === 0 && (
-            <div className="text-center py-16 sm:py-20">
-              <Building2
-                size={40}
-                className="sm:w-12 sm:h-12 mx-auto mb-4 text-base-content/40"
-              />
-              <p className="text-lg sm:text-xl font-semibold text-base-content mb-2">
-                No institutes found
-              </p>
-              <p className="text-base-content/70 text-sm sm:text-base px-4">
-                Try adjusting your filter criteria
-              </p>
-            </div>
-          )}
-
-          {searched && !loading && institutes.length > 0 && (
-            <div className="pb-20">
-              <div className="mb-10 flex flex-col sm:flex-row justify-between items-end gap-6 border-b border-slate-100 pb-8">
-                <div>
-                  <h2 className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight leading-none mb-2">
-                    {total}{" "}
-                    <span className="text-primary/40">Institutes Found</span>
-                  </h2>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
-                    Showing Page {page} of {Math.ceil(total / limit)} Results
-                  </p>
-                </div>
-              </div>
-
-              {/* Split Layout Container for Table and Map (Ultra Wide) */}
-              <div className="flex flex-col xl:flex-row gap-8 items-start">
-                {/* Left Side: Master Table View (78% Width) */}
-                <div className="w-full xl:w-[78%]">
-                  <div className="hidden md:block bg-white rounded-[2.5rem] border border-slate-200 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.05)] overflow-hidden">
-                    <table className="w-full table-auto">
+      {/* Results Section */}
+      <div className="bg-slate-50 min-h-screen py-12 px-4 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {searched && institutes.length > 0 && (
+            <div className="flex flex-col xl:flex-row gap-8 items-start">
+              {/* Table View */}
+              <div className="w-full xl:w-[75%] space-y-6">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
                       <thead>
-                        <tr className="bg-slate-50/50 border-b border-slate-100">
-                          <th className="pl-10 pr-6 py-8 text-left text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                            Institute Details
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
+                            Institute Name
                           </th>
-                          <th className="px-6 py-8 text-left text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                            Location
+                          <th className="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
+                            Total Enrollment
                           </th>
-                          <th className="px-6 py-8 text-left text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                            Category
-                          </th>
-                          <th className="px-6 py-8 text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                            Trainees
-                          </th>
-                          <th className="px-6 py-8 text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                          <th className="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
                             Placement Pool
                           </th>
-                          <th className="pl-6 pr-10 py-8 text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                            Connectivity
+                          <th className="px-6 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
+                            Action
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-50">
+                      <tbody className="divide-y divide-slate-100">
                         {institutes.map((inst) => (
-                          <tr
-                            key={inst.institute_id}
-                            className="hover:bg-primary/[0.02] transition-colors group"
-                          >
-                            <td className="pl-10 pr-6 py-7">
-                              <div className="flex items-center gap-5">
-                                <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-500 shadow-sm">
-                                  <Building2
-                                    size={24}
-                                    className="text-slate-400 group-hover:text-primary transition-colors"
-                                  />
-                                </div>
-                                <div className="min-w-0">
-                                  <h4 className="font-black text-slate-800 text-sm tracking-tight mb-1 group-hover:text-primary transition-colors">
-                                    {inst.institute_name}
-                                  </h4>
-                                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
-                                    <div className="w-1 h-1 rounded-full bg-slate-300" />
-                                    {inst.email || "Verification Pending"}
-                                  </span>
+                          <tr key={inst.institute_id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-6 py-5">
+                              <div className="max-w-xs sm:max-w-sm lg:max-w-md">
+                                <h4 className="text-sm font-semibold text-slate-800 leading-snug line-clamp-2">
+                                  {inst.institute_name}
+                                </h4>
+                                <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mt-1 font-medium">
+                                  <MapPin size={10} />
+                                  {inst.district || "N/A"}
+                                  <span className="mx-1">•</span>
+                                  {inst.type || "Institute"}
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-7 font-bold text-xs text-slate-500">
-                              <div className="flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_8px_rgba(242,166,44,0.5)]" />
-                                {inst.district || "N/A"}
-                              </div>
-                            </td>
-                            <td className="px-6 py-7">
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100/50 px-3 py-1.5 rounded-lg border border-slate-100">
-                                {inst.type || "Professional"}
+                            <td className="px-6 py-5 text-center">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/5 text-primary text-[11px] font-bold whitespace-nowrap">
+                                <Users size={12} />
+                                {inst.student_count.toLocaleString()}
                               </span>
                             </td>
-                            <td className="px-6 py-7 text-center">
-                              <div className="inline-flex flex-col">
-                                <span className="text-base font-black text-primary leading-none mb-1">
-                                  {inst.student_count}
-                                </span>
-                                <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">
-                                  Total Students
-                                </span>
-                              </div>
+                            <td className="px-6 py-5 text-center">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary/10 text-secondary-focus text-[11px] font-bold whitespace-nowrap">
+                                <Users size={12} />
+                                {inst.final_year_student_count?.toLocaleString() || "0"}
+                              </span>
                             </td>
-                            <td className="px-6 py-7 text-center">
-                              <div className="inline-flex flex-col">
-                                <span className="text-base font-black text-slate-800 leading-none mb-1">
-                                  {inst.final_year_student_count ?? "0"}
-                                </span>
-                                <span className="text-[8px] font-bold text-slate-300 uppercase tracking-tighter">
-                                  Final Year
-                                </span>
-                              </div>
-                            </td>
-                            <td className="pl-6 pr-10 py-7 text-right">
+                            <td className="px-6 py-5 text-right">
                               <button
                                 onClick={() =>
-                                  dispatch(
-                                    updateLoginUi({
-                                      authPrompt: { open: true },
-                                    }),
-                                  )
+                                  dispatch(updateLoginUi({ authPrompt: { open: true } }))
                                 }
-                                className="px-6 py-3 bg-white border-2 border-primary/10 text-primary hover:bg-primary hover:text-white hover:border-primary font-black rounded-xl transition-all duration-500 inline-flex items-center gap-2 text-[10px] uppercase tracking-widest shadow-sm hover:shadow-primary/30 active:scale-95 group/btn"
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-focus text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all active:scale-95 shadow-md shadow-primary/10 whitespace-nowrap"
                               >
-                                <LogIn
-                                  size={14}
-                                  className="group-hover/btn:-translate-x-1 transition-transform"
-                                />
-                                Contact
+                                <LogIn size={13} />
+                                Connect
                               </button>
                             </td>
                           </tr>
@@ -683,164 +619,89 @@ export default function PublicLandingPage() {
                       </tbody>
                     </table>
                   </div>
-
-                  <Pagination
-                    total={total}
-                    page={page}
-                    limit={limit}
-                    onPageChange={(p) => handleSearch(p, limit)}
-                    onLimitChange={(l) => handleSearch(1, l)}
-                  />
                 </div>
 
-                {/* Right Side: Visual Map Intelligence (22% Width) */}
-                <div className="w-full xl:w-[22%] sticky top-8">
-                  <div className="bg-white rounded-[3rem] border border-slate-200 shadow-[0_25px_60px_rgba(0,0,0,0.06)] p-10 group overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none" />
+                <Pagination
+                  total={total}
+                  page={page}
+                  limit={limit}
+                  onPageChange={(p) => handleSearch(p, limit)}
+                  onLimitChange={(l) => handleSearch(1, l)}
+                />
+              </div>
 
-                    <div className="flex items-center gap-4 mb-8">
-                      <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary shadow-inner">
-                        <MapPin size={24} />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-black text-slate-800 tracking-tight leading-none mb-1">
-                          Spatial View
-                        </h3>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                          Punjab Intelligence
-                        </p>
-                      </div>
+              {/* Map Column */}
+              <div className="w-full xl:w-[25%] space-y-6">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                      <MapPin size={18} />
                     </div>
+                    <h3 className="text-sm font-bold text-slate-800">Map View</h3>
+                  </div>
 
-                    <div className="space-y-5 mb-8">
-                      <div className="relative group/search">
-                        <input
-                          type="text"
-                          placeholder="District / Area..."
-                          className="w-full pl-12 pr-4 py-5 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/40 focus:bg-white transition-all text-xs font-black text-slate-700 placeholder:text-slate-300"
-                          value={searchGeoTerm}
-                          onChange={(e) => setSearchGeoTerm(e.target.value)}
-                          onKeyDown={(e) =>
-                            e.key === "Enter" && handleGeoSearch()
-                          }
+                  <div className="space-y-4 mb-6">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search area..."
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-xs font-medium"
+                        value={searchGeoTerm}
+                        onChange={(e) => setSearchGeoTerm(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleGeoSearch()}
+                      />
+                      <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    </div>
+                  </div>
+
+                  <div className="w-full h-[400px] rounded-xl border border-slate-100 overflow-hidden relative">
+                    <MapContainer
+                      center={userLocation || [31.1471, 75.3412]}
+                      zoom={userLocation ? 13 : 7}
+                      scrollWheelZoom={true}
+                      style={{ height: "100%", width: "100%" }}
+                    >
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      {punjabGeoJson && (
+                        <GeoJSON
+                          data={punjabGeoJson}
+                          style={() => ({
+                            color: "var(--primary)",
+                            weight: 2,
+                            fillColor: "var(--primary)",
+                            fillOpacity: 0.05,
+                          })}
                         />
-                        <Search
-                          size={20}
-                          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-200 group-focus-within/search:text-primary transition-colors"
-                        />
-                      </div>
-
-                      <div className="flex gap-3">
-                        <button
-                          onClick={handleGeoSearch}
-                          disabled={mapSearchLoading}
-                          className="px-6 py-5 bg-slate-800 hover:bg-black disabled:bg-slate-200 text-white font-black rounded-2xl transition-all text-[10px] uppercase tracking-[0.2em] flex-1 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-95"
-                        >
-                          {mapSearchLoading ? (
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          ) : (
-                            "Verify Location"
-                          )}
-                        </button>
-                        <button
-                          onClick={() => setUserLocation(null)}
-                          className="p-5 bg-slate-50 border border-slate-100 text-slate-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 rounded-2xl transition-all shadow-sm active:scale-90"
-                        >
-                          <X size={20} />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="w-full h-[600px] rounded-[2.5rem] border-4 border-slate-50 overflow-hidden shadow-inner bg-slate-100 relative group/map">
-                      <MapContainer
-                        center={userLocation || [31.1471, 75.3412]}
-                        zoom={userLocation ? 13 : 7}
-                        scrollWheelZoom={true}
-                        style={{ height: "100%", width: "100%" }}
-                        className="grayscale-[0.2] hover:grayscale-0 transition-all duration-700"
-                      >
-                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                        {punjabGeoJson && (
-                          <GeoJSON
-                            data={punjabGeoJson}
-                            style={() => ({
-                              color: "#1e40af",
-                              weight: 3,
-                              fillColor: "#1e40af",
-                              fillOpacity: 0.1,
-                            })}
-                          />
-                        )}
-                        {userLocation && <Marker position={userLocation} />}
-                        <MapClickEvent setUserLocation={setUserLocation} />
-                      </MapContainer>
-
-                      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full border border-white shadow-xl pointer-events-none transition-transform group-hover/map:-translate-y-2">
-                        <span className="text-[9px] font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-                          Geo-Spatial Context Active
-                        </span>
-                      </div>
-                    </div>
+                      )}
+                      {userLocation && <Marker position={userLocation} />}
+                      <MapClickEvent setUserLocation={setUserLocation} />
+                    </MapContainer>
                   </div>
                 </div>
               </div>
             </div>
           )}
+
+          {!searched && !loading && (
+            <div className="text-center py-24 bg-white rounded-3xl border border-slate-100 border-dashed">
+              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-300">
+                <Filter size={32} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 mb-2">Ready to search?</h3>
+              <p className="text-sm text-slate-400">Use the filters above to find institutes in Punjab.</p>
+            </div>
+          )}
+
+          {loading && (
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
+              <div className="w-10 h-10 border-4 border-slate-200 border-t-primary rounded-full animate-spin" />
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Searching Database...</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Info Section - Ultra Wide */}
-      <div className="bg-white border-t border-slate-100 py-24 px-4 lg:px-8">
-        <div className="w-full">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-16">
-            {/* Item 1 */}
-            <div className="flex items-start gap-8 border-l-4 border-primary pl-10 py-4">
-              <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center flex-shrink-0 text-primary shadow-inner">
-                <Shield size={32} />
-              </div>
-              <div>
-                <h3 className="font-black text-slate-800 text-lg mb-2 tracking-tight">
-                  Verified Data
-                </h3>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] leading-loose">
-                  Government Validated <br /> 100% Authenticity
-                </p>
-              </div>
-            </div>
 
-            {/* Item 2 */}
-            <div className="flex items-start gap-8 border-l-4 border-secondary pl-10 py-4">
-              <div className="w-16 h-16 rounded-2xl bg-secondary/5 flex items-center justify-center flex-shrink-0 text-secondary shadow-inner">
-                <BookOpen size={32} />
-              </div>
-              <div>
-                <h3 className="font-black text-slate-800 text-lg mb-2 tracking-tight">
-                  Deep Catalog
-                </h3>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] leading-loose">
-                  500+ Specializations <br /> Across Punjab
-                </p>
-              </div>
-            </div>
-
-            {/* Item 3 */}
-            <div className="flex items-start gap-8 border-l-4 border-slate-800 pl-10 py-4">
-              <div className="w-16 h-16 rounded-2xl bg-slate-800/5 flex items-center justify-center flex-shrink-0 text-slate-800 shadow-inner">
-                <Globe size={32} />
-              </div>
-              <div>
-                <h3 className="font-black text-slate-800 text-lg mb-2 tracking-tight">
-                  Direct Access
-                </h3>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] leading-loose">
-                  FastTrack Integration <br /> Instant Verification
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
       <Footer />
     </>
   );
