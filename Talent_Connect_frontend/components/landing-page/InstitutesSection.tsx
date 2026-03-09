@@ -151,7 +151,7 @@ const InstitutesSection = () => {
                             No. of Students
                           </p>
                           <p className="text-base md:text-lg font-extrabold">
-                            Upcoming
+                            Comming soon
                           </p>
                         </div>
 
@@ -160,7 +160,7 @@ const InstitutesSection = () => {
                             No. of Courses
                           </p>
                           <p className="text-base md:text-lg font-extrabold">
-                            Upcoming
+                            Comming soon
                           </p>
                         </div>
                       </>

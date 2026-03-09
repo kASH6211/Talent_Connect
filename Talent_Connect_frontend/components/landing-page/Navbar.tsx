@@ -1,5 +1,7 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   Menu,
   X,
@@ -15,6 +17,7 @@ import { AppDispatch } from "@/store/store";
 import { updateLoginUi } from "@/store/login";
 import { useAuth } from "@/lib/AuthProvider";
 import { getDashboardRoute } from "@/lib/helper";
+import { useEffect, useRef, useState } from "react";
 
 const pageLinks = [
   { label: "Home", to: "/" },
@@ -73,10 +76,10 @@ const Navbar = () => {
           </div>
 
           <div className="border-l border-white/20 pl-4 py-1">
-            <h1 className="text-white text-lg font-black leading-tight tracking-wider uppercase">
+            <h1 className="text-white text-lg font-bold leading-tight tracking-wider uppercase">
               HUNAR PUNJAB
             </h1>
-            <p className="text-white/70 text-[10px] uppercase font-bold tracking-[0.1em]">
+            <p className="text-white/90 text-xs font-semibold uppercase tracking-wide">
               Upskilling • Networking • Rozgar
             </p>
           </div>
@@ -90,7 +93,7 @@ const Navbar = () => {
                 <a
                   key={link.label}
                   href={link.to}
-                  className="relative py-2 text-sm font-bold text-white/80 hover:text-white transition-colors group"
+                  className="relative py-2 text-sm font-semibold text-white/90 hover:text-white transition-colors group"
                 >
                   {link.label}
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-secondary transition-all duration-300 group-hover:w-full"></span>
@@ -99,10 +102,10 @@ const Navbar = () => {
                 <Link
                   key={link.label}
                   href={link.to}
-                  className={`relative py-2 text-sm font-bold transition-colors group ${
+                  className={`relative py-2 text-sm font-semibold transition-colors group ${
                     isActive(link.to)
                       ? "text-white"
-                      : "text-white/80 hover:text-white"
+                      : "text-white/90 hover:text-white"
                   }`}
                 >
                   {link.label}
@@ -130,22 +133,22 @@ const Navbar = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-xs font-black uppercase">
+                    <span className="text-xs font-bold uppercase">
                       {user.username.charAt(0)}
                     </span>
                   )}
                 </div>
                 <div className="flex flex-col items-start leading-none gap-0.5">
-                  <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">
+                  <span className="text-xs font-semibold text-white/90 uppercase tracking-wide">
                     Hi, {user.username}
                   </span>
-                  <span className="text-[11px] font-black text-white uppercase tracking-tight">
+                  <span className="text-sm font-semibold text-white uppercase tracking-tight">
                     {role || "User"}
                   </span>
                 </div>
                 <ChevronDown
                   size={14}
-                  className={`text-white/40 transition-transform duration-300 ${userDropdownOpen ? "rotate-180" : ""}`}
+                  className={`text-white/70 transition-transform duration-300 ${userDropdownOpen ? "rotate-180" : ""}`}
                 />
               </button>
 
@@ -153,17 +156,17 @@ const Navbar = () => {
               {userDropdownOpen && (
                 <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-slate-100 py-3 text-slate-800 animate-in fade-in slide-in-from-top-4 duration-200">
                   <div className="px-5 py-2 mb-2 border-b border-slate-50">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                       Account Details
                     </p>
-                    <p className="text-sm font-black text-primary truncate">
+                    <p className="text-sm font-bold text-primary truncate">
                       {user.username}
                     </p>
                   </div>
 
                   <Link
                     href={getDashboardRoute(user.role)}
-                    className="flex items-center gap-3 px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors"
+                    className="flex items-center gap-3 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors"
                     onClick={() => setUserDropdownOpen(false)}
                   >
                     <UserCircle size={18} />
@@ -175,7 +178,7 @@ const Navbar = () => {
                       setUserDropdownOpen(false);
                       logout();
                     }}
-                    className="w-full flex items-center gap-3 px-5 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors"
+                    className="w-full flex items-center gap-3 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
                   >
                     <LogOut size={18} />
                     Logout
@@ -188,7 +191,7 @@ const Navbar = () => {
               onClick={() => {
                 dispatch(updateLoginUi({ roleSelectModal: { open: true } }));
               }}
-              className="bg-secondary text-white px-7 py-2 rounded-lg text-xs font-black uppercase tracking-widest shadow-lg hover:shadow-secondary/20 hover:scale-105 active:scale-95 transition-all duration-300 border-2 border-transparent hover:border-white/20"
+              className="bg-secondary text-white px-7 py-2 rounded-lg text-xs font-bold uppercase tracking-widest shadow-lg hover:shadow-secondary/20 hover:scale-105 active:scale-95 transition-all duration-300 border-2 border-transparent hover:border-white/20"
             >
               Login
             </button>
@@ -218,16 +221,16 @@ const Navbar = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-sm font-black uppercase">
+                    <span className="text-sm font-bold uppercase">
                       {user.username.charAt(0)}
                     </span>
                   )}
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">
+                  <p className="text-xs font-semibold text-white/90 uppercase tracking-wide">
                     Hi, {user.username}
                   </p>
-                  <p className="text-lg font-black text-white uppercase tracking-tight">
+                  <p className="text-lg font-semibold text-white uppercase tracking-tight">
                     {role || "User"}
                   </p>
                 </div>
@@ -239,7 +242,7 @@ const Navbar = () => {
                 <a
                   key={link.label}
                   href={link.to}
-                  className="block py-2 text-lg font-bold text-white/80 hover:text-white transition-colors"
+                  className="block py-2 text-lg font-semibold text-white/90 hover:text-white transition-colors"
                   onClick={() => setMobileOpen(false)}
                 >
                   {link.label}
@@ -248,10 +251,10 @@ const Navbar = () => {
                 <Link
                   key={link.label}
                   href={link.to}
-                  className={`block py-2 text-lg font-bold transition-colors ${
+                  className={`block py-2 text-lg font-semibold transition-colors ${
                     isActive(link.to)
                       ? "text-secondary"
-                      : "text-white/80 hover:text-white"
+                      : "text-white/90 hover:text-white"
                   }`}
                   onClick={() => setMobileOpen(false)}
                 >
@@ -265,7 +268,7 @@ const Navbar = () => {
                 <div className="space-y-3">
                   <Link
                     href={getDashboardRoute(user.role)}
-                    className="w-full flex items-center justify-center gap-3 bg-white/10 text-white py-4 rounded-lg text-sm font-black uppercase tracking-widest shadow-xl shadow-black/10"
+                    className="w-full flex items-center justify-center gap-3 bg-white/10 text-white py-4 rounded-lg text-sm font-semibold uppercase tracking-widest shadow-xl shadow-black/10"
                     onClick={() => setMobileOpen(false)}
                   >
                     <UserCircle size={20} />
@@ -276,7 +279,7 @@ const Navbar = () => {
                       logout();
                       setMobileOpen(false);
                     }}
-                    className="w-full flex items-center justify-center gap-3 bg-red-500/80 text-white py-4 rounded-lg text-sm font-black uppercase tracking-widest shadow-xl shadow-red-900/20"
+                    className="w-full flex items-center justify-center gap-3 bg-red-500/80 text-white py-4 rounded-lg text-sm font-semibold uppercase tracking-widest shadow-xl shadow-red-900/20"
                   >
                     <LogOut size={20} />
                     Sign Out
@@ -290,7 +293,7 @@ const Navbar = () => {
                     );
                     setMobileOpen(false);
                   }}
-                  className="w-full bg-secondary text-white py-4 rounded-lg text-sm font-black uppercase tracking-widest shadow-xl"
+                  className="w-full bg-secondary text-white py-4 rounded-lg text-sm font-semibold uppercase tracking-widest shadow-xl"
                 >
                   Login to Portal
                 </button>
