@@ -71,9 +71,9 @@ function calculateAirDistance(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-    Math.cos((lat2 * Math.PI) / 180) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -207,15 +207,18 @@ export default function FindInstitutesPage() {
     loadStaticOptions();
   }, []);
 
-
   useEffect(() => {
     const loadStreams = async () => {
       try {
         setStreamOpts([]); // Clear previous options during load
 
         // 1. Get streams currently in use by institutes
-        const inUseRes = await api.get("/institute-qualification-mapping/streams-in-use");
-        const inUseData = Array.isArray(inUseRes.data) ? inUseRes.data : inUseRes.data?.data || [];
+        const inUseRes = await api.get(
+          "/institute-qualification-mapping/streams-in-use",
+        );
+        const inUseData = Array.isArray(inUseRes.data)
+          ? inUseRes.data
+          : inUseRes.data?.data || [];
         const inUseIds = new Set(inUseData.map((s: any) => s.stream_branch_Id));
 
         let finalOptions: Option[] = [];
@@ -224,13 +227,15 @@ export default function FindInstitutesPage() {
         if (filters.qualification_ids.length > 0) {
           const masterStreamsMap = new Map<string, number[]>();
           const streamPromises = filters.qualification_ids.map((id: any) =>
-            api.get(`/stream-branch?qualification_id=${id}`)
+            api.get(`/stream-branch?qualification_id=${id}`),
           );
 
           const streamResponses = await Promise.all(streamPromises);
 
           streamResponses.forEach((res) => {
-            const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+            const data = Array.isArray(res.data)
+              ? res.data
+              : res.data?.data || [];
             data.forEach((s: any) => {
               const ids = masterStreamsMap.get(s.stream_branch_name) || [];
               if (!ids.includes(s.stream_branch_Id)) {
@@ -245,7 +250,10 @@ export default function FindInstitutesPage() {
             const ids = masterStreamsMap.get(name)!;
             const validIdsInPortal = ids.filter((id) => inUseIds.has(id));
             if (validIdsInPortal.length > 0) {
-              const groupedValue = validIdsInPortal.length === 1 ? validIdsInPortal[0] : validIdsInPortal.join(",");
+              const groupedValue =
+                validIdsInPortal.length === 1
+                  ? validIdsInPortal[0]
+                  : validIdsInPortal.join(",");
               finalOptions.push({ value: groupedValue, label: name });
             }
           });
@@ -274,12 +282,13 @@ export default function FindInstitutesPage() {
         // 4. Cleanup invalid stream selections from filters state
         const validValues = new Set(finalOptions.map((s) => String(s.value)));
         setFilters((prev) => {
-          const nextStreams = prev.stream_ids.filter((id) => validValues.has(String(id)));
+          const nextStreams = prev.stream_ids.filter((id) =>
+            validValues.has(String(id)),
+          );
           return nextStreams.length !== prev.stream_ids.length
             ? { ...prev, stream_ids: nextStreams }
             : prev;
         });
-
       } catch (error) {
         console.error("Failed to load generic streams:", error);
         setStreamOpts([]);
@@ -303,12 +312,14 @@ export default function FindInstitutesPage() {
       params.set("qualification_ids", filters.qualification_ids.join(","));
     if (filters.stream_ids.length)
       params.set("stream_ids", filters.stream_ids.join(","));
-    if (searchTerm.trim())
-      params.set("search", searchTerm.trim());
+    if (searchTerm.trim()) params.set("search", searchTerm.trim());
     params.set("sort", sort);
     params.set("order", order);
     params.set("page", String(currentPage));
-    params.set("limit", itemsPerPage === "all" ? String(total || 1000) : String(itemsPerPage));
+    params.set(
+      "limit",
+      itemsPerPage === "all" ? String(total || 1000) : String(itemsPerPage),
+    );
 
     try {
       const res = await api.get(`/institute/search?${params}`);
@@ -337,7 +348,16 @@ export default function FindInstitutesPage() {
       setTotal(0);
     }
     setLoading(false);
-  }, [filters, sort, order, userLocation, currentPage, searchTerm, itemsPerPage, total]);
+  }, [
+    filters,
+    sort,
+    order,
+    userLocation,
+    currentPage,
+    searchTerm,
+    itemsPerPage,
+    total,
+  ]);
 
   useEffect(() => {
     handleSearch();
@@ -405,11 +425,18 @@ export default function FindInstitutesPage() {
     setSelected(
       allSelected
         ? new Set()
-        : new Set((Array.isArray(institutes) ? institutes : []).map((i) => i.institute_id)),
+        : new Set(
+            (Array.isArray(institutes) ? institutes : []).map(
+              (i) => i.institute_id,
+            ),
+          ),
     );
 
   const institutesMap = new Map(
-    (Array.isArray(institutes) ? institutes : []).map((i) => [i.institute_id, i.institute_name]),
+    (Array.isArray(institutes) ? institutes : []).map((i) => [
+      i.institute_id,
+      i.institute_name,
+    ]),
   );
 
   const sortedInstitutes = institutes; // Using server-side sort for now
@@ -539,12 +566,18 @@ export default function FindInstitutesPage() {
                     className="bg-transparent border-0 outline-none text-slate-900 font-bold cursor-pointer"
                     value={itemsPerPage}
                     onChange={(e) => {
-                      setItemsPerPage(e.target.value === "all" ? "all" : Number(e.target.value));
+                      setItemsPerPage(
+                        e.target.value === "all"
+                          ? "all"
+                          : Number(e.target.value),
+                      );
                       setCurrentPage(1);
                     }}
                   >
-                    {[5, 10, 20, 25, 50, 100].map(size => (
-                      <option key={size} value={size}>{size}</option>
+                    {[5, 10, 20, 25, 50, 100].map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
                     ))}
                     <option value="all">All</option>
                   </select>
@@ -640,7 +673,10 @@ export default function FindInstitutesPage() {
                               Courses
                             </th>
                             <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Total Students
+                              Enroll Students
+                            </th>
+                            <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Available to Placement Students
                             </th>
                             <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
                               Final Year
@@ -705,6 +741,12 @@ export default function FindInstitutesPage() {
                                   >
                                     <BookOpen size={14} /> View
                                   </button>
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 text-primary text-xs font-bold">
+                                    <Users size={12} />
+                                    {inst.student_count.toLocaleString()}
+                                  </span>
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 text-primary text-xs font-bold">
@@ -1002,7 +1044,7 @@ export default function FindInstitutesPage() {
 
       {/* Modals */}
       <OfferModalV2
-        onClose={() => { }}
+        onClose={() => {}}
         isOpen={findInstituteUi?.bulkOffer?.open ?? false}
         selectedIds={Array.from(selected)}
         institutesMap={institutesMap}

@@ -1,45 +1,33 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
-import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
 import {
   Search,
+  Send,
+  CheckSquare,
+  Square,
+  Loader2,
+  X,
   Filter,
   MapPin,
   Users,
-  Building2,
-  LogIn,
-  X,
+  ArrowUpDown,
   ChevronLeft,
   ChevronRight,
-  Shield,
-  Globe,
+  Eye,
+  Building2,
   BookOpen,
-  AlertCircle,
+  LogIn,
 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import dynamic from "next/dynamic";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import { useMapEvents, useMap } from "react-leaflet";
+import api from "@/lib/api";
+import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
-import { updateLoginUi } from "@/store/login";
-import RoleSelectModal from "./landing-page/RoleSelectModal";
-import Footer from "./landing-page/Footer";
-import Pagination from "@/components/common/Pagination";
+import { updateUiInstitute } from "@/store/institute";
+import clsx from "clsx";
+import dynamic from "next/dynamic";
+import "leaflet/dist/leaflet.css";
 
-// Fix Leaflet marker icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
-
-// Dynamic imports for Leaflet components
 const MapContainer = dynamic(
   () => import("react-leaflet").then((m) => m.MapContainer),
   { ssr: false },
@@ -54,33 +42,64 @@ const Marker = dynamic(() => import("react-leaflet").then((m) => m.Marker), {
 const GeoJSON = dynamic(() => import("react-leaflet").then((m) => m.GeoJSON), {
   ssr: false,
 });
+import { useMapEvents, useMap } from "react-leaflet";
 
-const BASE =
-  (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001") + "/api";
-const pub = axios.create({ baseURL: BASE });
+import L from "leaflet";
+import { useAuth } from "@/lib/AuthProvider";
+import { OfferModalV2 } from "@/views/find-institute/view/OfferModalView";
+import { InstituteViewModal } from "@/views/find-institute/list/InstituteViewModal";
+import InstituteCoursesModal from "@/views/find-institute/view/InstituteCoursesModal";
+import { updateLoginUi } from "@/store/login";
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
+function calculateAirDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 interface InstituteRow {
   institute_id: number;
   institute_name: string;
-  district_id: number;
-  district?: string;
-  type_id?: number;
-  type?: string;
-  ownership_id?: number;
-  ownership?: string;
-  email?: string;
-  mobileno?: string;
+  district: string;
+  type: string;
+  ownership: string;
+  email: string;
+  mobileno: string;
   student_count: number;
   final_year_student_count?: number;
+  latitude?: string;
+  longitude?: string;
+  air_distance?: number;
 }
 
 interface Filters {
-  state_ids: (number | string)[];
-  district_ids: (number | string)[];
-  type_ids: (number | string)[];
-  ownership_ids: (number | string)[];
-  qualification_ids: (number | string)[];
-  stream_ids: (number | string)[];
+  state_ids: number[];
+  district_ids: number[];
+  type_ids: number[];
+  ownership_ids: number[];
+  qualification_ids: number[];
+  stream_ids: number[];
   min_enrollment?: number;
   min_placement?: number;
 }
@@ -96,340 +115,278 @@ const EMPTY_FILTERS: Filters = {
   min_placement: undefined,
 };
 
-const PAGE_SIZE = 5;
-
-// Map click handler component
-function MapClickEvent({
-  setUserLocation,
-}: {
-  setUserLocation: (loc: [number, number]) => void;
-}) {
-  const map = useMap();
-  useMapEvents({
-    click(e: any) {
-      setUserLocation([e.latlng.lat, e.latlng.lng]);
-      map.flyTo(e.latlng, 14);
-    },
-  });
-  return null;
-}
-
-// (Standalone LoginPromptModal has been moved to components/common/LoginPromptModal.tsx)
-
-// ... (rest of your PublicLandingPage component remains exactly the same)
-
-export default function PublicLandingPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+export default function FindInstitutesPage() {
+  const findInstituteUi = useSelector(
+    (state: RootState) => state?.institutes?.ui,
+  );
+  const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
-  const roleModal = useSelector((state: RootState) => state?.login?.ui);
 
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [institutes, setInstitutes] = useState<InstituteRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [total, setTotal] = useState(0);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const [districtOpts, setDistrictOpts] = useState<Option[]>([]);
-  const [typeOpts, setTypeOpts] = useState<Option[]>([]);
-  const [ownershipOpts, setOwnershipOpts] = useState<Option[]>([]);
   const [qualOpts, setQualOpts] = useState<Option[]>([]);
   const [streamOpts, setStreamOpts] = useState<Option[]>([]);
 
-  // Map state
+  const [sentSuccess, setSentSuccess] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number | "all">(10);
+  const [total, setTotal] = useState(0);
+
+  const [viewInstitute, setViewInstitute] = useState<boolean>(false);
+  const [viewCourses, setViewCourses] = useState<boolean>(false);
+  const [currentInstitute, setCurrentInstitute] = useState<InstituteRow | null>(
+    null,
+  );
+
   const [userLocation, setUserLocation] = useState<[number, number] | null>(
     null,
   );
   const [searchGeoTerm, setSearchGeoTerm] = useState("");
   const [punjabGeoJson, setPunjabGeoJson] = useState<any>(null);
-  const [mapSearchLoading, setMapSearchLoading] = useState(false);
-  const [mapSearchError, setMapSearchError] = useState("");
-  const [mapSearchSuccess, setMapSearchSuccess] = useState(false);
 
-  // Load Punjab GeoJSON
-  useEffect(() => {
-    fetch("/punjab_state.geojson")
-      .then((res) => res.json())
-      .then((data) => setPunjabGeoJson(data))
-      .catch((err) => console.error("Error loading Punjab GeoJSON:", err));
-  }, []);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sort, setSort] = useState<"name" | "name-rev" | "student_count">(
+    "student_count",
+  );
+  const [order, setOrder] = useState<"asc" | "desc">("desc");
 
-  // Load filter options (Static ones)
+  // Load qualifications & districts
   useEffect(() => {
-    const loadFilters = async () => {
+    const load = async () => {
       try {
-        const [types, ownerships, quals] = await Promise.all([
-          pub.get("/institute-type"),
-          pub.get("/institute-ownership-type"),
-          pub.get("/qualification"),
+        const [qual, dist] = await Promise.all([
+          api.get("/qualification"),
+          api.get("/district?state_id=3"),
         ]);
 
-        const getRowData = (res: any) => {
-          if (Array.isArray(res)) return res;
-          if (Array.isArray(res?.data)) return res.data;
-          return [];
-        };
-
-        setTypeOpts(
-          getRowData(types.data).map((t: any) => ({
-            value: t.institute_type_id,
-            label: t.institute_type,
-          })),
-        );
-
-        setOwnershipOpts(
-          getRowData(ownerships.data).map((o: any) => ({
-            value: o.institute_ownership_type_id,
-            label: o.institute_type,
-          })),
-        );
-
         setQualOpts(
-          getRowData(quals.data).map((q: any) => ({
-            value: q.qualificationid,
-            label: q.qualification,
-          })),
+          Array.isArray(qual.data)
+            ? qual.data.map((q: any) => ({
+                value: q.qualificationid,
+                label: q.qualification,
+              }))
+            : [],
         );
-      } catch (error) {
-        console.error("Failed to load filters:", error);
+
+        setDistrictOpts(
+          Array.isArray(dist.data)
+            ? dist.data
+                .map((d: any) => ({
+                  value: d.districtid,
+                  label: d.districtname,
+                }))
+                .sort((a, b) => a.label.localeCompare(b.label))
+            : [],
+        );
+      } catch (err) {
+        console.error("Failed to load options:", err);
       }
     };
-
-    loadFilters();
+    load();
   }, []);
 
-  // Cascading Streams Filter
+  // Load streams
   useEffect(() => {
     const loadStreams = async () => {
       try {
-        const masterStreamsMap = new Map<string, number[]>();
+        let streams: any[] = [];
 
         if (filters.qualification_ids.length > 0) {
-          const streamPromises = filters.qualification_ids.map((id) =>
-            pub.get(`/stream-branch?qualification_id=${id}`),
+          const promises = filters.qualification_ids.map((id) =>
+            api.get(`/stream-branch?qualification_id=${id}`),
           );
-          const streamResponses = await Promise.all(streamPromises);
-
-          streamResponses.forEach((res) => {
-            res.data.forEach((s: any) => {
-              const ids = masterStreamsMap.get(s.stream_branch_name) || [];
-              if (!ids.includes(s.stream_branch_Id))
-                ids.push(s.stream_branch_Id);
-              masterStreamsMap.set(s.stream_branch_name, ids);
-            });
-          });
+          const responses = await Promise.all(promises);
+          streams = responses.flatMap((r) => r.data || []);
+        } else {
+          const res = await api.get(
+            "/institute-qualification-mapping/streams-in-use",
+          );
+          streams = res.data || [];
         }
 
-        const inUseRes = await pub.get(
-          "/institute-qualification-mapping/streams-in-use",
+        setStreamOpts(
+          streams.map((s: any) => ({
+            value: s.stream_branch_Id,
+            label: s.stream_branch_name,
+          })),
         );
-        const inUseIds = new Set(
-          inUseRes.data.map((s: any) => s.stream_branch_Id),
-        );
-
-        if (filters.qualification_ids.length === 0) {
-          inUseRes.data.forEach((s: any) => {
-            const ids = masterStreamsMap.get(s.stream_branch_name) || [];
-            if (!ids.includes(s.stream_branch_Id)) ids.push(s.stream_branch_Id);
-            masterStreamsMap.set(s.stream_branch_name, ids);
-          });
-        }
-
-        const sortedNames = Array.from(masterStreamsMap.keys()).sort();
-        const finalOptions: Option[] = [];
-
-        sortedNames.forEach((name) => {
-          const ids = masterStreamsMap.get(name)!;
-          const validIdsInPortal = ids.filter((id) => inUseIds.has(id));
-          if (validIdsInPortal.length > 0) {
-            const groupedValue =
-              validIdsInPortal.length === 1
-                ? validIdsInPortal[0]
-                : validIdsInPortal.join(",");
-            finalOptions.push({ value: groupedValue, label: name });
-          }
-        });
-
-        setStreamOpts(finalOptions);
-
-        const validValues = new Set(finalOptions.map((s) => String(s.value)));
-        setFilters((prev) => {
-          const nextStreams = prev.stream_ids.filter((id) =>
-            validValues.has(String(id)),
-          );
-          if (nextStreams.length !== prev.stream_ids.length) {
-            return { ...prev, stream_ids: nextStreams };
-          }
-          return prev;
-        });
-      } catch (error) {
-        console.error("Failed to load cascading streams:", error);
+      } catch {
         setStreamOpts([]);
       }
     };
-
     loadStreams();
   }, [filters.qualification_ids]);
 
-  // Districts cascade
-  useEffect(() => {
-    if (filters.state_ids.length === 0) {
-      setDistrictOpts([]);
-      return;
-    }
-    pub
-      .get(`/district?state_id=${filters.state_ids[0]}`)
-      .then((r) =>
-        setDistrictOpts(
-          r.data.map((d: any) => ({
-            value: d.lgddistrictId ?? d.districtid,
-            label: d.districtname,
-          })),
-        ),
-      )
-      .catch((error) => console.error("Failed to load districts:", error));
-  }, [filters.state_ids]);
+  const setFilter = (key: keyof Filters) => (vals: number[]) =>
+    setFilters((f) => ({ ...f, [key]: vals }));
 
-  // Handle initial type filter from URL
+  const handleSearch = useCallback(async () => {
+    setLoading(true);
+    setSearched(true);
+    setSelected(new Set());
+
+    const params = new URLSearchParams();
+    if (filters.district_ids.length)
+      params.set("district_ids", filters.district_ids.join(","));
+    if (filters.qualification_ids.length)
+      params.set("qualification_ids", filters.qualification_ids.join(","));
+    if (filters.stream_ids.length)
+      params.set("stream_ids", filters.stream_ids.join(","));
+    if (filters.min_enrollment !== undefined)
+      params.set("min_enrollment", filters.min_enrollment.toString());
+    if (filters.min_placement !== undefined)
+      params.set("min_placement", filters.min_placement.toString());
+    if (searchTerm.trim()) params.set("search", searchTerm.trim());
+    params.set("sort", sort);
+    params.set("order", order);
+    params.set("page", currentPage.toString());
+    params.set(
+      "limit",
+      itemsPerPage === "all" ? "1000" : itemsPerPage.toString(),
+    );
+
+    try {
+      const res = await api.get(`/institute/search?${params}`);
+
+      let fetched: InstituteRow[] = [];
+      if (Array.isArray(res.data)) {
+        fetched = res.data;
+      } else if (res.data?.data && Array.isArray(res.data.data)) {
+        fetched = res.data.data;
+      } else if (res.data?.institutes && Array.isArray(res.data.institutes)) {
+        fetched = res.data.institutes;
+      }
+
+      const totalCount = res.data?.total || fetched.length || 0;
+
+      if (userLocation && fetched.length > 0) {
+        fetched = fetched.map((inst) => {
+          if (inst.latitude && inst.longitude) {
+            const air = calculateAirDistance(
+              userLocation[0],
+              userLocation[1],
+              parseFloat(inst.latitude),
+              parseFloat(inst.longitude),
+            );
+            return { ...inst, air_distance: air };
+          }
+          return inst;
+        });
+      }
+
+      setInstitutes(fetched);
+      setTotal(totalCount);
+    } catch (err) {
+      console.error("Search failed:", err);
+      setInstitutes([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    filters,
+    sort,
+    order,
+    userLocation,
+    currentPage,
+    itemsPerPage,
+    searchTerm,
+  ]);
+
   useEffect(() => {
-    const typeParam = searchParams?.get("type");
-    if (typeParam && typeOpts.length > 0) {
-      const match = typeOpts.find(
-        (t) => t.label.toLowerCase() === typeParam.toLowerCase(),
+    handleSearch();
+  }, [handleSearch]);
+
+  useEffect(() => {
+    if (!userLocation || institutes.length === 0) return;
+
+    setInstitutes((prev) =>
+      prev.map((inst) => {
+        if (inst.latitude && inst.longitude) {
+          const air = calculateAirDistance(
+            userLocation[0],
+            userLocation[1],
+            parseFloat(inst.latitude),
+            parseFloat(inst.longitude),
+          );
+          return { ...inst, air_distance: air };
+        }
+        return inst;
+      }),
+    );
+  }, [userLocation]);
+
+  const handleGeoSearch = async () => {
+    if (!searchGeoTerm.trim()) return;
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchGeoTerm)}`,
       );
-      if (match) {
-        setFilters((prev) => ({ ...prev, type_ids: [match.value] }));
+      const data = await res.json();
+      if (data?.[0]) {
+        setUserLocation([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
       }
+    } catch (e) {
+      console.warn("Geocoding failed", e);
     }
-  }, [typeOpts, searchParams]);
+  };
 
-  const handleSearch = useCallback(
-    async (targetPage = 1, targetLimit = limit) => {
-      setLoading(true);
-      setSearched(true);
-      setPage(targetPage);
-      setLimit(targetLimit);
+  const MapClickEvent = () => {
+    useMapEvents({
+      click(e) {
+        setUserLocation([e.latlng.lat, e.latlng.lng]);
+      },
+    });
+    const map = useMap();
+    useEffect(() => {
+      if (userLocation) map.flyTo(userLocation, map.getZoom());
+    }, [userLocation]);
+    return null;
+  };
 
-      const params = new URLSearchParams();
-      if (filters.state_ids.length)
-        params.set("state_ids", filters.state_ids.join(","));
-      if (filters.district_ids.length)
-        params.set("district_ids", filters.district_ids.join(","));
-      if (filters.type_ids.length)
-        params.set("type_ids", filters.type_ids.join(","));
-      if (filters.ownership_ids.length)
-        params.set("ownership_ids", filters.ownership_ids.join(","));
-      if (filters.qualification_ids.length)
-        params.set("qualification_ids", filters.qualification_ids.join(","));
-      if (filters.stream_ids.length)
-        params.set("stream_ids", filters.stream_ids.join(","));
-      if (filters.min_enrollment)
-        params.set("min_enrollment", String(filters.min_enrollment));
-      if (filters.min_placement)
-        params.set("min_placement", String(filters.min_placement));
+  const toggleSelect = (id: number) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
-      params.set("page", targetPage.toString());
-      params.set("limit", targetLimit.toString());
-      params.set("sort", "student_count");
-      params.set("order", "desc");
+  const allSelected =
+    institutes.length > 0 &&
+    institutes.every((i) => selected.has(i.institute_id));
 
-      try {
-        const res = await pub.get(`/institute/search?${params}`);
-        setInstitutes(res.data?.data || []);
-        setTotal(res.data?.total || 0);
-      } catch {
-        setInstitutes([]);
-        setTotal(0);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [filters, limit],
+  const toggleAll = () =>
+    setSelected(
+      allSelected ? new Set() : new Set(institutes.map((i) => i.institute_id)),
+    );
+
+  const institutesMap = new Map(
+    institutes.map((i) => [i.institute_id, i.institute_name]),
   );
 
-  // Auto-search on mount
-  useEffect(() => {
-    handleSearch(1, limit);
-  }, [handleSearch]);
+  const currentLimit = itemsPerPage === "all" ? total || 1000 : itemsPerPage;
+  const totalPages = Math.ceil(total / currentLimit) || 1;
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   const resetFilters = () => {
     setFilters(EMPTY_FILTERS);
-    setPage(1);
-  };
-
-  // Handle Geocoding Search with better error handling
-  const handleGeoSearch = async () => {
-    const term = searchGeoTerm.trim();
-    if (!term) {
-      setMapSearchError("Please enter a city, area, or pincode");
-      return;
-    }
-
-    setMapSearchLoading(true);
-    setMapSearchError("");
-    setMapSearchSuccess(false);
-
-    try {
-      // Add Punjab context to search for better results
-      const searchQuery = `${term}, Punjab, India`;
-      const encodedQuery = encodeURIComponent(searchQuery);
-
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedQuery}&limit=1`,
-        {
-          headers: {
-            Accept: "application/json",
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Search service temporarily unavailable");
-      }
-
-      const data = await response.json();
-
-      if (!data || data.length === 0) {
-        setMapSearchError(
-          `No location found for "${term}". Try a different city or area.`,
-        );
-        setMapSearchLoading(false);
-        return;
-      }
-
-      const result = data[0];
-      const lat = parseFloat(result.lat);
-      const lon = parseFloat(result.lon);
-
-      // Validate coordinates are within Punjab bounds
-      if (lat < 29 || lat > 33 || lon < 73 || lon > 77) {
-        setMapSearchError(
-          "Location is outside Punjab. Please search for places in Punjab.",
-        );
-        setMapSearchLoading(false);
-        return;
-      }
-
-      setUserLocation([lat, lon]);
-      setMapSearchSuccess(true);
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setMapSearchSuccess(false), 3000);
-    } catch (error) {
-      console.error("Geocoding error:", error);
-      setMapSearchError(
-        "Unable to search location. Please try again or click on the map.",
-      );
-    } finally {
-      setMapSearchLoading(false);
-    }
+    setCurrentPage(1);
   };
 
   return (
-    <>
-      {/* Header & Search Section - Centered & Compact */}
+    <div className="w-full mx-auto">
+      {/* Header - unchanged */}
       <div className="bg-primary text-white pt-10 pb-16 px-4 lg:px-8 relative overflow-visible border-b border-white/5">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
@@ -438,16 +395,15 @@ export default function PublicLandingPage() {
 
         <div className="max-w-5xl mx-auto relative z-10 text-center">
           <div className="flex flex-col items-center gap-4 mb-10">
-
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
               Find Institutes
             </h1>
             <p className="text-slate-400 text-sm max-w-2xl">
-              Search and connect with educational institutes across Punjab. Filter by location, qualification, and specialization.
+              Search and connect with educational institutes across Punjab.
+              Filter by location, qualification, and specialization.
             </p>
           </div>
 
-          {/* Compact Filter Section */}
           <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 shadow-2xl overflow-visible">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2 text-left">
@@ -458,9 +414,9 @@ export default function PublicLandingPage() {
                   label=""
                   options={districtOpts}
                   selected={filters.district_ids}
-                  onChange={(v) => {
-                    setFilters((f) => ({ ...f, district_ids: v }));
-                    setPage(1);
+                  onChange={(values) => {
+                    setFilter("district_ids");
+                    setCurrentPage(1);
                   }}
                   placeholder="All Locations"
                   buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/40 h-11 rounded-xl hover:bg-white/20 transition-all text-xs"
@@ -474,9 +430,9 @@ export default function PublicLandingPage() {
                   label=""
                   options={qualOpts}
                   selected={filters.qualification_ids}
-                  onChange={(v) => {
-                    setFilters((f) => ({ ...f, qualification_ids: v }));
-                    setPage(1);
+                  onChange={(values) => {
+                    setFilter("qualification_ids");
+                    setCurrentPage(1);
                   }}
                   placeholder="All Qualifications"
                   buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/40 h-11 rounded-xl hover:bg-white/20 transition-all text-xs"
@@ -490,45 +446,12 @@ export default function PublicLandingPage() {
                   label=""
                   options={streamOpts}
                   selected={filters.stream_ids}
-                  onChange={(v) => {
-                    setFilters((f) => ({ ...f, stream_ids: v }));
-                    setPage(1);
+                  onChange={(values) => {
+                    setFilter("stream_ids");
+                    setCurrentPage(1);
                   }}
                   placeholder="All Specializations"
                   buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/40 h-11 rounded-xl hover:bg-white/20 transition-all text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-white/5">
-              <div className="space-y-2 text-left">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">
-                  Min Total Enrollment
-                </label>
-                <input
-                  type="number"
-                  placeholder="e.g. 100"
-                  className="w-full h-11 px-4 bg-white/10 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/20 transition-all text-white text-xs font-medium placeholder:text-white/40"
-                  value={filters.min_enrollment || ""}
-                  onChange={(e) => {
-                    setFilters((f) => ({ ...f, min_enrollment: e.target.value ? Number(e.target.value) : undefined }));
-                    setPage(1);
-                  }}
-                />
-              </div>
-              <div className="space-y-2 text-left">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">
-                  Min Placement Pool
-                </label>
-                <input
-                  type="number"
-                  placeholder="e.g. 50"
-                  className="w-full h-11 px-4 bg-white/10 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/20 transition-all text-white text-xs font-medium placeholder:text-white/40"
-                  value={filters.min_placement || ""}
-                  onChange={(e) => {
-                    setFilters((f) => ({ ...f, min_placement: e.target.value ? Number(e.target.value) : undefined }));
-                    setPage(1);
-                  }}
                 />
               </div>
             </div>
@@ -549,160 +472,534 @@ export default function PublicLandingPage() {
         </div>
       </div>
 
-      {/* Results Section */}
-      <div className="bg-slate-50 min-h-screen py-12 px-4 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {searched && institutes.length > 0 && (
-            <div className="flex flex-col xl:flex-row gap-8 items-start">
-              {/* Table View */}
-              <div className="w-full xl:w-[75%] space-y-6">
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200">
-                          <th className="px-6 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
-                            Institute Name
-                          </th>
-                          <th className="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
-                            Total Enrollment
-                          </th>
-                          <th className="px-6 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
-                            Placement Pool
-                          </th>
-                          <th className="px-6 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
-                            Action
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {institutes.map((inst) => (
-                          <tr key={inst.institute_id} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="px-6 py-5">
-                              <div className="max-w-xs sm:max-w-sm lg:max-w-md">
-                                <h4 className="text-sm font-semibold text-slate-800 leading-snug line-clamp-2">
+      {/* Results section */}
+      {searched && (
+        <div className="space-y-4 relative pb-24 lg:pb-0">
+          {!loading && institutes.length > 0 && (
+            <div className=" m-2 flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleAll}
+                  className="w-8 h-8 rounded-lg border border-slate-300 bg-slate-50 flex items-center justify-center text-slate-600 transition-all"
+                >
+                  {allSelected ? (
+                    <CheckSquare size={16} className="text-primary" />
+                  ) : (
+                    <Square size={16} />
+                  )}
+                </button>
+                <div className="flex flex-col">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {total} institute{total !== 1 ? "s" : ""} found
+                    <span className="text-slate-600 font-normal ml-1.5 hidden sm:inline">
+                      • click rows to select
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-600 font-medium">
+                  <span>Show:</span>
+                  <select
+                    className="bg-transparent border-0 outline-none text-slate-900 font-bold cursor-pointer"
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setItemsPerPage(val === "all" ? "all" : Number(val));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    {[5, 10, 20, 25, 50, 100].map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                    <option value="all">All</option>
+                  </select>
+                </div>
+
+                <div className="relative flex-1 min-w-[240px] max-w-sm group">
+                  <input
+                    type="text"
+                    placeholder="Search institutes..."
+                    className="input input-bordered w-full pl-11 pr-5 text-sm border-slate-300 focus:ring-2 focus:ring-blue-100"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Search
+                    size={16}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 text-xs">
+                  <ArrowUpDown size={12} className="text-primary" />
+                  <select
+                    className="bg-transparent border-0 outline-none text-slate-900 font-medium cursor-pointer text-xs"
+                    value={sort}
+                    onChange={(e) => {
+                      setSort(
+                        e.target.value as "name" | "name-rev" | "student_count",
+                      );
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value="student_count">Students</option>
+                    <option value="name">A–Z</option>
+                    <option value="name-rev">Z–A</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-600">
+              <Loader2 size={32} className="animate-spin text-primary" />
+              <p className="text-sm">Searching institutes…</p>
+            </div>
+          ) : institutes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 gap-4">
+              <div className="w-14 h-14 rounded-lg bg-blue-50 flex items-center justify-center">
+                <Search size={24} className="text-primary" />
+              </div>
+              <div className="text-center">
+                <p className="font-semibold text-slate-900">
+                  No institutes found
+                </p>
+                <p className="text-sm text-slate-600 mt-1">
+                  Try adjusting your filters
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex gap-6 flex-col lg:flex-row m-2">
+                <div className="flex-1 lg:w-[70%] relative">
+                  <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto hidden md:block">
+                      <table className="min-w-full divide-y divide-slate-200">
+                        <thead>
+                          <tr className="bg-slate-50">
+                            <th className="px-4 py-3 w-10">
+                              <button
+                                onClick={toggleAll}
+                                className="w-7 h-7 rounded-md border border-slate-300 bg-white flex items-center justify-center text-slate-600 transition-all mx-auto"
+                              >
+                                {allSelected ? (
+                                  <CheckSquare
+                                    size={14}
+                                    className="text-blue-600"
+                                  />
+                                ) : (
+                                  <Square size={14} />
+                                )}
+                              </button>
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Institute Name
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              District
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Courses
+                            </th>
+                            <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Enroll Students
+                            </th>
+                            <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Available to Placement Studnets
+                            </th>
+                            <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                          {institutes.map((inst) => {
+                            const isSelected = selected.has(inst.institute_id);
+                            return (
+                              <tr
+                                key={inst.institute_id}
+                                className={clsx(
+                                  "transition-colors cursor-pointer",
+                                  isSelected
+                                    ? "bg-blue-50"
+                                    : "hover:bg-slate-50",
+                                )}
+                              >
+                                <td className="px-4 py-3 text-center">
+                                  <button
+                                    onClick={() =>
+                                      toggleSelect(inst.institute_id)
+                                    }
+                                    className="w-5 h-5 rounded-md border border-slate-300 flex items-center justify-center mx-auto transition-all"
+                                  >
+                                    {isSelected ? (
+                                      <CheckSquare
+                                        size={14}
+                                        className="text-blue-600"
+                                      />
+                                    ) : (
+                                      <Square size={14} />
+                                    )}
+                                  </button>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className="text-sm font-semibold text-slate-900">
+                                    {inst.institute_name}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className="flex items-center gap-1.5 text-sm text-slate-700">
+                                    <MapPin
+                                      size={12}
+                                      className="text-slate-500"
+                                    />
+                                    {inst.district || "—"}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setCurrentInstitute(inst);
+                                      setViewCourses(true);
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 hover:text-blue-800 transition-all text-xs font-semibold"
+                                  >
+                                    <BookOpen size={14} /> View
+                                  </button>
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 text-primary text-xs font-bold">
+                                    <Users size={12} />
+                                    {inst.student_count.toLocaleString()}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-bold">
+                                    <Users size={12} />
+                                    {inst.final_year_student_count?.toLocaleString() ||
+                                      "0"}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setCurrentInstitute(inst);
+                                        setViewInstitute(true);
+                                      }}
+                                      title="View Profile"
+                                      className="h-8 w-8 rounded-md bg-slate-100 border border-slate-300 text-slate-700 hover:bg-blue-50 flex items-center justify-center transition-all"
+                                    >
+                                      <Eye size={14} />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        toggleSelect(inst.institute_id);
+                                        dispatch(
+                                          updateLoginUi({
+                                            roleSelectModal: { open: true },
+                                          }),
+                                        );
+                                      }}
+                                      className="px-3 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center gap-1.5 transition-all"
+                                    >
+                                      <LogIn size={14} />
+                                      Connect
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Cards */}
+                    <div className="md:hidden flex flex-col divide-y divide-slate-200">
+                      {institutes.map((inst) => {
+                        const isSelected = selected.has(inst.institute_id);
+                        return (
+                          <div
+                            key={inst.institute_id}
+                            className={clsx(
+                              "p-4 transition-colors",
+                              isSelected ? "bg-blue-50" : "",
+                            )}
+                          >
+                            <div className="flex items-start gap-3 mb-3">
+                              <button
+                                onClick={() => toggleSelect(inst.institute_id)}
+                                className="mt-1"
+                              >
+                                {isSelected ? (
+                                  <CheckSquare
+                                    size={16}
+                                    className="text-blue-600"
+                                  />
+                                ) : (
+                                  <Square
+                                    size={16}
+                                    className="text-slate-400"
+                                  />
+                                )}
+                              </button>
+                              <div className="flex-1">
+                                <h3 className="text-sm font-bold text-slate-900 mb-1">
                                   {inst.institute_name}
-                                </h4>
-                                <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mt-1 font-medium">
-                                  <MapPin size={10} />
-                                  {inst.district || "N/A"}
-                                  <span className="mx-1">•</span>
-                                  {inst.type || "Institute"}
+                                </h3>
+                                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 mb-3">
+                                  <span className="flex items-center gap-1">
+                                    <MapPin size={11} /> {inst.district || "—"}
+                                  </span>
+                                  <span className="font-semibold text-primary">
+                                    <Users size={11} className="inline mr-1" />
+                                    {inst.student_count.toLocaleString()}
+                                  </span>
                                 </div>
                               </div>
-                            </td>
-                            <td className="px-6 py-5 text-center">
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/5 text-primary text-[11px] font-bold whitespace-nowrap">
-                                <Users size={12} />
-                                {inst.student_count.toLocaleString()}
-                              </span>
-                            </td>
-                            <td className="px-6 py-5 text-center">
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary/10 text-secondary-focus text-[11px] font-bold whitespace-nowrap">
-                                <Users size={12} />
-                                {inst.final_year_student_count?.toLocaleString() || "0"}
-                              </span>
-                            </td>
-                            <td className="px-6 py-5 text-right">
+                            </div>
+
+                            <div className="flex items-center gap-2 ml-7 flex-wrap">
                               <button
-                                onClick={() =>
-                                  dispatch(updateLoginUi({ authPrompt: { open: true } }))
-                                }
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-focus text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all active:scale-95 shadow-md shadow-primary/10 whitespace-nowrap"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCurrentInstitute(inst);
+                                  setViewCourses(true);
+                                }}
+                                className="flex-1 py-2 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-100"
                               >
-                                <LogIn size={13} />
-                                Connect
+                                <BookOpen size={12} /> View Courses
                               </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCurrentInstitute(inst);
+                                  setViewInstitute(true);
+                                }}
+                                className="flex-[0.5] py-2 rounded-md bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold flex items-center justify-center hover:bg-slate-200"
+                              >
+                                <Eye size={12} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  toggleSelect(inst.institute_id);
+                                  dispatch(
+                                    updateLoginUi({
+                                      roleSelectModal: { open: true },
+                                    }),
+                                  );
+                                }}
+                                className="flex-1 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-700"
+                              >
+                                <LogIn size={12} /> Connect
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
+
+                  {/* Sticky Send Button */}
+                  {selected.size > 0 && (
+                    <div className="sticky bottom-0 left-0 right-0 z-30 mt-4 bg-white border-t border-slate-200 shadow-lg">
+                      <div className="px-4 py-4 lg:px-6">
+                        <button
+                          onClick={() =>
+                            dispatch(
+                              dispatch(
+                                updateLoginUi({
+                                  roleSelectModal: { open: true },
+                                }),
+                              ),
+                            )
+                          }
+                          className={clsx(
+                            "group w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl",
+                            "bg-gradient-to-r from-primary via-blue-600 to-indigo-600",
+                            "text-white font-semibold shadow-xl",
+                            "hover:shadow-2xl hover:scale-[1.02] active:scale-95",
+                            "transition-all duration-250 border border-blue-500/30",
+                          )}
+                        >
+                          <Send
+                            size={20}
+                            className="group-hover:rotate-12 transition-transform duration-300"
+                          />
+                          <span className="text-base">
+                            Send to <strong>{selected.size}</strong> institute
+                            {selected.size !== 1 ? "s" : ""}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-3 mt-4 shadow-sm">
+                      <button
+                        onClick={() => goToPage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
+                      >
+                        <ChevronLeft size={14} /> Previous
+                      </button>
+
+                      <span className="text-xs text-slate-600 font-medium">
+                        Page {currentPage} of {totalPages}
+                        <span className="hidden sm:inline">
+                          {" "}
+                          · {total} institutes
+                        </span>
+                      </span>
+
+                      <button
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage >= totalPages}
+                        className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
+                      >
+                        Next <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                <Pagination
-                  total={total}
-                  page={page}
-                  limit={limit}
-                  onPageChange={(p) => handleSearch(p, limit)}
-                  onLimitChange={(l) => handleSearch(1, l)}
-                />
-              </div>
+                {/* Map Section */}
+                <div className="lg:w-[30%] h-fit lg:sticky lg:top-4">
+                  <div className="flex flex-col gap-3 bg-white rounded-lg border border-slate-200 shadow-sm p-4">
+                    <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                      <MapPin size={16} className="text-primary" /> Institutes
+                      Near You
+                    </h3>
 
-              {/* Map Column */}
-              <div className="w-full xl:w-[25%] space-y-6">
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                      <MapPin size={18} />
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-800">Map View</h3>
-                  </div>
-
-                  <div className="space-y-4 mb-6">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Search area..."
-                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-xs font-medium"
-                        value={searchGeoTerm}
-                        onChange={(e) => setSearchGeoTerm(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleGeoSearch()}
-                      />
-                      <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    </div>
-                  </div>
-
-                  <div className="w-full h-[400px] rounded-xl border border-slate-100 overflow-hidden relative">
-                    <MapContainer
-                      center={userLocation || [31.1471, 75.3412]}
-                      zoom={userLocation ? 13 : 7}
-                      scrollWheelZoom={true}
-                      style={{ height: "100%", width: "100%" }}
-                    >
-                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                      {punjabGeoJson && (
-                        <GeoJSON
-                          data={punjabGeoJson}
-                          style={() => ({
-                            color: "var(--primary)",
-                            weight: 2,
-                            fillColor: "var(--primary)",
-                            fillOpacity: 0.05,
-                          })}
+                    <div className="flex flex-col gap-2">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          placeholder="Search location..."
+                          className="input input-sm input-bordered w-full pl-9 pr-3 border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                          value={searchGeoTerm}
+                          onChange={(e) => setSearchGeoTerm(e.target.value)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && handleGeoSearch()
+                          }
                         />
-                      )}
-                      {userLocation && <Marker position={userLocation} />}
-                      <MapClickEvent setUserLocation={setUserLocation} />
-                    </MapContainer>
+                        <Search
+                          size={14}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleGeoSearch}
+                          className="flex-1 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg transition-all"
+                        >
+                          Search
+                        </button>
+                        <button
+                          onClick={() => {
+                            setUserLocation(null);
+                            setSearchGeoTerm("");
+                          }}
+                          className="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold rounded-lg transition-all"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="w-full h-[350px] rounded-lg overflow-hidden border border-slate-200 shadow-inner bg-slate-100">
+                      <MapContainer
+                        center={userLocation || [31.1471, 75.3412]}
+                        zoom={userLocation ? 14 : 7}
+                        scrollWheelZoom={true}
+                        style={{ height: "100%", width: "100%" }}
+                      >
+                        <TileLayer
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                        />
+                        {punjabGeoJson && (
+                          <GeoJSON
+                            data={punjabGeoJson}
+                            style={() => ({
+                              color: "#1e40af",
+                              weight: 2,
+                              fillColor: "#1e40af",
+                              fillOpacity: 0.1,
+                            })}
+                          />
+                        )}
+                        {userLocation && <Marker position={userLocation} />}
+                        <MapClickEvent />
+                      </MapContainer>
+                    </div>
+
+                    <p className="text-xs text-slate-600 text-center italic">
+                      {!userLocation
+                        ? "Click on map or search location"
+                        : "✓ Location marked"}
+                    </p>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {!searched && !loading && (
-            <div className="text-center py-24 bg-white rounded-3xl border border-slate-100 border-dashed">
-              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-300">
-                <Filter size={32} />
-              </div>
-              <h3 className="text-lg font-bold text-slate-800 mb-2">Ready to search?</h3>
-              <p className="text-sm text-slate-400">Use the filters above to find institutes in Punjab.</p>
-            </div>
-          )}
-
-          {loading && (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <div className="w-10 h-10 border-4 border-slate-200 border-t-primary rounded-full animate-spin" />
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Searching Database...</p>
-            </div>
+            </>
           )}
         </div>
-      </div>
+      )}
 
+      {/* Success Toast */}
+      {sentSuccess && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <div className="flex items-center gap-3 px-5 py-3.5 rounded-lg bg-green-50 border border-green-300 text-green-700 shadow-lg font-medium text-sm">
+            <Send size={16} className="shrink-0" />
+            <span className="font-semibold">Job offers sent successfully!</span>
+            <button onClick={() => setSentSuccess(false)}>
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+      )}
 
-      <Footer />
-    </>
+      {/* Modals */}
+      <OfferModalV2
+        onClose={() => {}}
+        isOpen={findInstituteUi?.bulkOffer?.open ?? false}
+        selectedIds={Array.from(selected)}
+        institutesMap={institutesMap}
+        qualOptions={qualOpts}
+        streamOptions={streamOpts}
+        prefilledQualIds={filters.qualification_ids}
+        prefilledStreamIds={filters.stream_ids}
+        onSent={() => {
+          setSentSuccess(true);
+          setSelected(new Set());
+        }}
+      />
+
+      <InstituteViewModal
+        open={viewInstitute}
+        setOpen={() => setViewInstitute(false)}
+        institute={currentInstitute}
+      />
+
+      <InstituteCoursesModal
+        open={viewCourses}
+        setOpen={setViewCourses}
+        instituteId={currentInstitute?.institute_id ?? null}
+        instituteName={currentInstitute?.institute_name ?? ""}
+        filters={filters}
+      />
+    </div>
   );
 }
