@@ -598,76 +598,82 @@ export default function PublicLandingPage() {
         onClose={() => setViewCoursesInstitute(null)}
         isOpen={!!viewCoursesInstitute}
       />
-
       {/* Professional Header */}
-      <div className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(255,255,255,0.08)_0%,transparent_50%)]" />
-        <div className="max-w-7xl mx-auto text-center relative z-10">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight  mb-4 drop-shadow-lg">
-            Find Institutes
-          </h1>
-          <p className="text-lg sm:text-xl md:text-xl text-white/90 font-medium max-w-3xl mx-auto">
-            Discover ITI & Polytechnic institutes across Punjab – location,
-            courses, students & more
-          </p>
-        </div>
-      </div>
+      <div className="bg-primary text-white py-10 md:py-12 px-4 sm:px-6 lg:px-8 relative">
+        {/* Subtle background pattern/gradient overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.12)_0%,transparent_60%)] pointer-events-none" />
 
-      {/* Filter Bar */}
-      <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-slate-700">
-                District
-              </label>
-              <MultiSelectDropdown
-                label="District"
-                options={districtOpts}
-                selected={filters.district_ids}
-                onChange={(v) => setFilters((f) => ({ ...f, district_ids: v }))}
-                placeholder="Select districts"
-                buttonClassName="w-full text-base"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-slate-700">
-                Qualification Level
-              </label>
-              <MultiSelectDropdown
-                label="Qualification Level"
-                options={qualOpts}
-                selected={filters.qualification_ids}
-                onChange={(v) =>
-                  setFilters((f) => ({ ...f, qualification_ids: v }))
-                }
-                placeholder="Select qualifications"
-                buttonClassName="w-full text-base"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-slate-700">
-                Course / Trade
-              </label>
-              <MultiSelectDropdown
-                label="Course / Trade"
-                options={streamOpts}
-                selected={filters.stream_ids}
-                onChange={(v) => setFilters((f) => ({ ...f, stream_ids: v }))}
-                placeholder="Select courses"
-                buttonClassName="w-full text-base"
-              />
-            </div>
+        <div className="max-w-7xl mx-auto relative z-10">
+          {/* Main Title */}
+          <div className="text-center pb-8 md:pb-10">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-medium tracking-tight ">
+              Find Institutes
+            </h2>
           </div>
 
-          <div className="flex justify-end mt-6">
-            <button
-              onClick={resetFilters}
-              className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors flex items-center gap-2 shadow-sm hover:shadow"
-            >
-              <X size={16} />
-              Reset Filters
-            </button>
+          {/* Filter Bar – moved outside the dark hero for better contrast */}
+          <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 border border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  District
+                </label>
+                <MultiSelectDropdown
+                  label=""
+                  options={districtOpts}
+                  selected={filters.district_ids}
+                  onChange={(v) =>
+                    setFilters((f) => ({ ...f, district_ids: v }))
+                  }
+                  placeholder="Select districts…"
+                  buttonClassName="w-full text-base border-gray-300 focus:border-primary focus:ring-primary/30"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Qualification Level
+                </label>
+                <MultiSelectDropdown
+                  label=""
+                  options={qualOpts}
+                  selected={filters.qualification_ids}
+                  onChange={(v) =>
+                    setFilters((f) => ({ ...f, qualification_ids: v }))
+                  }
+                  placeholder="Select qualifications…"
+                  buttonClassName="w-full text-base border-gray-300 focus:border-primary focus:ring-primary/30"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Course / Trade
+                </label>
+                <MultiSelectDropdown
+                  label=""
+                  options={streamOpts}
+                  selected={filters.stream_ids}
+                  onChange={(v) => setFilters((f) => ({ ...f, stream_ids: v }))}
+                  placeholder="Select courses…"
+                  buttonClassName="w-full text-base border-gray-300 focus:border-primary focus:ring-primary/30"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={resetFilters}
+                className="group flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-600 hover:text-red-700 transition-colors"
+                title="Clear all filters"
+              >
+                <X
+                  size={16}
+                  className="group-hover:scale-110 transition-transform"
+                />
+                Reset filters
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -953,7 +959,7 @@ export default function PublicLandingPage() {
                 {/* Right: Map Section */}
                 <div className="lg:w-[30%] h-fit lg:sticky lg:top-20">
                   <div className="bg-white rounded-xl border border-slate-200 shadow-md overflow-hidden">
-                    <div className="h-[600px] lg:h-[700px]">
+                    <div className=" h-[400px] w-[500px]">
                       <MapContainer
                         center={userLocation || [31.1471, 75.3412]}
                         zoom={userLocation ? 13 : 7}

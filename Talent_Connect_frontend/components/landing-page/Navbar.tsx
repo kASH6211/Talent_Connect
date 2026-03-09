@@ -64,7 +64,7 @@ const Navbar = () => {
       >
         <Link
           href="/"
-          className="flex items-center gap-4 group transition-transform duration-300 hover:scale-[1.02]"
+          className="flex items-center gap-4 group transition-transform duration-300 "
         >
           <div className="relative">
             <img
@@ -76,11 +76,11 @@ const Navbar = () => {
           </div>
 
           <div className="border-l border-white/20 pl-4 py-1">
-            <h1 className="text-white text-lg font-bold leading-tight tracking-wider uppercase">
+            <h1 className="text-white text-lg font-medium leading-tight tracking-wider uppercase">
               HUNAR PUNJAB
             </h1>
-            <p className="text-white/90 text-xs font-semibold uppercase tracking-wide">
-              Upskilling • Networking • Rozgar
+            <p className="text-white/90 text-xs font-medium  tracking-wide">
+              Hub for Upskilling, Networking and Access to Rozgar
             </p>
           </div>
         </Link>

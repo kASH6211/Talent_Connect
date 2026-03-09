@@ -2,73 +2,116 @@
 
 import { useAuth } from "@/lib/AuthProvider";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogIn, ArrowRight, ShieldCheck } from "lucide-react";
+import { LogIn, ArrowRight, X, Briefcase } from "lucide-react";
 import axios from "axios";
 import { useState } from "react";
 
 const FastTrackOverlay = () => {
-    const { user, loading: authLoading } = useAuth();
-    const [loading, setLoading] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const [loading, setLoading] = useState(false);
 
-    const handleSSO = async () => {
-        setLoading(true);
-        try {
-            const res = await axios.get("/api/sso");
-            if (res.data?.url) {
-                window.location.href = res.data.url;
-            }
-        } catch (e) {
-            console.error("SSO redirect failed", e);
-        } finally {
-            setLoading(false);
-        }
-    };
+  // Expanded by default
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
 
-    return (
-        <AnimatePresence mode="wait">
-            {!user && !authLoading && (
-                <motion.div
-                    initial={{ opacity: 0, x: 100, scale: 0.9 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: 100, scale: 0.9 }}
-                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                    className="fixed bottom-8 right-8 z-[100] max-w-[280px] w-full"
-                >
-                    <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[2rem] p-6 group transition-all duration-500 hover:shadow-[0_25px_60px_rgba(33,65,164,0.2)]">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
-                                <ShieldCheck size={20} />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Secure Access</p>
-                                <h4 className="text-sm font-bold text-slate-800">FastTrack Portal</h4>
-                            </div>
-                        </div>
+  const handleSSO = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get("/api/sso");
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      }
+    } catch (e) {
+      console.error("SSO redirect failed", e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                        <p className="text-xs text-slate-500 mb-5 leading-relaxed">
-                            Access industry partnerships and placement data directly.
-                        </p>
+  if (user || authLoading) return null;
 
-                        <button
-                            onClick={handleSSO}
-                            disabled={loading}
-                            className="w-full bg-primary text-white py-3.5 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20 disabled:opacity-70"
-                        >
-                            {loading ? (
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <>
-                                    <LogIn size={16} />
-                                    <span>Login with FastTrack</span>
-                                    <ArrowRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
-    );
+  return (
+    <div className="fixed bottom-6 right-6 z-[100]">
+      <AnimatePresence mode="wait">
+        {/* Collapsed Button */}
+        {!isExpanded && (
+          <div
+            className="relative"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            <motion.button
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.7, opacity: 0 }}
+              transition={{ type: "spring", damping: 22, stiffness: 280 }}
+              onClick={() => setIsExpanded(true)}
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-indigo-600 text-white shadow-xl hover:scale-105 transition-all"
+            >
+              <LogIn size={24} />
+            </motion.button>
+          </div>
+        )}
+
+        {/* Expanded Banner */}
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, x: 60, scale: 0.94 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 40, scale: 0.94 }}
+            transition={{ type: "spring", damping: 24, stiffness: 200 }}
+            className="flex items-center gap-4 max-w-[420px] bg-white/95 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-2xl px-5 py-4"
+          >
+            {/* Icon */}
+            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 text-primary">
+              <Briefcase size={20} />
+            </div>
+
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-gray-800 leading-snug">
+                Are you an{" "}
+                <span className="text-primary">Industry or Employer?</span>
+              </p>
+
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Access the{" "}
+                <span className="font-medium text-gray-700">
+                  FastTrack Industry Portal
+                </span>{" "}
+              </p>
+            </div>
+
+            {/* Login Button */}
+            <button
+              onClick={handleSSO}
+              disabled={loading}
+              className="group px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl flex items-center gap-2 hover:bg-primary/90 shadow-md transition-all"
+            >
+              {loading ? (
+                <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  Login
+                  <ArrowRight
+                    size={14}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
+                </>
+              )}
+            </button>
+
+            {/* Close */}
+            <button
+              onClick={() => setIsExpanded(false)}
+              className="text-gray-400 hover:text-gray-700 transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 };
 
 export default FastTrackOverlay;

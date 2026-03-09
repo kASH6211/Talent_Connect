@@ -34,15 +34,6 @@ const ContactPage = () => {
           </div>
 
           <div className="container mx-auto px-4 relative z-10 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-[10px] font-black uppercase tracking-[0.2em] mb-6"
-            >
-              <Info className="w-3 h-3" /> Talent Connect Portal
-            </motion.div>
-
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -51,15 +42,6 @@ const ContactPage = () => {
             >
               Contact Support
             </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.3 }}
-              className="text-white/80 text-lg max-w-2xl mx-auto font-medium"
-            >
-              Official Department of Technical Education & Industrial Training Support
-            </motion.p>
           </div>
         </section>
 
@@ -83,9 +65,12 @@ const ContactPage = () => {
                     <MapPin className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-slate-900 font-black text-sm uppercase tracking-wide">Main Office</h3>
+                    <h3 className="text-slate-900 font-black text-sm uppercase tracking-wide">
+                      Main Office
+                    </h3>
                     <p className="text-slate-700 text-sm leading-relaxed mt-1.5 font-medium">
-                      Department of Technical Education & Industrial Training, Sector 36-A, Chandigarh, Punjab
+                      Department of Technical Education & Industrial Training,
+                      Sector 36-A, Chandigarh, Punjab
                     </p>
                   </div>
                 </div>
@@ -95,7 +80,9 @@ const ContactPage = () => {
                     <Mail className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-slate-900 font-black text-sm uppercase tracking-wide">Official Email</h3>
+                    <h3 className="text-slate-900 font-black text-sm uppercase tracking-wide">
+                      Official Email
+                    </h3>
                     <p className="text-primary text-sm mt-1.5 font-bold underline underline-offset-4">
                       info.dteit@punjab.gov.in
                     </p>
@@ -107,7 +94,9 @@ const ContactPage = () => {
                     <Clock className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-slate-900 font-black text-sm uppercase tracking-wide">Business Hours</h3>
+                    <h3 className="text-slate-900 font-black text-sm uppercase tracking-wide">
+                      Business Hours
+                    </h3>
                     <p className="text-slate-700 text-sm mt-1.5 font-medium">
                       Mon – Fri: 09:00 AM - 05:00 PM
                     </p>
@@ -117,7 +106,8 @@ const ContactPage = () => {
 
               <div className="mt-12 p-5 rounded-xl bg-slate-50 border border-slate-200">
                 <p className="text-[#64748B] text-xs font-bold leading-relaxed">
-                  For faster processing of your query, please include your Registration ID if applicable.
+                  For faster processing of your query, please include your
+                  Registration ID if applicable.
                 </p>
               </div>
             </motion.div>
@@ -134,7 +124,8 @@ const ContactPage = () => {
                   Electronic Inquiry Form
                 </h2>
                 <p className="text-slate-600 mt-2 font-medium">
-                  Submit your request through our secure portal. All fields are mandatory.
+                  Submit your request through our secure portal. All fields are
+                  mandatory.
                 </p>
               </div>
 
@@ -147,7 +138,9 @@ const ContactPage = () => {
                     <input
                       type="text"
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, name: e.target.value })
+                      }
                       placeholder="ENTER FULL NAME"
                       className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                       required
@@ -160,7 +153,9 @@ const ContactPage = () => {
                     <input
                       type="email"
                       value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, email: e.target.value })
+                      }
                       placeholder="ENTER EMAIL ADDRESS"
                       className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                       required
@@ -175,7 +170,9 @@ const ContactPage = () => {
                   <input
                     type="text"
                     value={form.subject}
-                    onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, subject: e.target.value })
+                    }
                     placeholder="ENTER SUBJECT"
                     className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                     required
@@ -188,7 +185,9 @@ const ContactPage = () => {
                   </label>
                   <textarea
                     value={form.message}
-                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, message: e.target.value })
+                    }
                     placeholder="PROVIDE DETAILED INFORMATION..."
                     rows={6}
                     className="w-full px-4 py-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
