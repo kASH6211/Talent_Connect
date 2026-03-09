@@ -32,26 +32,26 @@ const institutes = [
   {
     icon: Lightbulb,
     name: "Skilling & Vocational Institutes",
-    gov: "Upcoming",
-    pvt: "Upcoming",
+    gov: "Coming Soon",
+    pvt: "Coming Soon",
   },
   {
     icon: GraduationCap,
     name: "Engineering College",
-    gov: "Upcoming",
-    pvt: "Upcoming",
+    gov: "Coming Soon",
+    pvt: "Coming Soon",
   },
   {
     icon: HeartPulse,
     name: "Medical College",
-    gov: "Upcoming",
-    pvt: "Upcoming",
+    gov: "Coming Soon",
+    pvt: "Coming Soon",
   },
   {
     icon: Award,
     name: "Professional Degree College",
-    gov: "Upcoming",
-    pvt: "Upcoming",
+    gov: "Coming Soon",
+    pvt: "Coming Soon",
   },
 ];
 
@@ -78,7 +78,7 @@ const InstitutesSection = () => {
                     ? () => router.push(`/search-institutes?type=${inst.name}`)
                     : undefined
                 }
-                className={`group border border-gray-200 rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md hover:border-primary/70 transition-all duration-300 ${
+                className={`group border bg-white border-gray-200 rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md hover:border-primary/70 transition-all duration-300 ${
                   isActive ? "cursor-pointer" : ""
                 }`}
               >
@@ -151,7 +151,7 @@ const InstitutesSection = () => {
                             No. of Students
                           </p>
                           <p className="text-base md:text-lg font-extrabold">
-                            Upcoming
+                            Comming soon
                           </p>
                         </div>
 
@@ -160,7 +160,7 @@ const InstitutesSection = () => {
                             No. of Courses
                           </p>
                           <p className="text-base md:text-lg font-extrabold">
-                            Upcoming
+                            Comming soon
                           </p>
                         </div>
                       </>

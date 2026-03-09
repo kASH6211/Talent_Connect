@@ -8,7 +8,7 @@ const Counter = ({
   value,
   suffix = "",
 }: {
-  value: number;
+  value: number | string;
   suffix?: string;
 }) => {
   const [displayValue, setDisplayValue] = useState(0);
@@ -16,7 +16,7 @@ const Counter = ({
   const isInView = useInView(ref);
 
   useEffect(() => {
-    if (isInView) {
+    if (isInView && typeof value == "number") {
       const controls = animate(0, value, {
         duration: 2.5,
         ease: "easeOut",
@@ -51,7 +51,7 @@ const HeroSection2 = () => {
     },
     {
       icon: GraduationCap,
-      value: 0,
+      value: "coming soon",
       label: "Successful Placement",
       color: "text-green-500",
     },
@@ -85,7 +85,11 @@ const HeroSection2 = () => {
                   <stat.icon className={`w-8 h-8 ${stat.color}`} />
                 </div>
                 <p className="text-2xl md:text-4xl font-bold text-slate-900 mb-2">
-                  <Counter value={stat.value || 0} suffix={stat.suffix} />
+                  {typeof stat.value === "number" ? (
+                    <Counter value={stat.value || 0} suffix={stat.suffix} />
+                  ) : (
+                    stat.value.toString()
+                  )}
                 </p>
                 <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] leading-tight">
                   {stat.label}
