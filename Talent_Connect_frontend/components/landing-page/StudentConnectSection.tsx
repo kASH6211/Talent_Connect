@@ -13,17 +13,17 @@ const industriesCards = [
   {
     icon: Briefcase,
     title: "Placement",
-    desc: "See our students placed in top industries across India",
+    desc: "Hire skilled students and alumni through a seamless, digitally facilitated campus hiring process",
   },
   {
     icon: Building2,
     title: "1 to 6 Month Industrial Training",
-    desc: "Track the journey from enrollment to employment",
+    desc: "Offer structured industrial training opportunities to students and manage the entire training lifecycle digitally",
   },
   {
     icon: Handshake,
     title: "Partner with Institutes",
-    desc: "Build long-term industry-academia relationships",
+    desc: "Partner with institutes to support skill development through CSR initiatives",
   },
 ];
 
@@ -31,17 +31,17 @@ const studentCards = [
   {
     icon: Zap,
     title: "Upskilling",
-    desc: "Access certified training programs to sharpen your technical skills.",
+    desc: "Discover courses offered by nearby institutes and enhance your career opportunities",
   },
   {
     icon: Search,
     title: "Search Job",
-    desc: "Browse thousands of verified job openings matched with your trade.",
+    desc: "Find and apply for job opportunities posted by companies looking for skilled candidates like you",
   },
   {
     icon: MessageCircle,
     title: "Counselling",
-    desc: "Get expert guidance on career paths and industry opportunities.",
+    desc: "Get expert guidance to choose the right course, training path, and career based on your interests and goals",
   },
 ];
 
@@ -52,14 +52,13 @@ const StudentConnectSection = () => {
         {/* Heading */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-extrabold mb-4 heading-primary">
-            Connect & Grow
+            Get Started
           </h2>
           <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full"></div>
         </div>
 
         {/* Two Column Layout with Vertical Divider */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 relative border border-base-300 rounded-[2.5rem] overflow-hidden shadow-xl bg-white">
-
           {/* LEFT - INDUSTRIES (Theme: Light Blue/Primary) */}
           <div className="p-10 lg:p-14 bg-slate-50">
             <h3 className="text-2xl font-black mb-12 text-center text-primary uppercase tracking-[0.2em]">

@@ -1,6 +1,13 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Menu, X, UserCircle, ChevronDown, LogOut, User as UserIcon } from "lucide-react";
+import {
+  Menu,
+  X,
+  UserCircle,
+  ChevronDown,
+  LogOut,
+  User as UserIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useDispatch } from "react-redux";
@@ -11,7 +18,6 @@ import { getDashboardRoute } from "@/lib/helper";
 
 const pageLinks = [
   { label: "Home", to: "/" },
-  { label: "Institutes", to: "/#institutes" },
   { label: "Contact", to: "/contact" },
 ];
 
@@ -27,15 +33,20 @@ const Navbar = () => {
 
   const navLinks = user
     ? [
-      ...pageLinks.filter((link) => link.label === "Home" || link.label === "Contact"),
-      { label: "Dashboard", to: getDashboardRoute(role) }
-    ]
+        ...pageLinks.filter(
+          (link) => link.label === "Home" || link.label === "Contact",
+        ),
+        { label: "Dashboard", to: getDashboardRoute(role) },
+      ]
     : pageLinks;
 
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setUserDropdownOpen(false);
       }
     }
@@ -45,8 +56,13 @@ const Navbar = () => {
 
   return (
     <nav className="bg-primary/95 text-white sticky top-0 z-50 backdrop-blur-md shadow-[0_2px_15px_rgba(0,0,0,0.1)] border-b border-white/10 shrink-0">
-      <div className={`${user ? 'w-full px-6 lg:px-10' : 'container mx-auto px-6 lg:px-10'} flex items-center justify-between py-2.5`}>
-        <Link href="/" className="flex items-center gap-4 group transition-transform duration-300 hover:scale-[1.02]">
+      <div
+        className={`${user ? "w-full px-6 lg:px-10" : "container mx-auto px-6 lg:px-10"} flex items-center justify-between py-2.5`}
+      >
+        <Link
+          href="/"
+          className="flex items-center gap-4 group transition-transform duration-300 hover:scale-[1.02]"
+        >
           <div className="relative">
             <img
               src={"/Gov Logo.png"}
@@ -83,11 +99,16 @@ const Navbar = () => {
                 <Link
                   key={link.label}
                   href={link.to}
-                  className={`relative py-2 text-sm font-bold transition-colors group ${isActive(link.to) ? "text-white" : "text-white/80 hover:text-white"
-                    }`}
+                  className={`relative py-2 text-sm font-bold transition-colors group ${
+                    isActive(link.to)
+                      ? "text-white"
+                      : "text-white/80 hover:text-white"
+                  }`}
                 >
                   {link.label}
-                  <span className={`absolute bottom-0 left-0 h-0.5 bg-secondary transition-all duration-300 group-hover:w-full ${isActive(link.to) ? 'w-full' : 'w-0'}`}></span>
+                  <span
+                    className={`absolute bottom-0 left-0 h-0.5 bg-secondary transition-all duration-300 group-hover:w-full ${isActive(link.to) ? "w-full" : "w-0"}`}
+                  ></span>
                 </Link>
               ),
             )}
@@ -103,24 +124,41 @@ const Navbar = () => {
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary to-orange-400 flex items-center justify-center text-white shadow-lg overflow-hidden border-2 border-white/20">
                   {user.avatar ? (
-                    <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
+                    <img
+                      src={user.avatar}
+                      alt={user.username}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <span className="text-xs font-black uppercase">{user.username.charAt(0)}</span>
+                    <span className="text-xs font-black uppercase">
+                      {user.username.charAt(0)}
+                    </span>
                   )}
                 </div>
                 <div className="flex flex-col items-start leading-none gap-0.5">
-                  <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Hi, {user.username}</span>
-                  <span className="text-[11px] font-black text-white uppercase tracking-tight">{role || 'User'}</span>
+                  <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">
+                    Hi, {user.username}
+                  </span>
+                  <span className="text-[11px] font-black text-white uppercase tracking-tight">
+                    {role || "User"}
+                  </span>
                 </div>
-                <ChevronDown size={14} className={`text-white/40 transition-transform duration-300 ${userDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  size={14}
+                  className={`text-white/40 transition-transform duration-300 ${userDropdownOpen ? "rotate-180" : ""}`}
+                />
               </button>
 
               {/* Dropdown Menu */}
               {userDropdownOpen && (
                 <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-slate-100 py-3 text-slate-800 animate-in fade-in slide-in-from-top-4 duration-200">
                   <div className="px-5 py-2 mb-2 border-b border-slate-50">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Details</p>
-                    <p className="text-sm font-black text-primary truncate">{user.username}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      Account Details
+                    </p>
+                    <p className="text-sm font-black text-primary truncate">
+                      {user.username}
+                    </p>
                   </div>
 
                   <Link
@@ -174,14 +212,24 @@ const Navbar = () => {
               <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 mb-6">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-secondary to-orange-400 flex items-center justify-center text-white shadow-lg overflow-hidden border-2 border-white/20">
                   {user.avatar ? (
-                    <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
+                    <img
+                      src={user.avatar}
+                      alt={user.username}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <span className="text-sm font-black uppercase">{user.username.charAt(0)}</span>
+                    <span className="text-sm font-black uppercase">
+                      {user.username.charAt(0)}
+                    </span>
                   )}
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Hi, {user.username}</p>
-                  <p className="text-lg font-black text-white uppercase tracking-tight">{role || 'User'}</p>
+                  <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">
+                    Hi, {user.username}
+                  </p>
+                  <p className="text-lg font-black text-white uppercase tracking-tight">
+                    {role || "User"}
+                  </p>
                 </div>
               </div>
             )}
@@ -200,8 +248,11 @@ const Navbar = () => {
                 <Link
                   key={link.label}
                   href={link.to}
-                  className={`block py-2 text-lg font-bold transition-colors ${isActive(link.to) ? "text-secondary" : "text-white/80 hover:text-white"
-                    }`}
+                  className={`block py-2 text-lg font-bold transition-colors ${
+                    isActive(link.to)
+                      ? "text-secondary"
+                      : "text-white/80 hover:text-white"
+                  }`}
                   onClick={() => setMobileOpen(false)}
                 >
                   {link.label}
@@ -234,7 +285,9 @@ const Navbar = () => {
               ) : (
                 <button
                   onClick={() => {
-                    dispatch(updateLoginUi({ roleSelectModal: { open: true } }));
+                    dispatch(
+                      updateLoginUi({ roleSelectModal: { open: true } }),
+                    );
                     setMobileOpen(false);
                   }}
                   className="w-full bg-secondary text-white py-4 rounded-lg text-sm font-black uppercase tracking-widest shadow-xl"
