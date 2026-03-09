@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api, { getAll, createOne, updateOne, deleteOne } from "@/lib/api";
 import { useAuth } from "@/lib/AuthProvider";
-import { Pencil, Trash2, Check, X, Plus, RefreshCw, AlertCircle, Save } from "lucide-react";
+import { Pencil, Trash2, Check, X, Plus, RefreshCw, AlertCircle, Save, Users } from "lucide-react";
 import clsx from "clsx";
 import { useOptions } from "@/hooks/useOptions";
+import CrudTable from "@/components/CrudTable";
 
 export default function StudentCountsPage() {
     const { user } = useAuth();
@@ -15,10 +16,14 @@ export default function StudentCountsPage() {
     const [selectedInstituteId, setSelectedInstituteId] = useState<string>("");
     const [bulkData, setBulkData] = useState<any[]>([]);
 
-    // Fetch all student counts for the main list
-    const { data: records, isLoading, isError, refetch } = useQuery({
-        queryKey: ["student-count"],
-        queryFn: () => getAll("student-count"),
+    // State to hold data from CrudTable for summary stats
+    const [fetchedData, setFetchedData] = useState<any>(null);
+
+    // Fetch existing student counts for the selected institute (for modal population)
+    const { data: existingCounts } = useQuery({
+        queryKey: ["existing-counts", selectedInstituteId],
+        queryFn: () => getAll(`student-count?limit=1000&institute_id=${selectedInstituteId}`),
+        enabled: !!selectedInstituteId && modalOpen,
     });
 
     // Institutes for dropdown
@@ -38,19 +43,17 @@ export default function StudentCountsPage() {
     // Fetch mappings for the selected institute
     const { data: mappings, isFetching: isFetchingMappings } = useQuery({
         queryKey: ["mappings-for-institute", selectedInstituteId],
-        queryFn: () => getAll(`institute-qualification-mapping?institute_id=${selectedInstituteId}`),
-        enabled: !!selectedInstituteId,
+        queryFn: () => getAll(`institute-qualification-mapping?limit=1000&institute_id=${selectedInstituteId}`),
+        enabled: !!selectedInstituteId && modalOpen,
     });
 
     // Initialize bulk data when mappings are fetched
     useEffect(() => {
-        if (mappings && Array.isArray(mappings)) {
-            // For each mapping, check if we already have a record in 'records' for it
-            // Actually, it might be better to just let the user fill them.
-            // But if we want to "Edit", we should populate existing counts.
-            const initialBulk = mappings.map((m: any) => {
-                // Find existing record if any (this is a bit slow on client side, but okay for small sets)
-                const existing = records?.find((r: any) => r.institute_qualification_id === m.institute_qualification_id);
+        const mappingList = Array.isArray(mappings) ? mappings : mappings?.data;
+        if (mappingList && Array.isArray(mappingList) && existingCounts) {
+            const initialBulk = mappingList.map((m: any) => {
+                // Find existing record if any in the fetched counts for this institute
+                const existing = existingCounts.data?.find((r: any) => r.institute_qualification_id === m.institute_qualification_id);
                 return {
                     institute_qualification_id: m.institute_qualification_id,
                     qualification: m.qualification?.qualification,
@@ -64,18 +67,20 @@ export default function StudentCountsPage() {
                 };
             });
             setBulkData(initialBulk);
-        } else {
+        } else if (!selectedInstituteId || !modalOpen) {
             setBulkData([]);
         }
-    }, [mappings, records]);
+    }, [mappings, existingCounts, selectedInstituteId, modalOpen]);
 
     // Bulk Save Mutation
     const bulkSaveMutation = useMutation({
         mutationFn: (data: any[]) => api.post("student-count/bulk", data),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["student-count"] });
+            qc.invalidateQueries({ queryKey: ["existing-counts"] });
             setModalOpen(false);
             setSelectedInstituteId("");
+            setBulkData([]);
         },
         onError: (err: any) => {
             alert("Error saving: " + (err?.response?.data?.message || err.message));
@@ -117,92 +122,132 @@ export default function StudentCountsPage() {
         }
     }, [user]);
 
+    // Column Definitions
+    const COLUMNS = useMemo(() => [
+        { key: "sn", label: "#", render: (_: any, __: any, i: number) => i },
+        { key: "studentcountid", label: "ID" },
+        ...(user?.role !== "institute" ? [{
+            key: "institute",
+            label: "Institute",
+            render: (_: any, row: any) => (
+                <div className="max-w-[150px] truncate" title={row.instituteQualification?.institute?.institute_name}>
+                    {row.instituteQualification?.institute?.institute_name || "—"}
+                </div>
+            )
+        }] : []),
+        {
+            key: "qualification",
+            label: "Qualification",
+            render: (_: any, row: any) => row.instituteQualification?.qualification?.qualification || "—"
+        },
+        {
+            key: "course",
+            label: "Course",
+            render: (_: any, row: any) => (
+                <div className="max-w-[180px] truncate" title={row.instituteQualification?.streamBranch?.stream_branch_name}>
+                    {row.instituteQualification?.streamBranch?.stream_branch_name || "—"}
+                </div>
+            )
+        },
+        {
+            key: "affiliation",
+            label: "Affiliation",
+            render: (_: any, row: any) => row.instituteQualification?.streamBranch?.affiliation?.affiliating_body || "—"
+        },
+        {
+            key: "nsqf",
+            label: "NSQF",
+            render: (_: any, row: any) => row.instituteQualification?.streamBranch?.nsqf?.nsqf_level || "—"
+        },
+        {
+            key: "duration",
+            label: "Duration",
+            render: (_: any, row: any) => row.instituteQualification?.streamBranch?.courseDuration?.courseduration || "—"
+        },
+        {
+            key: "session",
+            label: "Sess.",
+            render: (val: any) => <span className="text-[10px] font-medium opacity-70 px-1.5 border border-base-200 rounded">{val?.session || "—"}</span>
+        },
+        {
+            key: "studentcount",
+            label: "Qty",
+            render: (val: any) => <span className="text-sm font-bold text-primary">{val}</span>
+        },
+        {
+            key: "is_active",
+            label: "St.",
+            render: (val: any) => (
+                <div className={clsx(
+                    "w-2 h-2 rounded-full mx-auto",
+                    val === 'Y' ? "bg-success" : "bg-error"
+                )} />
+            )
+        },
+    ], [user]);
+
+    // Handle single record edit (though bulk is preferred, we need actions)
+    const [editRow, setEditRow] = useState<any>(null);
+
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="p-4 space-y-3">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                 <div>
                     <h1 className="text-2xl font-bold">Student Count Management</h1>
-                    <p className="text-sm text-base-content/60">{records?.length || 0} records total</p>
+                    <p className="text-sm text-base-content/60">Manage enrollment numbers for mapped courses</p>
                 </div>
-                <div className="flex gap-2">
-                    <button onClick={() => refetch()} className="btn btn-ghost btn-sm btn-circle">
-                        <RefreshCw size={16} />
-                    </button>
-                    <button
-                        onClick={() => setModalOpen(true)}
-                        className="btn btn-primary btn-sm gap-2"
-                    >
-                        <Plus size={16} /> Manage Student Counts
-                    </button>
+
+                {/* Total Stats Card */}
+                <div className="stats shadow-sm border border-primary/20 bg-primary/5 min-w-[180px]">
+                    <div className="stat py-1.5 px-3">
+                        <div className="stat-figure text-primary">
+                            <Users size={24} />
+                        </div>
+                        <div className="stat-title text-[10px] font-bold uppercase tracking-wider">Total Students</div>
+                        <div className="stat-value text-primary text-xl">
+                            {fetchedData?.totalStudents?.toLocaleString() || 0}
+                        </div>
+                        <div className="stat-desc text-[9px] opacity-70">Across all filtered records</div>
+                    </div>
                 </div>
             </div>
 
-            <div className="bg-base-100 border border-base-200 rounded-2xl shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="table table-zebra w-full text-xs">
-                        <thead>
-                            <tr className="bg-base-200/60">
-                                <th>ID</th>
-                                {user?.role !== "institute" && <th>Institute</th>}
-                                <th>Qualification</th>
-                                <th>Course</th>
-                                <th>Affiliation</th>
-                                <th>NSQF</th>
-                                <th>Duration</th>
-                                <th className="text-center">Session</th>
-                                <th className="text-center">Student Count</th>
-                                <th>Status</th>
-                                <th className="text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {records?.length === 0 && (
-                                <tr>
-                                    <td colSpan={11} className="text-center py-12 text-base-content/40">No student counts recorded yet.</td>
-                                </tr>
-                            )}
-                            {records?.map((row: any) => (
-                                <tr key={row.studentcountid} className="group">
-                                    <td>{row.studentcountid}</td>
-                                    {user?.role !== "institute" && (
-                                        <td className="max-w-[150px] truncate" title={row.instituteQualification?.institute?.institute_name}>
-                                            {row.instituteQualification?.institute?.institute_name || "—"}
-                                        </td>
-                                    )}
-                                    <td>{row.instituteQualification?.qualification?.qualification || "—"}</td>
-                                    <td className="max-w-[150px] truncate" title={row.instituteQualification?.streamBranch?.stream_branch_name}>
-                                        {row.instituteQualification?.streamBranch?.stream_branch_name || "—"}
-                                    </td>
-                                    <td>{row.instituteQualification?.streamBranch?.affiliation?.affiliating_body || "—"}</td>
-                                    <td className="text-center">{row.instituteQualification?.streamBranch?.nsqf?.nsqf_level || "—"}</td>
-                                    <td>{row.instituteQualification?.streamBranch?.courseDuration?.courseduration || "—"}</td>
-                                    <td className="text-center">
-                                        <span className="badge badge-outline border-base-300">{row.session?.session || "—"}</span>
-                                    </td>
-                                    <td className="text-center">
-                                        <span className="text-sm font-bold text-primary">{row.studentcount}</span>
-                                    </td>
-                                    <td>
-                                        <span className={clsx("badge badge-xs", row.is_active === 'Y' ? "badge-success" : "badge-error")}>
-                                            {row.is_active === 'Y' ? "Active" : "Inactive"}
-                                        </span>
-                                    </td>
-                                    <td className="text-right">
-                                        <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={() => confirm("Remove this student count?") && deleteMutation.mutate(row.studentcountid)}
-                                                className="btn btn-ghost btn-xs btn-circle text-error"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            {/* Qualification Breakdown Tiles */}
+            {fetchedData?.qualificationStats?.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+                    {fetchedData.qualificationStats.map((stat: any, idx: number) => (
+                        <div key={idx} className="bg-base-100 border border-base-200 rounded-xl p-2 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-base-content/50 truncate" title={stat.name}>
+                                {stat.name}
+                            </div>
+                            <div className="mt-0.5 flex items-baseline gap-1">
+                                <span className="text-lg font-black text-base-content">{stat.total.toLocaleString()}</span>
+                                <span className="text-[9px] font-medium opacity-40 uppercase">Students</span>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-            </div>
+            )}
+
+            <CrudTable
+                title="Student Counts"
+                apiPath="student-count"
+                queryKey="student-count"
+                columns={COLUMNS}
+                primaryKey="studentcountid"
+                onAdd={() => {
+                    setSelectedInstituteId(user?.role === 'institute' ? String(user.institute_id) : "");
+                    setModalOpen(true);
+                }}
+                onEdit={(r) => {
+                    // Pre-select institute if not institute user to show the right mappings
+                    if (user?.role !== 'institute') {
+                        setSelectedInstituteId(String(r.instituteQualification?.instituteId));
+                    }
+                    setModalOpen(true);
+                }}
+                onDataFetched={setFetchedData}
+            />
 
             {/* BULK MANAGE MODAL */}
             {modalOpen && (

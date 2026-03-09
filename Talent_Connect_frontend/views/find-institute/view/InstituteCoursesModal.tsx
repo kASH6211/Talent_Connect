@@ -22,8 +22,8 @@ interface Props {
     instituteId: number | null;
     instituteName: string;
     filters: {
-        qualification_ids: number[];
-        stream_ids: number[];
+        qualification_ids: (number | string)[];
+        stream_ids: (number | string)[];
     };
 }
 

@@ -9,6 +9,7 @@ import axios from 'axios';
 import api from '@/lib/api';
 
 const COLUMNS = [
+    { key: 'sn', label: 'S.No', render: (_: any, __: any, i: number) => i },
     { key: 'institute_id', label: 'ID' },
     { key: 'institute_name', label: 'Name' },
     { key: 'address', label: 'Address' },
@@ -58,10 +59,10 @@ const FIELDS = [
         key: 'institute_enrollment_id', label: 'Enrollment Type',
         optionsApi: 'institute-enrollment', optionsValueKey: 'institute_enrollment_id', optionsLabelKey: 'instituteenrollmenttype',
     },
-    {
-        key: 'training_type_id', label: 'Training Type',
-        optionsApi: 'training-type', optionsValueKey: 'training_type_id', optionsLabelKey: 'training_type',
-    },
+    { key: 'placement_officer_name', label: 'PO Name' },
+    { key: 'placement_officer_contact_number', label: 'PO Contact No.' },
+    { key: 'placement_officer_email_id', label: 'PO Email', type: 'email' },
+    { key: 'google_map_link', label: 'Google Map Link' },
     { key: 'is_active', label: 'Is Active?', type: 'radio' },
 ];
 

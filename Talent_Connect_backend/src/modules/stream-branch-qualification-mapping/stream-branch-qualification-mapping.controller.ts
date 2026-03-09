@@ -8,7 +8,15 @@ import { StreamBranchQualificationMapping } from './stream-branch-qualification-
 export class StreamBranchQualificationMappingController {
     constructor(private readonly service: StreamBranchQualificationMappingService) { }
 
-    @Get() findAll(@Query('qualification_id') qualificationId?: number) { return this.service.findAll(qualificationId); }
+    @Get()
+    findAll(
+        @Query('page') page?: number,
+        @Query('limit') limit?: number,
+        @Query('search') search?: string,
+        @Query('qualification_id') qualificationId?: number
+    ) {
+        return this.service.findAll(page, limit, search, qualificationId);
+    }
     @Get(':id') findOne(@Param('id', ParseIntPipe) id: number) { return this.service.findOne(id); }
     @Post() create(@Body() dto: Partial<StreamBranchQualificationMapping>) { return this.service.create(dto); }
     @Patch(':id') update(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<StreamBranchQualificationMapping>) { return this.service.update(id, dto); }

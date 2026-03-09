@@ -22,7 +22,7 @@ import MultiSelectDropdown from "@/components/MultiSelectDropdown";
 /* ─── Types ─────────────────────────────────────────────────────────────────── */
 interface Option {
   label: string;
-  value: number;
+  value: number | string;
 }
 
 type EoiType = "Placement" | "Industrial Training" | "Collaboration" | "";
@@ -121,8 +121,8 @@ export function OfferModalV2({
   qualOptions: Option[];
   streamOptions: Option[];
   onSent: () => void;
-  prefilledQualIds?: number[];
-  prefilledStreamIds?: number[];
+  prefilledQualIds?: (number | string)[];
+  prefilledStreamIds?: (number | string)[];
   isSelectAll?: boolean;
   searchFilters?: any;
   searchSort?: string;
@@ -135,8 +135,8 @@ export function OfferModalV2({
   // Fields for Placement / Industrial Training
   const [jobTitle, setJobTitle] = useState("");
   const [natureOfEngagement, setNatureOfEngagement] = useState("");
-  const [qualIds, setQualIds] = useState<number[]>(prefilledQualIds);
-  const [streamIds, setStreamIds] = useState<number[]>(prefilledStreamIds);
+  const [qualIds, setQualIds] = useState<(number | string)[]>(prefilledQualIds);
+  const [streamIds, setStreamIds] = useState<(number | string)[]>(prefilledStreamIds);
   const [numStudents, setNumStudents] = useState("");
   const [experience, setExperience] = useState("");
   const [location, setLocation] = useState("");

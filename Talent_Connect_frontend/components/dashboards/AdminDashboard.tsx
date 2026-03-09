@@ -42,7 +42,16 @@ export default function AdminDashboard({ username }: { username: string }) {
           api.get("/industry-request"),
         ]);
 
-        const requests = reqRes.data || [];
+        const getCount = (res: any) => {
+          if (Array.isArray(res.data)) return res.data.length;
+          if (res.data?.total !== undefined) return res.data.total;
+          if (Array.isArray(res.data?.data)) return res.data.data.length;
+          return 0;
+        };
+
+        const requestsRes = reqRes.data;
+        const requests = Array.isArray(requestsRes) ? requestsRes : (requestsRes?.data || []);
+
         const sent = requests.filter((r: any) =>
           ["Submitted", "Under Review", "Approved", "Completed"].includes(r.requestStatus?.request_status)
         ).length;
@@ -51,10 +60,10 @@ export default function AdminDashboard({ username }: { username: string }) {
         ).length;
 
         setCounts({
-          institutes: instRes.data?.length || 0,
-          industries: indRes.data?.length || 0,
-          students: stuRes.data?.length || 0,
-          placements: placeRes.data?.length || 0,
+          institutes: getCount(instRes),
+          industries: getCount(indRes),
+          students: getCount(stuRes),
+          placements: getCount(placeRes),
           sentOffers: sent,
           acceptedOffers: accepted,
         });

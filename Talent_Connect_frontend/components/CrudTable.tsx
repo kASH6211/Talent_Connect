@@ -19,6 +19,7 @@ import SpinnerFallback from "./Spinner";
 import { openConfirm } from "@/store/common/confirmSlice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
+import PaginationComponent from "./common/Pagination";
 
 // ── Detect mobile reliably (SSR-safe)
 function useIsMobile(): boolean {
@@ -40,7 +41,7 @@ function useIsMobile(): boolean {
 export interface ColumnDef {
   key: string;
   label: string;
-  render?: (val: any, row: any) => React.ReactNode;
+  render?: (val: any, row: any, index: number) => React.ReactNode;
 }
 
 interface CrudTableProps {
@@ -54,6 +55,7 @@ interface CrudTableProps {
   onEdit: (row: any) => void;
   pagination?: boolean;
   extraActions?: React.ReactNode;
+  onDataFetched?: (data: any) => void;
 }
 
 export default function CrudTable({
@@ -67,6 +69,7 @@ export default function CrudTable({
   onEdit,
   pagination = true,
   extraActions,
+  onDataFetched,
 }: CrudTableProps) {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
@@ -98,6 +101,12 @@ export default function CrudTable({
     placeholderData: (prev: any) => prev,
   });
 
+  useEffect(() => {
+    if (data && onDataFetched) {
+      onDataFetched(data);
+    }
+  }, [data, onDataFetched]);
+
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteOne(apiPath, id),
     onSuccess: () => qc.invalidateQueries({ queryKey: [queryKey] }),
@@ -121,7 +130,7 @@ export default function CrudTable({
     : rows;
 
   // ── Single row card for mobile ──
-  const RowCard = ({ row }: { row: any }) => {
+  const RowCard = ({ row, index }: { row: any; index: number }) => {
     const [expanded, setExpanded] = useState(false);
 
     return (
@@ -177,7 +186,7 @@ export default function CrudTable({
                 if (col.key === primaryKey || col.key === columns[1]?.key)
                   return null;
                 const value = col.render
-                  ? col.render(row[col.key], row)
+                  ? col.render(row[col.key], row, index)
                   : (row[col.key] ?? "—");
                 return (
                   <div
@@ -302,7 +311,7 @@ export default function CrudTable({
                   </div>
                 ) : (
                   filtered.map((row, i) => (
-                    <RowCard key={row[primaryKey] ?? i} row={row} />
+                    <RowCard key={row[primaryKey] ?? i} row={row} index={(page - 1) * limit + i + 1} />
                   ))
                 )}
               </div>
@@ -315,12 +324,12 @@ export default function CrudTable({
                       {columns.map((c) => (
                         <th
                           key={c.key}
-                          className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-base-content/70"
+                          className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-base-content/70"
                         >
                           {c.label}
                         </th>
                       ))}
-                      <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-base-content/70">
+                      <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wider text-base-content/70">
                         Actions
                       </th>
                     </tr>
@@ -344,10 +353,10 @@ export default function CrudTable({
                           {columns.map((c) => (
                             <td
                               key={c.key}
-                              className="px-5 py-3.5 whitespace-nowrap text-base-content/90"
+                              className="px-3 py-2.5 whitespace-nowrap text-base-content/90"
                             >
                               {c.render ? (
-                                c.render(row[c.key], row)
+                                c.render(row[c.key], row, (page - 1) * limit + i + 1)
                               ) : c.key === "is_active" ? (
                                 <span
                                   className={clsx(
@@ -366,7 +375,7 @@ export default function CrudTable({
                               )}
                             </td>
                           ))}
-                          <td className="px-6 py-4 text-right">
+                          <td className="px-3 py-2 text-right">
                             <div className="flex items-center justify-end gap-1.5">
                               <button
                                 onClick={() => onEdit(row)}
@@ -404,32 +413,15 @@ export default function CrudTable({
             )}
 
             {/* Pagination */}
-            {pagination && totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-3.5 border-t border-base-200 bg-base-200/40 text-sm">
-                <div className="text-base-content/60 font-medium">
-                  Page <strong>{page}</strong> of {totalPages}
-                </div>
-                <div className="join rounded-lg overflow-hidden shadow-sm">
-                  <button
-                    onClick={() => setPage(Math.max(1, page - 1))}
-                    disabled={page === 1}
-                    className="join-item btn btn-sm border-base-300 bg-base-100 hover:bg-base-200 disabled:opacity-50"
-                  >
-                    « Prev
-                  </button>
-                  <button className="join-item btn btn-sm border-base-300 bg-primary/10 text-primary font-semibold pointer-events-none">
-                    {page}
-                  </button>
-                  <button
-                    onClick={() =>
-                      setPage((p) => (totalPages && p < totalPages ? p + 1 : p))
-                    }
-                    disabled={page >= totalPages}
-                    className="join-item btn btn-sm border-base-300 bg-base-100 hover:bg-base-200 disabled:opacity-50"
-                  >
-                    Next »
-                  </button>
-                </div>
+            {pagination && (
+              <div className="border-t border-base-200 bg-base-200/20">
+                <PaginationComponent
+                  total={totalCount}
+                  page={page}
+                  limit={limit}
+                  onPageChange={setPage}
+                  className="px-6 py-4 !py-4"
+                />
               </div>
             )}
           </>

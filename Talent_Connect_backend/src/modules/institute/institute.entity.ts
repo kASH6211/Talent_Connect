@@ -85,14 +85,14 @@ export class Institute extends BaseEntity {
     lgdstateId: number;
 
     @ManyToOne(() => State, { nullable: true })
-    @JoinColumn({ name: 'lgdstateId', referencedColumnName: 'stateid' })
+    @JoinColumn({ name: 'lgdstateId', referencedColumnName: 'lgdstateid' })
     state: State;
 
     @Column({ type: 'int', nullable: true })
     lgddistrictId: number;
 
     @ManyToOne(() => District, { nullable: true })
-    @JoinColumn({ name: 'lgddistrictId', referencedColumnName: 'districtid' })
+    @JoinColumn({ name: 'lgddistrictId', referencedColumnName: 'lgddistrictId' })
     district: District;
 
     @Column({ type: 'varchar', length: 500, nullable: true })
@@ -165,4 +165,10 @@ export class Institute extends BaseEntity {
 
     @Column({ type: 'varchar', length: 50, nullable: true })
     longitude: string;
+
+    @Column({ type: 'varchar', length: 500, nullable: true })
+    placement_officer_name: string;
+
+    @Column({ type: 'varchar', length: 1000, nullable: true })
+    google_map_link: string;
 }

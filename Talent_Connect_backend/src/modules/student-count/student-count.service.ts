@@ -10,7 +10,10 @@ export class StudentCountService {
         private readonly repo: Repository<StudentCount>,
     ) { }
 
-    async findAll(user?: any) {
+    async findAll(user?: any, page?: number, limit?: number, search?: string, instituteId?: number) {
+        const take = Number(limit) || 10;
+        const skip = ((Number(page) || 1) - 1) * take;
+
         const qb = this.repo.createQueryBuilder('sc')
             .leftJoinAndSelect('sc.instituteQualification', 'iqm')
             .leftJoinAndSelect('iqm.institute', 'institute')
@@ -20,13 +23,42 @@ export class StudentCountService {
             .leftJoinAndSelect('streamBranch.nsqf', 'nsqf')
             .leftJoinAndSelect('streamBranch.courseDuration', 'courseDuration')
             .leftJoinAndSelect('sc.session', 'session')
-            .orderBy('sc.studentcountid', 'DESC');
+            .where('1=1');
 
-        if (user?.role === 'institute' && user?.institute_id) {
+        if (instituteId) {
+            qb.andWhere('iqm.instituteId = :instituteId', { instituteId });
+        } else if (user?.role === 'institute' && user?.institute_id) {
             qb.andWhere('iqm.instituteId = :instituteId', { instituteId: user.institute_id });
         }
 
-        return qb.getMany();
+        if (search) {
+            qb.andWhere(
+                '(LOWER(institute.institute_name) LIKE LOWER(:search) OR LOWER(qualification.qualification) LIKE LOWER(:search) OR LOWER(streamBranch.stream_branch_name) LIKE LOWER(:search))',
+                { search: `%${search}%` }
+            );
+        }
+
+        // Use clones for aggregations to avoid polluting the main query builder state
+        const totalSumResult = await qb.clone().select('SUM(sc.studentcount)', 'total').getRawOne();
+        const totalStudents = parseInt(totalSumResult.total) || 0;
+
+        const qualificationStats = await qb.clone()
+            .select('qualification.qualification', 'name')
+            .addSelect('SUM(sc.studentcount)', 'total')
+            .groupBy('qualification.qualification')
+            .getRawMany()
+            .then(res => res.map(q => ({
+                name: q.name || 'Unknown',
+                total: parseInt(q.total) || 0
+            })));
+
+        const [data, total] = await qb
+            .orderBy('sc.studentcountid', 'DESC')
+            .skip(skip)
+            .take(take)
+            .getManyAndCount();
+
+        return { data, total, totalStudents, qualificationStats, page: Number(page) || 1, limit: take };
     }
 
     async findOne(id: number) {

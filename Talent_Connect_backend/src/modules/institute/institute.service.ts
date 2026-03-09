@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, ILike } from 'typeorm';
 import { Institute } from './institute.entity';
 
 export interface InstituteSearchQuery {
@@ -23,10 +23,17 @@ export class InstituteService {
     private readonly dataSource: DataSource,
   ) { }
 
-  async findAll(page?: number, limit?: number) {
+  async findAll(page?: number, limit?: number, search?: string) {
     const take = Number(limit) || 10;
     const skip = ((Number(page) || 1) - 1) * take;
+
+    const where: any = { is_active: 'Y' };
+    if (search) {
+      where.institute_name = ILike(`%${search}%`);
+    }
+
     const [data, total] = await this.repo.findAndCount({
+      where,
       take,
       skip,
       order: { institute_id: 'DESC' } as any,
@@ -107,12 +114,15 @@ export class InstituteService {
       '"i"."emailId"               AS email',
       'i.mobileno                  AS mobileno',
       'i.address                   AS address',
+      '"i"."lgdstateId"            AS state_id',
       '"i"."lgddistrictId"         AS district_id',
       'i.institute_type_id         AS type_id',
       'i.institute_ownership_type_id AS ownership_id',
       'i.contactperson             AS contactperson',
       'i.placement_officer_email_id AS po_email',
       'i.placement_officer_contact_number AS po_mobile',
+      'i.placement_officer_name    AS placement_officer_name',
+      'i.google_map_link           AS google_map_link',
       'i.latitude                  AS latitude',
       'i.longitude                 AS longitude',
     ])
@@ -152,7 +162,7 @@ export class InstituteService {
     const allTypes = await typeRepo.find() as any[];
     const allOwns = await ownRepo.find() as any[];
 
-    const distMap = Object.fromEntries(allDists.map((d: any) => [d.districtid, d.districtname]));
+    const distMap = Object.fromEntries(allDists.map((d: any) => [d.lgddistrictId, d.districtname]));
     const typeMap = Object.fromEntries(allTypes.map((t: any) => [t.institute_type_id, t.institute_type]));
     const ownMap = Object.fromEntries(allOwns.map((o: any) => [o.institute_ownership_type_id, o.institute_type]));
 
@@ -169,6 +179,8 @@ export class InstituteService {
       contactperson: r.contactperson ?? '',
       po_email: r.po_email ?? r.email ?? '',
       po_mobile: r.po_mobile ?? r.mobileno ?? '',
+      placement_officer_name: r.placement_officer_name ?? '',
+      google_map_link: r.google_map_link ?? '',
       latitude: r.latitude ?? null,
       longitude: r.longitude ?? null,
     }));
@@ -305,46 +317,51 @@ export class InstituteService {
 
         // State — case-insensitive match
         let stateId: number | null = null;
+        let lgdStateIdVal: number | null = null;
         const stateVal = normalizeText(row['lgdstateId']);
         if (stateVal) {
-          const stateRows = await this.dataSource.query(`SELECT stateid FROM "master_state" WHERE LOWER(statename) = LOWER($1) LIMIT 1`, [stateVal]);
+          const stateRows = await this.dataSource.query(`SELECT stateid, lgdstateid FROM "master_state" WHERE LOWER(statename) = LOWER($1) LIMIT 1`, [stateVal]);
           if (stateRows && stateRows.length > 0) {
             stateId = Number(stateRows[0]['stateid']);
+            lgdStateIdVal = Number(stateRows[0]['lgdstateid']);
           } else {
             const maxR = await this.dataSource.query(`SELECT COALESCE(MAX(lgdstateid), 0) + 1 AS next FROM "master_state"`);
+            const nextLgd = Number(maxR[0]['next']);
             const inserted = await this.dataSource.query(
               `INSERT INTO "master_state" (statename, lgdstateid, is_active, created_date, createdby) VALUES ($1, $2, 'Y', $3, 'import') RETURNING stateid`,
-              [stateVal, Number(maxR[0]['next']), now]
+              [stateVal, nextLgd, now]
             );
             stateId = Number(inserted[0]['stateid']);
+            lgdStateIdVal = nextLgd;
           }
         }
 
         // District — case-insensitive match
-        let districtId: number | null = null;
+        let districtLgdVal: number | null = null;
         const districtVal = normalizeText(row['lgddistrictId']);
         if (districtVal && stateId) {
-          const distRows = await this.dataSource.query(`SELECT districtid FROM "master_district" WHERE LOWER(districtname) = LOWER($1) LIMIT 1`, [districtVal]);
+          const distRows = await this.dataSource.query(`SELECT "lgddistrictId" FROM "master_district" WHERE LOWER(districtname) = LOWER($1) LIMIT 1`, [districtVal]);
           if (distRows && distRows.length > 0) {
-            districtId = Number(distRows[0]['districtid']);
+            districtLgdVal = Number(distRows[0]['lgddistrictId']);
           } else {
             const maxD = await this.dataSource.query(`SELECT COALESCE(MAX("lgddistrictId"), 0) + 1 AS next FROM "master_district"`);
-            const inserted = await this.dataSource.query(
-              `INSERT INTO "master_district" (districtname, "lgddistrictId", lgdstateid, is_active, created_date, createdby) VALUES ($1, $2, $3, 'Y', $4, 'import') RETURNING districtid`,
-              [districtVal, Number(maxD[0]['next']), stateId, now]
+            const nextDistLgd = Number(maxD[0]['next']);
+            await this.dataSource.query(
+              `INSERT INTO "master_district" (districtname, "lgddistrictId", lgdstateid, is_active, created_date, createdby) VALUES ($1, $2, $3, 'Y', $4, 'import')`,
+              [districtVal, nextDistLgd, stateId, now]
             );
-            districtId = Number(inserted[0]['districtid']);
+            districtLgdVal = nextDistLgd;
           }
         }
 
         // Enrollment
         const enrollmentId = await findOrCreate('master_institute_enrollment', 'institute_enrollment_id', 'instituteenrollmenttype', String(row['institute_enrollment_id'] || ''));
 
-        // Check for duplicate registration_id
+        // Check for duplicate registration_id (case-insensitive)
         const regId = row['institute_registration_id'] ? String(row['institute_registration_id']).trim() : null;
         if (regId) {
           const dup = await this.dataSource.query(
-            `SELECT institute_id FROM "master_institute" WHERE institute_registration_id = $1 LIMIT 1`,
+            `SELECT institute_id FROM "master_institute" WHERE LOWER(institute_registration_id) = LOWER($1) LIMIT 1`,
             [regId]
           );
           if (dup && dup.length > 0) {
@@ -363,9 +380,10 @@ export class InstituteService {
             "emailId", "altemailId", contactperson, mobileno,
             institute_enrollment_id, "totalseatIntake", is_placement_cell_available,
             placement_officer_contact_number, placement_officer_email_id,
+            placement_officer_name, google_map_link,
             latitude, longitude, is_active, created_date, createdby
           ) VALUES (
-            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,'Y',$29,'import'
+            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,'Y',$31,'import'
           ) RETURNING institute_id`,
           [
             instituteName,
@@ -379,8 +397,8 @@ export class InstituteService {
             affiliationId,
             regulatoryId,
             row['institute_rural_urban_status'] ? String(row['institute_rural_urban_status']).trim().charAt(0).toUpperCase() : null,
-            stateId,
-            districtId,
+            lgdStateIdVal,
+            districtLgdVal,
             row['address'] ? String(row['address']).substring(0, 500) : null,
             row['pincode'] ? String(row['pincode']).substring(0, 6) : null,
             row['phone'] ? String(row['phone']).substring(0, 50) : null,
@@ -394,6 +412,8 @@ export class InstituteService {
             String(row['is_placement_cell_available'] || '').trim().toLowerCase() === 'yes' ? 'Y' : 'N',
             row['placement_officer_contact_number'] ? String(row['placement_officer_contact_number']).substring(0, 50) : null,
             row['placement_officer_email_id'] ? String(row['placement_officer_email_id']).substring(0, 500) : null,
+            row['placement_officer_name'] ? String(row['placement_officer_name']).substring(0, 500) : null,
+            row['google_map_link'] ? String(row['google_map_link']).substring(0, 1000) : null,
             row['latitude'] ? String(row['latitude']) : null,
             row['longitude'] ? String(row['longitude']) : null,
             now,
@@ -409,14 +429,25 @@ export class InstituteService {
         const passwordHash = await bcrypt.hash(defaultPassword, 10);
         const contactEmail = row['emailId'] ? String(row['emailId']).substring(0, 200).trim() : `${newUsername}@example.com`;
 
-        await this.dataSource.query(
-          `INSERT INTO "users" (
-            username, email, password_hash, role, institute_id, is_active, created_date
-          ) VALUES (
-            $1, $2, $3, 'institute', $4, 'Y', $5
-          )`,
-          [newUsername, contactEmail, passwordHash, insertedInstituteId, now]
+        // Safety Check: Avoid duplicate user insertion (email or username)
+        const existingUser = await this.dataSource.query(
+          `SELECT id FROM "users" WHERE LOWER(username) = LOWER($1) OR LOWER(email) = LOWER($2) LIMIT 1`,
+          [newUsername, contactEmail]
         );
+
+        if (existingUser && existingUser.length > 0) {
+          // Skip user creation if it already exists, but log it as a partial success for the institute
+          // (or we could choose to throw an error, but usually skipping is safer for batch imports)
+        } else {
+          await this.dataSource.query(
+            `INSERT INTO "users" (
+              username, email, password_hash, role, institute_id, is_active, created_date
+            ) VALUES (
+              $1, $2, $3, 'institute', $4, 'Y', $5
+            )`,
+            [newUsername, contactEmail, passwordHash, insertedInstituteId, now]
+          );
+        }
 
         successCount++;
       } catch (err: any) {

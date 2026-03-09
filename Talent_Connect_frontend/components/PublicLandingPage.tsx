@@ -75,12 +75,12 @@ interface InstituteRow {
 }
 
 interface Filters {
-  state_ids: number[];
-  district_ids: number[];
-  type_ids: number[];
-  ownership_ids: number[];
-  qualification_ids: number[];
-  stream_ids: number[];
+  state_ids: (number | string)[];
+  district_ids: (number | string)[];
+  type_ids: (number | string)[];
+  ownership_ids: (number | string)[];
+  qualification_ids: (number | string)[];
+  stream_ids: (number | string)[];
 }
 
 const EMPTY_FILTERS: Filters = {
@@ -162,22 +162,28 @@ export default function PublicLandingPage() {
           pub.get("/qualification"),
         ]);
 
+        const getRowData = (res: any) => {
+          if (Array.isArray(res)) return res;
+          if (Array.isArray(res?.data)) return res.data;
+          return [];
+        };
+
         setTypeOpts(
-          types.data.map((t: any) => ({
+          getRowData(types.data).map((t: any) => ({
             value: t.institute_type_id,
             label: t.institute_type,
           })),
         );
 
         setOwnershipOpts(
-          ownerships.data.map((o: any) => ({
+          getRowData(ownerships.data).map((o: any) => ({
             value: o.institute_ownership_type_id,
             label: o.institute_type,
           })),
         );
 
         setQualOpts(
-          quals.data.map((q: any) => ({
+          getRowData(quals.data).map((q: any) => ({
             value: q.qualificationid,
             label: q.qualification,
           })),
@@ -194,50 +200,51 @@ export default function PublicLandingPage() {
   useEffect(() => {
     const loadStreams = async () => {
       try {
-        let streamsToShow: Option[] = [];
+        const masterStreamsMap = new Map<string, number[]>();
 
         if (filters.qualification_ids.length > 0) {
-          // 1. Fetch streams for each selected qualification in parallel
           const streamPromises = filters.qualification_ids.map(id =>
             pub.get(`/stream-branch?qualification_id=${id}`)
           );
           const streamResponses = await Promise.all(streamPromises);
 
-          // 2. Merge and de-duplicate master streams
-          const masterStreamsMap = new Map<number, string>();
           streamResponses.forEach(res => {
             res.data.forEach((s: any) => {
-              masterStreamsMap.set(s.stream_branch_Id, s.stream_branch_name);
+              const ids = masterStreamsMap.get(s.stream_branch_name) || [];
+              if (!ids.includes(s.stream_branch_Id)) ids.push(s.stream_branch_Id);
+              masterStreamsMap.set(s.stream_branch_name, ids);
             });
           });
-
-          // 3. Fetch streams currently being offered by institutes
-          const inUseRes = await pub.get("/institute-qualification-mapping/streams-in-use");
-          const inUseIds = new Set(inUseRes.data.map((s: any) => s.stream_branch_Id));
-
-          // 4. Intersect
-          masterStreamsMap.forEach((label, value) => {
-            if (inUseIds.has(value)) {
-              streamsToShow.push({ value, label });
-            }
-          });
-        } else {
-          // No qualification selected: show all active streams in the portal
-          const res = await pub.get("/institute-qualification-mapping/streams-in-use");
-          streamsToShow = res.data.map((s: any) => ({
-            value: s.stream_branch_Id,
-            label: s.stream_branch_name,
-          }));
         }
 
-        // Sort alphabetically
-        streamsToShow.sort((a, b) => a.label.localeCompare(b.label));
-        setStreamOpts(streamsToShow);
+        const inUseRes = await pub.get("/institute-qualification-mapping/streams-in-use");
+        const inUseIds = new Set(inUseRes.data.map((s: any) => s.stream_branch_Id));
 
-        // 5. Cleanup selected streams that are no longer valid
-        const validIds = new Set(streamsToShow.map(s => s.value));
+        if (filters.qualification_ids.length === 0) {
+          inUseRes.data.forEach((s: any) => {
+            const ids = masterStreamsMap.get(s.stream_branch_name) || [];
+            if (!ids.includes(s.stream_branch_Id)) ids.push(s.stream_branch_Id);
+            masterStreamsMap.set(s.stream_branch_name, ids);
+          });
+        }
+
+        const sortedNames = Array.from(masterStreamsMap.keys()).sort();
+        const finalOptions: Option[] = [];
+
+        sortedNames.forEach(name => {
+          const ids = masterStreamsMap.get(name)!;
+          const validIdsInPortal = ids.filter(id => inUseIds.has(id));
+          if (validIdsInPortal.length > 0) {
+            const groupedValue = validIdsInPortal.length === 1 ? validIdsInPortal[0] : validIdsInPortal.join(",");
+            finalOptions.push({ value: groupedValue, label: name });
+          }
+        });
+
+        setStreamOpts(finalOptions);
+
+        const validValues = new Set(finalOptions.map(s => String(s.value)));
         setFilters(prev => {
-          const nextStreams = prev.stream_ids.filter(id => validIds.has(id));
+          const nextStreams = prev.stream_ids.filter(id => validValues.has(String(id)));
           if (nextStreams.length !== prev.stream_ids.length) {
             return { ...prev, stream_ids: nextStreams };
           }
@@ -264,7 +271,7 @@ export default function PublicLandingPage() {
       .then((r) =>
         setDistrictOpts(
           r.data.map((d: any) => ({
-            value: d.districtid ?? d.lgddistrictId,
+            value: d.lgddistrictId ?? d.districtid,
             label: d.districtname,
           })),
         ),

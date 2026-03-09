@@ -10,6 +10,7 @@ export default function Page() {
   const [editData, setEditData] = useState<any>(null);
 
   const COLUMNS = [
+    { key: "sn", label: "S.No", render: (_: any, __: any, i: number) => i },
     { key: "stream_branch_qualification_id", label: "ID" },
     {
       key: "qualificationid",
@@ -58,7 +59,7 @@ export default function Page() {
       required: true,
       optionsApi: "stream-branch",
       optionsValueKey: "stream_branch_Id",
-      optionsLabelKey: "stream_branch_name",
+      optionsLabelKey: "full_name",
       dependsOn: "qualificationid",
       dependsOnQueryKey: "qualification_id",
     },

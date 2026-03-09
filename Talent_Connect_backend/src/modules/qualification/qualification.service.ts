@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { Qualification } from './qualification.entity';
 
 @Injectable()
@@ -8,9 +8,25 @@ export class QualificationService {
   constructor(
     @InjectRepository(Qualification)
     private readonly repo: Repository<Qualification>,
-  ) {}
+  ) { }
 
-  findAll() { return this.repo.find(); }
+  async findAll(page?: number, limit?: number, search?: string) {
+    const take = Number(limit) || 10;
+    const skip = ((Number(page) || 1) - 1) * take;
+
+    const where: any = { is_active: 'Y' };
+    if (search) {
+      where.qualification = ILike(`%${search}%`);
+    }
+
+    const [data, total] = await this.repo.findAndCount({
+      where,
+      take,
+      skip,
+      order: { qualificationid: 'DESC' } as any,
+    });
+    return { data, total, page: Number(page) || 1, limit: take };
+  }
 
   async findOne(id: number) {
     const item = await this.repo.findOne({ where: { qualificationid: id } as any });

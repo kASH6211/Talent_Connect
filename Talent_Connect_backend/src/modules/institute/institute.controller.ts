@@ -15,8 +15,13 @@ export class InstituteController {
   @Get()
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.service.findAll(page, limit);
+  @ApiQuery({ name: 'search', required: false })
+  findAll(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('search') search?: string,
+  ) {
+    return this.service.findAll(page, limit, search);
   }
 
   /** Filtered institute search — GET /api/institute/search */

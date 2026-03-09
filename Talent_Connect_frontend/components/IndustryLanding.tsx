@@ -46,9 +46,9 @@ function calculateAirDistance(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -103,12 +103,12 @@ interface InstituteRow {
   path_distance?: number;
 }
 interface Filters {
-  state_ids: number[];
-  district_ids: number[];
-  type_ids: number[];
-  ownership_ids: number[];
-  qualification_ids: number[];
-  stream_ids: number[];
+  state_ids: (number | string)[];
+  district_ids: (number | string)[];
+  type_ids: (number | string)[];
+  ownership_ids: (number | string)[];
+  qualification_ids: (number | string)[];
+  stream_ids: (number | string)[];
 }
 const EMPTY_FILTERS: Filters = {
   state_ids: [3],
@@ -514,14 +514,15 @@ export default function IndustryLandingPage() {
       const [qual] = await Promise.all([
         api
           .get("/qualification")
-          .then((r) =>
-            r.data.map(
+          .then((r) => {
+            const list = Array.isArray(r.data) ? r.data : r.data?.data || [];
+            return list.map(
               (q: { qualificationid: number; qualification: string }) => ({
                 value: q.qualificationid,
                 label: q.qualification,
               }),
-            ),
-          )
+            );
+          })
           .catch(() => []),
       ]);
       setQualOpts(qual);
@@ -536,8 +537,8 @@ export default function IndustryLandingPage() {
         const res = await api.get(`/district?state_id=3`);
         setDistrictOpts(
           res.data
-            .map((d: { districtid: number; districtname: string }) => ({
-              value: d.districtid,
+            .map((d: { districtid: number; lgddistrictId: number; districtname: string }) => ({
+              value: d.lgddistrictId ?? d.districtid,
               label: d.districtname,
             }))
             .sort((a: Option, b: Option) => a.label.localeCompare(b.label)),
@@ -552,40 +553,51 @@ export default function IndustryLandingPage() {
   // Stream cascade — same as FindInstitutesListView
   useEffect(() => {
     const loadStreams = async () => {
-      if (filters.qualification_ids.length > 0) {
-        const qId = filters.qualification_ids[0];
-        const [masterRes, inUseRes] = await Promise.all([
-          api.get(`/stream-branch?qualification_id=${qId}`),
-          api.get("/institute-qualification-mapping/streams-in-use"),
-        ]);
-        const inUseIds = new Set(
-          inUseRes.data.map(
-            (s: { stream_branch_Id: number }) => s.stream_branch_Id,
-          ),
-        );
-        const filtered = masterRes.data.filter(
-          (s: { stream_branch_Id: number }) => inUseIds.has(s.stream_branch_Id),
-        );
-        setStreamOpts(
-          filtered.map(
-            (s: { stream_branch_Id: number; stream_branch_name: string }) => ({
-              value: s.stream_branch_Id,
-              label: s.stream_branch_name,
-            }),
-          ),
-        );
-      } else {
-        const res = await api.get(
-          "/institute-qualification-mapping/streams-in-use",
-        );
-        setStreamOpts(
-          res.data.map(
-            (s: { stream_branch_Id: number; stream_branch_name: string }) => ({
-              value: s.stream_branch_Id,
-              label: s.stream_branch_name,
-            }),
-          ),
-        );
+      const masterStreamsMap = new Map<string, number[]>();
+      try {
+        if (filters.qualification_ids.length > 0) {
+          const qId = filters.qualification_ids[0];
+          const [masterRes, inUseRes] = await Promise.all([
+            api.get(`/stream-branch?qualification_id=${qId}`),
+            api.get("/institute-qualification-mapping/streams-in-use"),
+          ]);
+          const inUseIds = new Set(
+            inUseRes.data.map(
+              (s: { stream_branch_Id: number }) => s.stream_branch_Id,
+            ),
+          );
+
+          masterRes.data.forEach((s: any) => {
+            if (inUseIds.has(s.stream_branch_Id)) {
+              const ids = masterStreamsMap.get(s.stream_branch_name) || [];
+              if (!ids.includes(s.stream_branch_Id)) ids.push(s.stream_branch_Id);
+              masterStreamsMap.set(s.stream_branch_name, ids);
+            }
+          });
+        } else {
+          const res = await api.get(
+            "/institute-qualification-mapping/streams-in-use",
+          );
+          res.data.forEach((s: any) => {
+            const ids = masterStreamsMap.get(s.stream_branch_name) || [];
+            if (!ids.includes(s.stream_branch_Id)) ids.push(s.stream_branch_Id);
+            masterStreamsMap.set(s.stream_branch_name, ids);
+          });
+        }
+
+        const sortedNames = Array.from(masterStreamsMap.keys()).sort();
+        const finalOptions: Option[] = sortedNames.map(name => {
+          const ids = masterStreamsMap.get(name)!;
+          return {
+            value: ids.length === 1 ? ids[0] : ids.join(","),
+            label: name
+          };
+        });
+
+        setStreamOpts(finalOptions);
+      } catch (err) {
+        console.error("Failed to load streams in IndustryLanding:", err);
+        setStreamOpts([]);
       }
     };
     loadStreams();
@@ -873,15 +885,15 @@ export default function IndustryLandingPage() {
                   style={
                     filtersOpen
                       ? {
-                          background: P_ALPHA(0.09),
-                          color: P,
-                          border: `1px solid ${P_ALPHA(0.25)}`,
-                        }
+                        background: P_ALPHA(0.09),
+                        color: P,
+                        border: `1px solid ${P_ALPHA(0.25)}`,
+                      }
                       : {
-                          background: "hsl(var(--bc) / 0.05)",
-                          color: "hsl(var(--bc) / 0.45)",
-                          border: "1px solid hsl(var(--bc) / 0.09)",
-                        }
+                        background: "hsl(var(--bc) / 0.05)",
+                        color: "hsl(var(--bc) / 0.45)",
+                        border: "1px solid hsl(var(--bc) / 0.09)",
+                      }
                   }
                 >
                   <Filter size={11} />
@@ -1024,9 +1036,9 @@ export default function IndustryLandingPage() {
                         onChange={(e) => {
                           setSort(
                             e.target.value as
-                              | "name"
-                              | "name-rev"
-                              | "student_count",
+                            | "name"
+                            | "name-rev"
+                            | "student_count",
                           );
                           setCurrentPage(1);
                         }}

@@ -4,15 +4,15 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, X, Check } from 'lucide-react';
 import { clsx } from 'clsx';
 
-export interface Option { value: number; label: string; }
+export interface Option { value: number | string; label: string; }
 
 interface Props {
     label: string;
     options: Option[];
-    selected: number[];
-    onChange: (vals: number[]) => void;
+    selected: (number | string)[];
+    onChange: (vals: (number | string)[]) => void;
     placeholder?: string;
-    disabledOptions?: number[];
+    disabledOptions?: (number | string)[];
     containerClassName?: string;
     buttonClassName?: string;
 }
@@ -42,7 +42,7 @@ export default function MultiSelectDropdown({
     const filtered = (options ?? []).filter(o => o.label?.toLowerCase().includes(search.toLowerCase()));
     const count = selected.length;
 
-    const toggle = (val: number) => {
+    const toggle = (val: number | string) => {
         onChange(selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val]);
     };
 

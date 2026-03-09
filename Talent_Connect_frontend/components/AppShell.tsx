@@ -88,7 +88,7 @@ export default function AppShell({
                 </div>
               )}
 
-              <main className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 pt-6 sm:pt-8 lg:pt-10 px-4 sm:px-6 lg:px-8 xl:px-10 pb-10">
+              <main className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 xl:px-10 pb-10">
                 <div className="max-w-[1600px] mx-auto w-full">
                   {children}
                 </div>

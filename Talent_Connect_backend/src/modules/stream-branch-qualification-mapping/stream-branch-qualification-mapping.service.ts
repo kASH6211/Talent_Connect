@@ -10,17 +10,34 @@ export class StreamBranchQualificationMappingService {
         private readonly repo: Repository<StreamBranchQualificationMapping>,
     ) { }
 
-    findAll(qualificationId?: number) {
+    async findAll(page?: number, limit?: number, search?: string, qualificationId?: number) {
+        const take = Number(limit) || 10;
+        const skip = ((Number(page) || 1) - 1) * take;
+
         const qb = this.repo.createQueryBuilder('m')
             .leftJoinAndSelect('m.qualification', 'qualification')
             .leftJoinAndSelect('m.streamBranch', 'streamBranch')
             .leftJoinAndSelect('streamBranch.affiliation', 'affiliation')
             .leftJoinAndSelect('streamBranch.nsqf', 'nsqf')
-            .leftJoinAndSelect('streamBranch.courseDuration', 'courseDuration');
+            .leftJoinAndSelect('streamBranch.courseDuration', 'courseDuration')
+            .where('m.is_active = :active', { active: 'Y' });
+
         if (qualificationId) {
-            qb.where('m.qualificationid = :qualificationId', { qualificationId });
+            qb.andWhere('m.qualificationid = :qualificationId', { qualificationId });
         }
-        return qb.getMany();
+
+        if (search) {
+            qb.andWhere('(LOWER(qualification.qualification) LIKE LOWER(:search) OR LOWER(streamBranch.stream_branch_name) LIKE LOWER(:search))', { search: `%${search}%` });
+        }
+
+        const [data, total] = await qb
+            .orderBy('qualification.qualification', 'ASC')
+            .addOrderBy('streamBranch.stream_branch_name', 'ASC')
+            .skip(skip)
+            .take(take)
+            .getManyAndCount();
+
+        return { data, total, page: Number(page) || 1, limit: take };
     }
 
     async findOne(id: number) {

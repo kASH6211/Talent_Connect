@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, ParseIntPipe, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, ParseIntPipe, Req, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { StudentCountService } from './student-count.service';
 import { StudentCount } from './student-count.entity';
@@ -9,8 +9,14 @@ export class StudentCountController {
     constructor(private readonly service: StudentCountService) { }
 
     @Get()
-    findAll(@Req() req: any) {
-        return this.service.findAll(req.user);
+    findAll(
+        @Req() req: any,
+        @Query('page') page?: number,
+        @Query('limit') limit?: number,
+        @Query('search') search?: string,
+        @Query('institute_id') instituteId?: number,
+    ) {
+        return this.service.findAll(req.user, page, limit, search, instituteId);
     }
 
     @Get(':id')

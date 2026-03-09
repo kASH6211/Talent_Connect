@@ -81,7 +81,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem("tc_token");
     localStorage.removeItem("user");
     setUser(null);
-    router.replace("/");
+    // Hard reload ensures all in-memory state (React Query, Redux) is cleared
+    window.location.href = "/";
   };
 
   return (

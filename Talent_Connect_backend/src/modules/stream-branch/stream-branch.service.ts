@@ -60,7 +60,11 @@ export class StreamBranchService {
       return { data, total, page, limit: take };
     }
 
-    return qb.getMany();
+    const results = await qb.getMany();
+    return results.map(sb => ({
+      ...sb,
+      full_name: `${sb.stream_branch_name} - ${sb.affiliation?.affiliating_body || 'N/A'} - ${sb.courseDuration?.courseduration || 'N/A'}`
+    }));
   }
 
   async findOne(id: number) {

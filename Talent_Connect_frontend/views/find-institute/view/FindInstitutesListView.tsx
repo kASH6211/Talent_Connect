@@ -103,12 +103,12 @@ interface InstituteRow {
 }
 
 interface Filters {
-  state_ids: number[];
-  district_ids: number[];
-  type_ids: number[];
-  ownership_ids: number[];
-  qualification_ids: number[];
-  stream_ids: number[];
+  state_ids: (number | string)[];
+  district_ids: (number | string)[];
+  type_ids: (number | string)[];
+  ownership_ids: (number | string)[];
+  qualification_ids: (number | string)[];
+  stream_ids: (number | string)[];
 }
 
 const EMPTY_FILTERS: Filters = {
@@ -166,8 +166,11 @@ export default function FindInstitutesPage() {
           api.get("/qualification"),
           api.get("/district?state_id=3"),
         ]);
-        setQualOpts(qualRes.data.map((q: any) => ({ value: q.qualificationid, label: q.qualification })));
-        setDistrictOpts(distRes.data.map((d: any) => ({ value: d.districtid, label: d.districtname }))
+        const qData = Array.isArray(qualRes.data) ? qualRes.data : qualRes.data?.data || [];
+        const dData = Array.isArray(distRes.data) ? distRes.data : distRes.data?.data || [];
+
+        setQualOpts(qData.map((q: any) => ({ value: q.qualificationid, label: q.qualification })));
+        setDistrictOpts(dData.map((d: any) => ({ value: d.lgddistrictId ?? d.districtid, label: d.districtname }))
           .sort((a: Option, b: Option) => a.label.localeCompare(b.label)));
       } catch (err) {
         console.error("Error loading options:", err);
@@ -180,30 +183,52 @@ export default function FindInstitutesPage() {
   useEffect(() => {
     const loadStreams = async () => {
       try {
-        let streamsToShow: Option[] = [];
+        const masterStreamsMap = new Map<string, number[]>();
         if (filters.qualification_ids.length > 0) {
           const streamPromises = filters.qualification_ids.map(id => api.get(`/stream-branch?qualification_id=${id}`));
           const streamResponses = await Promise.all(streamPromises);
-          const masterStreamsMap = new Map<number, string>();
           streamResponses.forEach(res => {
-            res.data.forEach((s: any) => masterStreamsMap.set(s.stream_branch_Id, s.stream_branch_name));
-          });
-          const inUseRes = await api.get("/institute-qualification-mapping/streams-in-use");
-          const inUseIds = new Set(inUseRes.data.map((s: any) => s.stream_branch_Id));
-          masterStreamsMap.forEach((label, value) => {
-            if (inUseIds.has(value)) streamsToShow.push({ value, label });
+            res.data.forEach((s: any) => {
+              const ids = masterStreamsMap.get(s.stream_branch_name) || [];
+              if (!ids.includes(s.stream_branch_Id)) ids.push(s.stream_branch_Id);
+              masterStreamsMap.set(s.stream_branch_name, ids);
+            });
           });
         } else {
-          const res = await api.get("/institute-qualification-mapping/streams-in-use");
-          streamsToShow = res.data.map((s: any) => ({ value: s.stream_branch_Id, label: s.stream_branch_name }));
+          // If no qualification selected, we skip master fetch or handle differently?
+          // The previous logic fetched from "streams-in-use" directly.
         }
-        streamsToShow.sort((a, b) => a.label.localeCompare(b.label));
-        setStreamOpts(streamsToShow);
+
+        const inUseRes = await api.get("/institute-qualification-mapping/streams-in-use");
+        const inUseIds = new Set(inUseRes.data.map((s: any) => s.stream_branch_Id));
+
+        if (filters.qualification_ids.length === 0) {
+          // Flatten inUseRes into the map
+          inUseRes.data.forEach((s: any) => {
+            const ids = masterStreamsMap.get(s.stream_branch_name) || [];
+            if (!ids.includes(s.stream_branch_Id)) ids.push(s.stream_branch_Id);
+            masterStreamsMap.set(s.stream_branch_name, ids);
+          });
+        }
+
+        const sortedNames = Array.from(masterStreamsMap.keys()).sort();
+        const finalOptions: Option[] = [];
+
+        sortedNames.forEach(name => {
+          const ids = masterStreamsMap.get(name)!;
+          const validIdsInPortal = ids.filter(id => inUseIds.has(id));
+          if (validIdsInPortal.length > 0) {
+            const groupedValue = validIdsInPortal.length === 1 ? validIdsInPortal[0] : validIdsInPortal.join(",");
+            finalOptions.push({ value: groupedValue, label: name });
+          }
+        });
+
+        setStreamOpts(finalOptions);
 
         // Cleanup
-        const validIds = new Set(streamsToShow.map(s => s.value));
+        const validValues = new Set(finalOptions.map(s => String(s.value)));
         setFilters(prev => {
-          const nextStreams = prev.stream_ids.filter(id => validIds.has(id));
+          const nextStreams = prev.stream_ids.filter(id => validValues.has(String(id)));
           return nextStreams.length !== prev.stream_ids.length ? { ...prev, stream_ids: nextStreams } : prev;
         });
       } catch (error) {

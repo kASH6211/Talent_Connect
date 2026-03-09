@@ -10,22 +10,45 @@ export class InstituteQualificationMappingService {
         private readonly repo: Repository<InstituteQualificationMapping>,
     ) { }
 
-    findAll(query?: any) {
+    async findAll(query?: any) {
+        const page = Number(query?.page) || 1;
+        const limit = Number(query?.limit) || 10;
+        const skip = (page - 1) * limit;
+        const search = query?.search;
+
         const qb = this.repo.createQueryBuilder('m')
             .leftJoinAndSelect('m.institute', 'institute')
             .leftJoinAndSelect('m.qualification', 'qualification')
             .leftJoinAndSelect('m.streamBranch', 'streamBranch')
             .leftJoinAndSelect('streamBranch.affiliation', 'affiliation')
             .leftJoinAndSelect('streamBranch.nsqf', 'nsqf')
-            .leftJoinAndSelect('streamBranch.courseDuration', 'courseDuration');
+            .leftJoinAndSelect('streamBranch.courseDuration', 'courseDuration')
+            .where('m.is_active = :active', { active: 'Y' });
 
         if (query?.role === 'institute' && query?.institute_id) {
-            qb.where('m.instituteId = :instituteId', { instituteId: query.institute_id });
+            qb.andWhere('m.instituteId = :instituteId', { instituteId: query.institute_id });
         } else if (query?.institute_id) {
-            qb.where('m.instituteId = :instituteId', { instituteId: query.institute_id });
+            qb.andWhere('m.instituteId = :instituteId', { instituteId: query.institute_id });
         }
 
-        return qb.getMany();
+        if (search) {
+            qb.andWhere(
+                '(LOWER(institute.institute_name) LIKE LOWER(:search) OR LOWER(qualification.qualification) LIKE LOWER(:search) OR LOWER(streamBranch.stream_branch_name) LIKE LOWER(:search))',
+                { search: `%${search}%` }
+            );
+        }
+
+        const [data, total] = await qb
+            .orderBy('qualification.qualification', 'ASC')
+            .addOrderBy('institute.institute_name', 'ASC')
+            .addOrderBy('streamBranch.stream_branch_name', 'ASC')
+            .addOrderBy('affiliation.affiliating_body', 'ASC')
+            .addOrderBy('courseDuration.courseduration', 'ASC')
+            .skip(skip)
+            .take(limit)
+            .getManyAndCount();
+
+        return { data, total, page, limit };
     }
 
     async findOne(id: number) {
