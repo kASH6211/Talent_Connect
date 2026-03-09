@@ -21,11 +21,11 @@ import {
   ChevronLeft,
   Mail,
   X,
+  AppWindow,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { clsx } from "clsx";
 import api from "@/lib/api";
-import { ThemeToggle } from "@/components2/ThemeToggle";
 import { useAuth } from "@/lib/AuthProvider";
 
 const adminNav = [
@@ -74,7 +74,10 @@ const adminNav = [
         label: "Institute ↔ Qualification",
         href: "/mappings/institute-qualification",
       },
-      { label: "Job Role ↔ Qualification", href: "/mappings/job-role-qualification" },
+      {
+        label: "Job Role ↔ Qualification",
+        href: "/mappings/job-role-qualification",
+      },
       {
         label: "Qualification ↔ Course",
         href: "/mappings/stream-branch-qualification",
@@ -109,23 +112,8 @@ const instituteNav = [
 const industryNav = [
   { icon: Search, label: "Find Institutes", href: "/find-institutes" },
   { icon: LayoutDashboard, label: "Dashboard", href: "/industry/dashboard" },
-  { icon: Send, label: "Sent EOI", href: "/sent-offers" },
+  { icon: AppWindow, label: "My Application", href: "/sent-offers" },
 ];
-
-const roleBadge: Record<string, { label: string; color: string }> = {
-  admin: {
-    label: "Administrator",
-    color: "bg-primary text-white border-primary/20 shadow-[0_2px_10px_-3px_rgba(var(--p),0.4)]",
-  },
-  institute: {
-    label: "Institute Portal",
-    color: "bg-primary text-white border-primary/20 shadow-[0_2px_10px_-3px_rgba(var(--p),0.4)]",
-  },
-  industry: {
-    label: "Industry Partner",
-    color: "bg-primary text-white border-primary/20 shadow-[0_2px_10px_-3px_rgba(var(--p),0.4)]",
-  },
-};
 
 function NavLink({ href, label, icon: Icon, collapsed }: any) {
   const pathname = usePathname();
@@ -169,7 +157,6 @@ function NavGroup({ item, collapsed }: any) {
   const isOpen = item.children?.some((c: any) => pathname.startsWith(c.href));
   const [open, setOpen] = useState(isOpen ?? false);
 
-  // Sync open state with forceOpen (used during search filtering)
   useEffect(() => {
     if (item.forceOpen) {
       setOpen(true);
@@ -280,7 +267,11 @@ export default function Sidebar({
         if (item.children) {
           const filteredChildren = filterNavItems(item.children, term);
           if (filteredChildren.length > 0 || matchesLabel) {
-            return { ...item, children: filteredChildren, forceOpen: filteredChildren.length > 0 };
+            return {
+              ...item,
+              children: filteredChildren,
+              forceOpen: filteredChildren.length > 0,
+            };
           }
         } else if (matchesLabel) {
           return item;
@@ -291,46 +282,55 @@ export default function Sidebar({
   };
 
   const navItems = filterNavItems(rawNavItems, searchTerm);
-  const badge = role ? (roleBadge[role] ?? roleBadge.admin) : roleBadge.admin;
+
+  // Simple role display (plain text)
+  const roleDisplay =
+    {
+      admin: "Administrator",
+      institute: "Institute Portal",
+      industry: "Industry Partner",
+    }[role || ""] || "User";
 
   return (
     <>
       {/* Mobile Overlay */}
-      {collapsed && (
+      {isMobile && mobileSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-40 lg:hidden pointer-events-none"
-          onClick={() => setCollapsed(true)}
+          className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setMobileSidebarOpen(false)}
         />
       )}
 
       <aside
         className={clsx(
-          isMobile ? "h-screen" : "h-full",
-          "flex flex-col",
-          isMobile && "fixed top-0 left-0 z-[100]",
+          "flex flex-col h-full",
           "bg-base-100 dark:bg-base-900",
           "border-r border-base-200 dark:border-base-800",
           "shadow-lg z-50 transition-all duration-300",
           isMobile
             ? mobileSidebarOpen
-              ? "translate-x-0 w-72"
-              : "-translate-x-full w-72"
+              ? "fixed top-0 left-0 translate-x-0 w-72"
+              : "fixed top-0 left-0 -translate-x-full w-72"
             : collapsed
               ? "w-20"
               : "w-72 lg:w-64",
         )}
       >
-        {/* Search Section (Replaces Logo) */}
+        {/* Search Section */}
         <div className="p-4 border-b border-base-200 dark:border-base-800">
-          <div className={clsx(
-            "relative flex items-center transition-all duration-300",
-            collapsed ? "w-10 h-10 mx-auto justify-center" : "w-full h-11"
-          )}>
-            <div className={clsx(
-              "transition-colors duration-300 z-10",
-              collapsed ? "" : "absolute left-3.5",
-              searchTerm ? "text-primary" : "text-base-content/40"
-            )}>
+          <div
+            className={clsx(
+              "relative flex items-center transition-all duration-300",
+              collapsed ? "w-10 h-10 mx-auto justify-center" : "w-full h-11",
+            )}
+          >
+            <div
+              className={clsx(
+                "transition-colors duration-300 z-10",
+                collapsed ? "" : "absolute left-3.5 top-1/2 -translate-y-1/2",
+                searchTerm ? "text-primary" : "text-base-content/40",
+              )}
+            >
               <Search size={18} />
             </div>
             {!collapsed && (
@@ -343,14 +343,14 @@ export default function Sidebar({
                   "w-full h-full pl-11 pr-10 rounded-xl text-[13px] transition-all duration-300 font-medium",
                   "bg-base-200/50 dark:bg-base-800/50 border-transparent",
                   "focus:bg-white dark:focus:bg-base-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none",
-                  "placeholder:text-base-content/30"
+                  "placeholder:text-base-content/30",
                 )}
               />
             )}
             {searchTerm && !collapsed && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="absolute right-3.5 text-base-content/30 hover:text-base-content/60 transition-colors p-1"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-base-content/30 hover:text-base-content/60 transition-colors p-1"
                 aria-label="Clear search"
               >
                 <X size={14} />
@@ -359,64 +359,65 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* User Profile Section - Commented out as now in Header */}
-        {/* {!loading && user && (
+        {/* User Info Section */}
+        {!loading && user && (
           <div
             className={clsx(
-              "px-4 py-6 border-b border-base-200 dark:border-base-800",
+              "px-4 py-5 border-b border-base-200 dark:border-base-800",
               "transition-all duration-300",
-              collapsed ? "flex flex-col items-center gap-4" : "space-y-4"
+              collapsed && "hidden",
             )}
           >
-            <div className={clsx(
-              "flex items-center gap-3.5",
-              collapsed ? "flex-col" : "flex-row"
-            )}>
+            <div className="flex items-start gap-3.5">
+              {/* Avatar / Icon */}
               <div className="relative shrink-0">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-[0_8px_16px_-4px_rgba(var(--p),0.3)] ring-2 ring-white dark:ring-base-900 group">
-                  <UserCircle
-                    size={22}
-                    className="text-primary-content opacity-90 group-hover:scale-110 transition-transform"
-                    aria-hidden="true"
-                  />
-                </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-base-900 shadow-sm" />
-              </div>
-
-              {!collapsed && (
-                <div className="flex-1 min-w-0">
-                  <p
-                    className="text-[13px] font-black text-base-content truncate tracking-tight"
-                    title={orgName || ""}
-                  >
-                    {orgName || "Organization"}
-                  </p>
-                  {user.username && (
-                    <p
-                      className="text-[11px] font-bold text-base-content/40 truncate tracking-wide leading-none mt-0.5"
-                      title={user.username}
-                    >
-                      @{user.username}
-                    </p>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center ring-1 ring-base-300 dark:ring-base-700 shadow-sm overflow-hidden">
+                  {user.profile_picture ? (
+                    <img
+                      src={user.profile_picture}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <UserCircle
+                      size={28}
+                      className="text-primary/70"
+                      strokeWidth={1.8}
+                    />
                   )}
                 </div>
-              )}
-            </div>
-
-            {!collapsed && (
-              <div
-                className={clsx(
-                  "inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] border transition-all duration-300 w-full justify-center group cursor-default",
-                  badge.color
-                )}
-              >
-                <span className="opacity-80 group-hover:opacity-100 transition-opacity">
-                  {badge.label}
-                </span>
+                {/* Optional online indicator - remove if not needed */}
+                {/* <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-base-100 dark:border-base-900" /> */}
               </div>
-            )}
+
+              {/* Text content */}
+              <div className="flex-1 min-w-0 space-y-1.5">
+                {/* Organization / Institute / Company Name */}
+                <p
+                  className="text-[15px] font-semibold text-base-content tracking-tight truncate"
+                  title={orgName || "Your Organization"}
+                >
+                  {orgName || "Your Organization"}
+                </p>
+
+                {/* Username */}
+                {user.username && (
+                  <p
+                    className="text-xs text-base-content/60 font-medium truncate leading-tight"
+                    title={user.username}
+                  >
+                    @{user.username}
+                  </p>
+                )}
+
+                {/* Role in subtle grey pill/box */}
+                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-base-200/70 dark:bg-base-800/60 text-base-content/70 border border-base-300/50 dark:border-base-700/50 mt-1">
+                  {roleDisplay}
+                </div>
+              </div>
+            </div>
           </div>
-        )} */}
+        )}
 
         {/* Navigation */}
         <nav className="flex-1 px-2 py-6 space-y-2.5 overflow-y-auto scrollbar-thin scrollbar-thumb-base-300 dark:scrollbar-thumb-base-700 scrollbar-track-transparent">
@@ -435,17 +436,23 @@ export default function Sidebar({
               ),
             )
           ) : (
-            <div className={clsx(
-              "flex flex-col items-center justify-center py-10 px-4 text-center animate-in fade-in slide-in-from-top-2 duration-300",
-              collapsed ? "opacity-0" : "opacity-100"
-            )}>
+            <div
+              className={clsx(
+                "flex flex-col items-center justify-center py-10 px-4 text-center animate-in fade-in slide-in-from-top-2 duration-300",
+                collapsed ? "opacity-0" : "opacity-100",
+              )}
+            >
               <div className="w-12 h-12 rounded-2xl bg-base-200 dark:bg-base-800 flex items-center justify-center mb-3 text-base-content/20">
                 <Search size={24} />
               </div>
               {!collapsed && (
                 <>
-                  <p className="text-xs font-bold text-base-content/50 uppercase tracking-wider">No matches</p>
-                  <p className="text-[10px] text-base-content/30 mt-1 uppercase tracking-widest">Check spelling</p>
+                  <p className="text-xs font-bold text-base-content/50 uppercase tracking-wider">
+                    No matches
+                  </p>
+                  <p className="text-[10px] text-base-content/30 mt-1 uppercase tracking-widest">
+                    Check spelling
+                  </p>
                 </>
               )}
             </div>
@@ -454,7 +461,6 @@ export default function Sidebar({
 
         {/* Bottom Controls */}
         <div className="p-2 border-t border-base-200 dark:border-base-800 bg-base-50 dark:bg-base-950/50 space-y-2">
-          {/* Collapse/Expand Button */}
           <button
             onClick={() => setCollapsed(!collapsed)}
             title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
@@ -484,26 +490,6 @@ export default function Sidebar({
               )}
             </div>
           </button>
-
-          {/* Logout Button - Commented out as now in Header dropdown */}
-          {/* <button
-            onClick={logout}
-            className={clsx(
-              "group w-full flex items-center justify-center lg:justify-start gap-3 px-3 py-2.5 rounded-lg",
-              "text-base-content/80 dark:text-base-content/70",
-              "hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300",
-              "transition-all duration-200 font-medium",
-            )}
-          >
-            {collapsed ? (
-              <LogOut size={18} aria-hidden="true" />
-            ) : (
-              <>
-                <LogOut size={18} aria-hidden="true" />
-                <span className="text-sm">Sign Out</span>
-              </>
-            )}
-          </button> */}
         </div>
       </aside>
     </>

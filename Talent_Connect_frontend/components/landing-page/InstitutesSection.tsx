@@ -59,9 +59,9 @@ const InstitutesSection = () => {
   const router = useRouter();
 
   return (
-    <section className="py-12 bg-background" id="institutes">
+    <section className="py-5 bg-background" id="institutes">
       <div className="container mx-auto px-2 sm:px-4 md:px-5 lg:px-6 text-center">
-        <h2 className="text-foreground text-2xl md:text-3xl text-blue-900 font-extrabold mb-8">
+        <h2 className="text-foreground text-2xl md:text-3xl text-primary font-bold mb-8">
           Explore Punjab Institutes
         </h2>
 

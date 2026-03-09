@@ -56,13 +56,10 @@ const PartnersSection = () => {
   const router = useRouter();
 
   return (
-    <section
-      className="py-12 md:py-16 relative overflow-hidden"
-      id="industries"
-    >
+    <section className="py-2 md:py-8 relative overflow-hidden" id="industries">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10 md:mb-12">
-          <h2 className="text-2xl md:text-4xl font-extrabold mb-3 heading-primary">
+          <h2 className="text-foreground text-2xl md:text-3xl text-primary font-bold mb-8">
             Our Partners
           </h2>
           <div className="h-1 w-20 bg-secondary mx-auto rounded-full"></div>
@@ -74,11 +71,9 @@ const PartnersSection = () => {
             {/* Left Blue Box */}
             <div className="bg-primary bg-gradient-to-br from-primary via-primary to-blue-900 text-white p-5 md:p-6 rounded-3xl lg:w-[220px] flex flex-col justify-center items-center text-center shadow-xl relative overflow-hidden group">
               <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <span className="text-[9px] uppercase tracking-[0.4em] opacity-60 mb-1 font-black">
-                Strategic
-              </span>
+
               <h3 className="font-black text-lg md:text-xl leading-tight tracking-tighter">
-                CSR TECH <br /> PARTNERS
+                CSR <br /> PARTNERS
               </h3>
             </div>
 
@@ -95,11 +90,9 @@ const PartnersSection = () => {
           {/* Training & Placement Partners */}
           <div className="flex flex-col lg:flex-row-reverse items-stretch gap-4 overflow-hidden bg-white rounded-3xl p-3 border border-slate-100 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)]">
             {/* Right Orange Box */}
-            <div className="bg-secondary bg-gradient-to-br from-secondary via-secondary to-yellow-600 text-white p-5 md:p-6 rounded-3xl lg:w-[260px] flex flex-col justify-center items-center text-center shadow-xl relative overflow-hidden group">
+            <div className="bg-secondary  text-white p-5 md:p-6 rounded-3xl lg:w-[260px] flex flex-col justify-center items-center text-center shadow-xl relative overflow-hidden group">
               <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <span className="text-[9px] uppercase tracking-[0.4em] opacity-60 mb-1 font-black">
-                Institutional
-              </span>
+
               <h3 className="font-black text-lg md:text-xl leading-tight tracking-tighter">
                 TRAINING & <br /> PLACEMENT
               </h3>

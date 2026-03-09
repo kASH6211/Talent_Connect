@@ -19,6 +19,7 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  ArrowDownToLine,
 } from "lucide-react";
 import api from "@/lib/api";
 import { useSelector } from "react-redux";
@@ -559,14 +560,14 @@ interface OfferRecord {
   collaboration_types?: string;
   additional_details?: string;
   status:
-  | "Sent"
-  | "Discussed"
-  | "Accepted"
-  | "Rejected"
-  | "Project initiated"
-  | "Project completed"
-  | "Withdrawn"
-  | "Pending";
+    | "Sent"
+    | "Discussed"
+    | "Accepted"
+    | "Rejected"
+    | "Project initiated"
+    | "Project completed"
+    | "Withdrawn"
+    | "Pending";
   institute: {
     institute_id: number;
     institute_name: string;
@@ -1034,30 +1035,33 @@ export default function SentOffersListView() {
     };
   }, [currentIndustry]);
 
-  const fetchOffers = useCallback(async (page = currentPage, currentLimit = limit) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      params.set("page", page.toString());
-      params.set("limit", currentLimit.toString());
-      if (searchTerm) params.set("search", searchTerm);
-      // Backend doesn't support full filtering yet, so we'll still do some client-side, 
-      // but we need to handle the new response format.
-      const res = await api.get(`/job-offer/sent?${params}`);
+  const fetchOffers = useCallback(
+    async (page = currentPage, currentLimit = limit) => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.set("page", page.toString());
+        params.set("limit", currentLimit.toString());
+        if (searchTerm) params.set("search", searchTerm);
+        // Backend doesn't support full filtering yet, so we'll still do some client-side,
+        // but we need to handle the new response format.
+        const res = await api.get(`/job-offer/sent?${params}`);
 
-      if (res.data && res.data.data) {
-        setOffers(res.data.data);
-        setTotalRecords(res.data.total);
-      } else {
-        setOffers(Array.isArray(res.data) ? res.data : []);
-        setTotalRecords(Array.isArray(res.data) ? res.data.length : 0);
+        if (res.data && res.data.data) {
+          setOffers(res.data.data);
+          setTotalRecords(res.data.total);
+        } else {
+          setOffers(Array.isArray(res.data) ? res.data : []);
+          setTotalRecords(Array.isArray(res.data) ? res.data.length : 0);
+        }
+      } catch {
+        setError("Failed to load sent offers.");
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      setError("Failed to load sent offers.");
-    } finally {
-      setLoading(false);
-    }
-  }, [searchTerm, currentPage, limit]);
+    },
+    [searchTerm, currentPage, limit],
+  );
 
   useEffect(() => {
     fetchOffers();
@@ -1285,67 +1289,98 @@ export default function SentOffersListView() {
         {!loading && !error && offers.length > 0 && (
           <>
             {/* Stat Cards - Icon on RIGHT */}
-            <div
-              className="sol-fade-up sol-delay-1"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "16px",
-                marginBottom: "32px",
-              }}
-            >
-              <StatCard
-                label="Total Sent"
-                count={total}
+            {/* Stat Cards - Clean & Professional */}
+            <div className="sol-fade-up sol-delay-1 grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+              {/* Total Sent - Active/Filterable */}
+              <button
                 onClick={() => setFilter("All")}
-                active={filter === "All"}
-                icon={TrendingUp}
-              // iconBg="linear-gradient(135deg,#6366f1,#8b5cf6)"
-              // countColor="#6366f1"
-              // activeClass="active-all"
-              />
-              <StatCard
-                label="Discussed"
-                count={discussed}
-                onClick={() => setFilter("Discussed")}
-                active={filter === "Discussed"}
-                icon={AlertCircle}
-              // iconBg="linear-gradient(135deg,#f59e0b,#fbbf24)"
-              // countColor="#f59e0b"
-              // activeClass="active-discussed"
-              />
-              <StatCard
-                label="Accepted"
-                count={accepted}
-                onClick={() => setFilter("Accepted")}
-                active={filter === "Accepted"}
-                icon={CheckCircle2}
-              // iconBg="linear-gradient(135deg,#10b981,#34d399)"
-              // countColor="#10b981"
-              // activeClass="active-accepted"
-              />
-              <StatCard
-                label="Pending Discussion (>2d)"
-                count={pendingDiscuss}
-                onClick={() => setFilter("PendingDiscuss")}
-                active={filter === "PendingDiscuss"}
-                icon={Clock}
-              // iconBg="linear-gradient(135deg,#ef4444,#f87171)"
-              // countColor="#ef4444"
-              // activeClass="active-rejected"
-              />
-              <StatCard
-                label="Pending Accept/Reject (>7d)"
-                count={pendingAccept}
-                onClick={() => setFilter("PendingAccept")}
-                active={filter === "PendingAccept"}
-                icon={Ban}
-              // iconBg="linear-gradient(135deg,#8b5cf6,#a78bfa)"
-              // countColor="#8b5cf6"
-              // activeClass="active-project"
-              />
-            </div>
+                className={clsx(
+                  "group relative",
+                  "bg-white border rounded-xl shadow-sm",
+                  "p-7 transition-all duration-200 ease-out",
+                  "hover:shadow-md hover:-translate-y-0.5 hover:border-indigo-200/70",
+                  filter === "All"
+                    ? "border-indigo-300/60 bg-indigo-50/30 shadow-indigo-100/40"
+                    : "border-gray-200/80",
+                )}
+              >
+                <div className="flex items-center gap-5">
+                  {/* Icon */}
+                  <div className="flex-shrink-0">
+                    <div
+                      className={clsx(
+                        "w-14 h-14 rounded-xl flex items-center justify-center",
+                        filter === "All"
+                          ? "bg-indigo-100 text-indigo-600"
+                          : "bg-gray-100 text-gray-500",
+                      )}
+                    >
+                      <TrendingUp size={28} strokeWidth={2} />
+                    </div>
+                  </div>
 
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                      Total EOI Sent
+                    </div>
+                    <div className="mt-1.5 text-3xl font-bold text-gray-900 tracking-tight">
+                      {total.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Active indicator */}
+                {filter === "All" && (
+                  <div className="absolute top-5 right-5">
+                    <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100/80 text-indigo-700 border border-indigo-200/60">
+                      Viewing
+                    </span>
+                  </div>
+                )}
+
+                {/* Hover arrow */}
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <ChevronRight size={20} className="text-indigo-400" />
+                </div>
+              </button>
+
+              {/* Received Responses - Disabled/Coming Soon */}
+              <div
+                className={clsx(
+                  "relative",
+                  "bg-white border border-gray-200/70 rounded-xl shadow-sm",
+                  "p-7 opacity-80 cursor-not-allowed",
+                  "flex items-center gap-5",
+                )}
+              >
+                <div className="flex items-center gap-5 flex-1">
+                  {/* Icon */}
+                  <div className="flex-shrink-0">
+                    <div className="w-14 h-14 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">
+                      <ArrowDownToLine size={28} strokeWidth={2} />
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                      Received Responses
+                    </div>
+                    <div className="mt-1.5 text-3xl font-bold text-gray-400 tracking-tight">
+                      {discussed.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Coming Soon badge - subtle & professional */}
+                <div className="absolute top-5 right-5">
+                  <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                    Coming Soon
+                  </span>
+                </div>
+              </div>
+            </div>
             {/* Filter label */}
             {filter !== "All" && (
               <div className="sol-filter-label sol-fade-up sol-delay-2">
@@ -1585,16 +1620,16 @@ export default function SentOffersListView() {
               {/* Additional Details */}
               {(selectedOffer.rows[0]?.job_description ||
                 selectedOffer.rows[0]?.additional_details) && (
-                  <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 text-sm">
-                      Additional Information
-                    </div>
-                    <div className="p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {selectedOffer.rows[0]?.job_description ||
-                        selectedOffer.rows[0]?.additional_details}
-                    </div>
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 text-sm">
+                    Additional Information
                   </div>
-                )}
+                  <div className="p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {selectedOffer.rows[0]?.job_description ||
+                      selectedOffer.rows[0]?.additional_details}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Footer */}

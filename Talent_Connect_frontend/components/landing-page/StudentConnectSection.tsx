@@ -47,11 +47,11 @@ const studentCards = [
 
 const StudentConnectSection = () => {
   return (
-    <section className="py-20" id="students">
+    <section className="py-5" id="students">
       <div className="container px-4 max-w-[1600px] mx-auto">
         {/* Heading */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-extrabold mb-4 heading-primary">
+        <div className="text-center mb-5">
+          <h2 className="text-foreground text-2xl md:text-3xl text-primary font-bold mb-8">
             Get Started
           </h2>
           <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full"></div>
