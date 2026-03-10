@@ -446,7 +446,7 @@ export default function FindInstitutesPage() {
 
           <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-4 shadow-xl overflow-visible">
             <div className="flex flex-col md:flex-row gap-4 items-end justify-between">
-              
+
               <div className="flex-1 w-full space-y-1.5 text-left">
                 <label className="text-xs font-bold text-white ml-1 tracking-wide">
                   District / Location
@@ -506,21 +506,21 @@ export default function FindInstitutesPage() {
                   buttonClassName="bg-white/10 border-white/20 text-white placeholder:text-white/60 h-10 rounded-xl hover:bg-white/20 transition-all text-xs focus:ring-1 focus:ring-white/30"
                 />
               </div>
-              
+
               <div className="flex md:flex-col items-center justify-between w-full md:w-auto h-full min-h-[40px] gap-2">
-                 <button
-                   onClick={resetFilters}
-                   className="text-white hover:bg-white/20 px-3 py-2 rounded-lg transition-colors text-xs font-bold flex items-center justify-center gap-2 whitespace-nowrap h-10 border border-white/10"
-                 >
-                   <X size={14} /> Reset
-                 </button>
-                 <div className="text-[11px] font-semibold text-white/80 whitespace-nowrap hidden md:block mt-1">
-                   {loading ? "Searching..." : `${total} found`}
-                 </div>
-                 {/* Mobile version count inline */}
-                 <div className="text-[11px] font-semibold text-white/80 whitespace-nowrap md:hidden">
-                    {loading ? "Searching..." : `${total} found`}
-                 </div>
+                <button
+                  onClick={resetFilters}
+                  className="text-white hover:bg-white/20 px-3 py-2 rounded-lg transition-colors text-xs font-bold flex items-center justify-center gap-2 whitespace-nowrap h-10 border border-white/10"
+                >
+                  <X size={14} /> Reset
+                </button>
+                <div className="text-[11px] font-semibold text-white/80 whitespace-nowrap hidden md:block mt-1">
+                  {loading ? "Searching..." : `${total} found`}
+                </div>
+                {/* Mobile version count inline */}
+                <div className="text-[11px] font-semibold text-white/80 whitespace-nowrap md:hidden">
+                  {loading ? "Searching..." : `${total} found`}
+                </div>
               </div>
             </div>
           </div>
@@ -579,7 +579,10 @@ export default function FindInstitutesPage() {
                   placeholder="Search institutes..."
                   className="input input-bordered w-full pl-11 pr-5 text-sm border-slate-300 focus:ring-2 focus:ring-blue-100"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
                 />
                 <Search
                   size={16}
