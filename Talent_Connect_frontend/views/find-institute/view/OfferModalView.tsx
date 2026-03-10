@@ -12,6 +12,8 @@ import {
   ChevronDown,
   ChevronUp,
   MapPin,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 
 import api from "@/lib/api";
@@ -25,7 +27,43 @@ interface Option {
   value: number | string;
 }
 
-type EoiType = "Placement" | "Industrial Training" | "Collaboration" | "";
+type EoiType = "Placement" | "Industrial Training" | "Collaboration";
+
+export interface EoiFormState {
+  isSaved: boolean;
+  jobTitle: string;
+  natureOfEngagement: string;
+  qualIds: (number | string)[];
+  streamIds: (number | string)[];
+  numStudents: string;
+  experience: string;
+  location: string;
+  isRemote: boolean;
+  salaryMin: string;
+  salaryMax: string;
+  startDate: string;
+  duration: string;
+  collabTypes: string[];
+  additionalDetails: string;
+}
+
+export const DEFAULT_FORM_STATE: EoiFormState = {
+  isSaved: false,
+  jobTitle: "",
+  natureOfEngagement: "",
+  qualIds: [],
+  streamIds: [],
+  numStudents: "",
+  experience: "",
+  location: "",
+  isRemote: false,
+  salaryMin: "",
+  salaryMax: "",
+  startDate: "",
+  duration: "",
+  collabTypes: [],
+  additionalDetails: "",
+};
 
 const NATURE_OPTIONS = [
   "Permanent employment",
@@ -59,34 +97,52 @@ function EoiTypeCard({
   label,
   desc,
   selected,
+  isSaved,
+  isPartiallyFilled,
   onClick,
 }: {
-  value: EoiType;
+  value: EoiType | "";
   label: string;
   desc: string;
   selected: boolean;
+  isSaved: boolean;
+  isPartiallyFilled: boolean;
   onClick: () => void;
 }) {
+  const getBorderColor = () => {
+    if (selected) return "border-primary bg-primary/10 shadow";
+    if (isSaved) return "border-green-500 bg-green-500/5 shadow-sm";
+    if (isPartiallyFilled) return "border-amber-500 bg-amber-500/5 shadow-sm";
+    return "border-base-300 dark:border-base-700 hover:border-primary/40";
+  };
+
+  const getIcon = () => {
+    if (isSaved) return <CheckCircle2 size={16} className="text-green-500" />;
+    if (isPartiallyFilled) return <AlertCircle size={16} className="text-amber-500" />;
+    return (
+      <span
+        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selected
+          ? "border-primary bg-primary"
+          : "border-base-400 dark:border-base-500"
+          }`}
+      >
+        {selected && (
+          <span className="w-1.5 h-1.5 rounded-full bg-white block" />
+        )}
+      </span>
+    );
+  };
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 rounded-xl border-2 p-4 text-left transition-all duration-150 ${selected
-        ? "border-primary bg-primary/10 shadow"
-        : "border-base-300 dark:border-base-700 hover:border-primary/40"
-        }`}
+      className={`relative flex-1 rounded-xl border-2 p-4 text-left transition-all duration-150 ${getBorderColor()}`}
     >
       <div className="flex items-center gap-2.5 mb-1">
-        <span
-          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selected
-            ? "border-primary bg-primary"
-            : "border-base-400 dark:border-base-500"
-            }`}
-        >
-          {selected && (
-            <span className="w-1.5 h-1.5 rounded-full bg-white block" />
-          )}
-        </span>
+        <div className="w-4 flex items-center justify-center">
+          {getIcon()}
+        </div>
         <span
           className={`text-sm font-bold ${selected ? "text-primary" : "text-base-content"
             }`}
@@ -95,6 +151,18 @@ function EoiTypeCard({
         </span>
       </div>
       <p className="text-xs text-base-content/50 ml-6.5 leading-relaxed">{desc}</p>
+
+      {/* Decorative tag */}
+      {isSaved && !selected && (
+        <span className="absolute top-2 right-2 text-[9px] font-bold uppercase tracking-wider text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
+          Saved
+        </span>
+      )}
+      {isPartiallyFilled && !isSaved && !selected && (
+        <span className="absolute top-2 right-2 text-[9px] font-bold uppercase tracking-wider text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
+          Draft
+        </span>
+      )}
     </button>
   );
 }
@@ -131,28 +199,14 @@ export function OfferModalV2({
 }) {
   const dispatch = useDispatch<AppDispatch>();
 
-  // Engagement type
-  const [eoiType, setEoiType] = useState<EoiType>("");
+  const [eoiType, setEoiType] = useState<EoiType | "">("");
 
-  // Fields for Placement / Industrial Training
-  const [jobTitle, setJobTitle] = useState("");
-  const [natureOfEngagement, setNatureOfEngagement] = useState("");
-  const [qualIds, setQualIds] = useState<(number | string)[]>(prefilledQualIds);
-  const [streamIds, setStreamIds] = useState<(number | string)[]>(prefilledStreamIds);
-  const [numStudents, setNumStudents] = useState("");
-  const [experience, setExperience] = useState("");
-  const [location, setLocation] = useState("");
-  const [isRemote, setIsRemote] = useState(false);
-  const [salaryMin, setSalaryMin] = useState("");
-  const [salaryMax, setSalaryMax] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [duration, setDuration] = useState("");
+  const [forms, setForms] = useState<Record<EoiType, EoiFormState>>({
+    "Placement": { ...DEFAULT_FORM_STATE },
+    "Industrial Training": { ...DEFAULT_FORM_STATE },
+    "Collaboration": { ...DEFAULT_FORM_STATE },
+  });
 
-  // Fields for Collaboration
-  const [collabTypes, setCollabTypes] = useState<string[]>([]);
-
-  // Common
-  const [additionalDetails, setAdditionalDetails] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [showAllInstitutes, setShowAllInstitutes] = useState(false);
@@ -166,8 +220,23 @@ export function OfferModalV2({
   // Sync prefilled ids when modal opens
   useEffect(() => {
     if (isOpen) {
-      setQualIds(prefilledQualIds);
-      setStreamIds(prefilledStreamIds);
+      setForms((prev) => {
+        const next = { ...prev };
+        const types: EoiType[] = ["Placement", "Industrial Training", "Collaboration"];
+
+        types.forEach(t => {
+          // Only overwrite if form is not saved and not partially filled
+          if (!prev[t].isSaved && !isPartiallyFilled(t)) {
+            next[t] = {
+              ...DEFAULT_FORM_STATE,
+              qualIds: prefilledQualIds,
+              streamIds: prefilledStreamIds
+            };
+          }
+        });
+
+        return next;
+      });
     }
   }, [isOpen, prefilledQualIds.join(","), prefilledStreamIds.join(",")]);
 
@@ -180,10 +249,11 @@ export function OfferModalV2({
 
   const clear = () => {
     setEoiType("");
-    setJobTitle(""); setNatureOfEngagement(""); setQualIds([]); setStreamIds([]);
-    setNumStudents(""); setExperience(""); setLocation(""); setIsRemote(false);
-    setSalaryMin(""); setSalaryMax(""); setStartDate(""); setDuration("");
-    setCollabTypes([]); setAdditionalDetails("");
+    setForms({
+      "Placement": { ...DEFAULT_FORM_STATE, qualIds: prefilledQualIds, streamIds: prefilledStreamIds },
+      "Industrial Training": { ...DEFAULT_FORM_STATE, qualIds: prefilledQualIds, streamIds: prefilledStreamIds },
+      "Collaboration": { ...DEFAULT_FORM_STATE, qualIds: prefilledQualIds, streamIds: prefilledStreamIds },
+    });
     setSending(false); setError(""); setShowAllInstitutes(false);
   };
 
@@ -192,56 +262,173 @@ export function OfferModalV2({
     setTimeout(() => {
       dispatch(updateUiInstitute({ bulkOffer: { open: false } }));
       onClose();
-      clear();
     }, 220);
   };
 
+  const handleFieldChange = (field: keyof EoiFormState, value: any) => {
+    if (!eoiType) return;
+    setError("");
+    setForms((prev) => ({
+      ...prev,
+      [eoiType]: {
+        ...prev[eoiType],
+        [field]: value,
+        isSaved: false,
+      },
+    }));
+  };
+
   const toggleCollab = (opt: string) => {
-    setCollabTypes((prev) =>
-      prev.includes(opt) ? prev.filter((o) => o !== opt) : [...prev, opt]
+    if (!eoiType) return;
+    const current = forms[eoiType].collabTypes;
+    handleFieldChange("collabTypes", current.includes(opt) ? current.filter((o) => o !== opt) : [...current, opt]);
+  };
+
+  const validateForm = (type: EoiType): string | null => {
+    const f = forms[type];
+    if (type !== "Collaboration" && !f.jobTitle.trim()) {
+      return `Job Role / Title is required for ${type}`;
+    }
+    if (type === "Collaboration" && f.collabTypes.length === 0) {
+      return "Select at least one collaboration type";
+    }
+    return null;
+  };
+
+  const saveCurrentTab = () => {
+    if (!eoiType) return;
+    const err = validateForm(eoiType);
+    if (err) {
+      setError(err);
+      return;
+    }
+    setForms((prev) => ({
+      ...prev,
+      [eoiType]: {
+        ...prev[eoiType],
+        isSaved: true,
+      },
+    }));
+    setError("");
+  };
+
+  const isPartiallyFilled = (type: EoiType) => {
+    const f = forms[type];
+    if (f.isSaved) return false;
+    // For Collaboration
+    if (type === "Collaboration") {
+      return f.collabTypes.length > 0 || f.additionalDetails.trim() !== "";
+    }
+    // For Placement/Training
+    return (
+      f.jobTitle.trim() !== "" ||
+      f.natureOfEngagement !== "" ||
+      f.numStudents !== "" ||
+      f.location !== "" ||
+      f.additionalDetails.trim() !== "" ||
+      (f.qualIds.length > 0 && f.qualIds.join(",") !== prefilledQualIds.join(",")) ||
+      (f.streamIds.length > 0 && f.streamIds.join(",") !== prefilledStreamIds.join(","))
     );
   };
 
   const handleSend = async () => {
-    if (!eoiType) { setError("Please select a purpose of engagement"); return; }
-    if (eoiType !== "Collaboration" && !jobTitle.trim()) {
-      setError("Job Role / Title is required"); return;
+    setError("");
+    const types: EoiType[] = ["Placement", "Industrial Training", "Collaboration"];
+
+    let updatedForms = { ...forms };
+
+    // Auto-save the current tab if it has data and isn't saved
+    if (eoiType && !forms[eoiType].isSaved && isPartiallyFilled(eoiType)) {
+      const err = validateForm(eoiType);
+      if (!err) {
+        updatedForms[eoiType] = { ...forms[eoiType], isSaved: true };
+        setForms(updatedForms);
+      }
     }
-    if (eoiType === "Collaboration" && collabTypes.length === 0) {
-      setError("Select at least one collaboration type"); return;
+
+    const savedForms = types.filter(t => updatedForms[t].isSaved);
+    const draftForms = types.filter(t => !updatedForms[t].isSaved && isPartiallyFilled(t));
+
+    if (savedForms.length === 0 && draftForms.length === 0) {
+      setError("Please select and fill at least one Purpose of Engagement.");
+      return;
     }
-    if (!isSelectAll && selectedIds.length === 0) { setError("Select at least one institute"); return; }
+
+    if (savedForms.length === 0 && draftForms.length > 0) {
+      const err = validateForm(draftForms[0]);
+      if (err) {
+        setError(`Please fix errors in ${draftForms[0]} before sending: ${err}`);
+        if (eoiType !== draftForms[0]) setEoiType(draftForms[0]);
+        return;
+      }
+      // If only one draft and it's valid, prompt to send
+      const confirmDraft = window.confirm(`The details for ${draftForms[0]} haven't been saved. Do you want to send it anyway?`);
+      if (!confirmDraft) {
+        if (eoiType !== draftForms[0]) setEoiType(draftForms[0]);
+        return;
+      }
+    } else if (draftForms.length > 0 && savedForms.length > 0) {
+      const confirmSend = window.confirm(
+        `You have partially filled incomplete drafts for: ${draftForms.join(", ")}.\n\n` +
+        `Do you want to send ONLY the saved ones (${savedForms.join(", ")})?`
+      );
+      if (!confirmSend) return;
+    }
+
+    const formsToSend = savedForms.length > 0 ? savedForms : draftForms;
+
+    // Final validation of forms to be sent
+    for (const t of formsToSend) {
+      const err = validateForm(t);
+      if (err) {
+        setError(`Error in ${t}: ${err}`);
+        if (eoiType !== t) setEoiType(t);
+        return;
+      }
+    }
+
+    if (!isSelectAll && selectedIds.length === 0) {
+      setError("Select at least one institute");
+      return;
+    }
 
     setSending(true);
     try {
-      await api.post("/job-offer/bulk", {
-        institute_ids: isSelectAll ? [] : selectedIds,
-        is_select_all: isSelectAll,
-        district_ids: searchFilters?.district_ids?.join(","),
-        qualification_ids: searchFilters?.qualification_ids?.join(","),
-        stream_ids: searchFilters?.stream_ids?.join(","),
-        search: searchTerm,
-        eoi_type: eoiType,
-        job_title: jobTitle || undefined,
-        nature_of_engagement: natureOfEngagement || undefined,
-        required_qualification_ids: qualIds.join(",") || undefined,
-        required_stream_ids: streamIds.join(",") || undefined,
-        number_of_posts: numStudents ? parseInt(numStudents) : undefined,
-        experience_required: experience || undefined,
-        location: location || undefined,
-        is_remote: isRemote,
-        salary_min: salaryMin ? parseFloat(salaryMin) : undefined,
-        salary_max: salaryMax ? parseFloat(salaryMax) : undefined,
-        start_date: startDate || undefined,
-        duration: duration || undefined,
-        collaboration_types: collabTypes.join("|") || undefined,
-        additional_details: additionalDetails || undefined,
+      const promises = formsToSend.map((type) => {
+        const f = updatedForms[type];
+        return api.post("/job-offer/bulk", {
+          institute_ids: isSelectAll ? [] : selectedIds,
+          is_select_all: isSelectAll,
+          district_ids: searchFilters?.district_ids?.join(","),
+          qualification_ids: searchFilters?.qualification_ids?.join(","),
+          stream_ids: searchFilters?.stream_ids?.join(","),
+          search: searchTerm,
+          eoi_type: type,
+          job_title: f.jobTitle || undefined,
+          nature_of_engagement: f.natureOfEngagement || undefined,
+          required_qualification_ids: f.qualIds.join(",") || undefined,
+          required_stream_ids: f.streamIds.join(",") || undefined,
+          number_of_posts: f.numStudents ? parseInt(f.numStudents) : undefined,
+          experience_required: f.experience || undefined,
+          location: f.location || undefined,
+          is_remote: f.isRemote,
+          salary_min: f.salaryMin ? parseFloat(f.salaryMin) : undefined,
+          salary_max: f.salaryMax ? parseFloat(f.salaryMax) : undefined,
+          start_date: f.startDate || undefined,
+          duration: f.duration || undefined,
+          collaboration_types: f.collabTypes.join("|") || undefined,
+          additional_details: f.additionalDetails || undefined,
+        });
       });
+
+      await Promise.all(promises);
+
       dispatch(updateUiInstitute({ bulkOffer: { open: false } }));
       onSent();
+      clear(); // Only clear state on successful submission
       handleClose();
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? "Failed to send EOI");
+      setError(e?.response?.data?.message ?? "Failed to send EOI. Some forms might not have been sent.");
     } finally {
       setSending(false);
     }
@@ -367,6 +554,8 @@ export function OfferModalV2({
                 label="Hire Students"
                 desc="Placement drive / recruitment for permanent or contract roles"
                 selected={eoiType === "Placement"}
+                isSaved={forms["Placement"].isSaved}
+                isPartiallyFilled={isPartiallyFilled("Placement")}
                 onClick={() => setEoiType("Placement")}
               />
               <EoiTypeCard
@@ -374,6 +563,8 @@ export function OfferModalV2({
                 label="Host for Industrial Training"
                 desc="Apprenticeship, OJT, or dual system training for students"
                 selected={eoiType === "Industrial Training"}
+                isSaved={forms["Industrial Training"].isSaved}
+                isPartiallyFilled={isPartiallyFilled("Industrial Training")}
                 onClick={() => setEoiType("Industrial Training")}
               />
               <EoiTypeCard
@@ -381,20 +572,22 @@ export function OfferModalV2({
                 label="Collaborate with Institute"
                 desc="Industrial visits, workshops, lab setup, CSR support"
                 selected={eoiType === "Collaboration"}
+                isSaved={forms["Collaboration"].isSaved}
+                isPartiallyFilled={isPartiallyFilled("Collaboration")}
                 onClick={() => setEoiType("Collaboration")}
               />
             </div>
           </section>
 
           {/* ── Section 2a: Hiring / Training fields ── */}
-          {isHiringOrTraining && (
-            <section className="space-y-4">
+          {isHiringOrTraining && eoiType && forms[eoiType] && (
+            <section className="space-y-4 animate-in fade-in duration-300">
               <p className={sectionLabelCls}>Engagement Details</p>
 
               {/* Job Role */}
               <div>
                 <label className={fieldLabelCls}>Job Role <span className="text-error">*</span></label>
-                <input type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)}
+                <input type="text" value={forms[eoiType].jobTitle} onChange={(e) => handleFieldChange("jobTitle", e.target.value)}
                   placeholder="e.g. Software Engineer, CNC Operator, Welder" className={inputCls} />
               </div>
 
@@ -402,7 +595,7 @@ export function OfferModalV2({
               {eoiType === "Placement" && (
                 <div>
                   <label className={fieldLabelCls}>Nature of Engagement</label>
-                  <select value={natureOfEngagement} onChange={(e) => setNatureOfEngagement(e.target.value)}
+                  <select value={forms[eoiType].natureOfEngagement} onChange={(e) => handleFieldChange("natureOfEngagement", e.target.value)}
                     className={inputCls}>
                     <option value="">Select nature…</option>
                     {NATURE_OPTIONS.filter(o => !(eoiType === "Placement" && o === "Industrial traineeship"))
@@ -414,8 +607,8 @@ export function OfferModalV2({
               {/* Qualification */}
               <div>
                 <label className={fieldLabelCls}>Qualification</label>
-                <MultiSelectDropdown label="Qualification" options={qualOptions} selected={qualIds}
-                  onChange={setQualIds} placeholder="Any qualification" disabledOptions={disabledQualIds} />
+                <MultiSelectDropdown label="Qualification" options={qualOptions} selected={forms[eoiType].qualIds}
+                  onChange={(vals) => handleFieldChange("qualIds", vals)} placeholder="Any qualification" disabledOptions={disabledQualIds} />
               </div>
 
               {/* Relevant Course */}
@@ -428,14 +621,14 @@ export function OfferModalV2({
                     .filter((opt) => {
                       const val = String(opt.value || "");
                       const ids = val.split(",").map(Number);
-                      return ids.every((id) => streamIds.includes(id as any));
+                      return ids.every((id) => forms[eoiType].streamIds.includes(id as any));
                     })
                     .map((opt) => opt.value)}
                   onChange={(vals) => {
                     const allIds = (vals as string[]).flatMap((v) =>
                       String(v || "").split(",").map(Number),
                     );
-                    setStreamIds(allIds);
+                    handleFieldChange("streamIds", allIds);
                   }}
                   placeholder="Any course"
                 />
@@ -445,12 +638,12 @@ export function OfferModalV2({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={fieldLabelCls}>Number of Students Required</label>
-                  <input type="number" value={numStudents} onChange={(e) => setNumStudents(e.target.value)}
+                  <input type="number" value={forms[eoiType].numStudents} onChange={(e) => handleFieldChange("numStudents", e.target.value)}
                     placeholder="e.g. 10" className={inputCls} />
                 </div>
                 <div>
                   <label className={fieldLabelCls}>Experience Required</label>
-                  <select value={experience} onChange={(e) => setExperience(e.target.value)} className={inputCls}>
+                  <select value={forms[eoiType].experience} onChange={(e) => handleFieldChange("experience", e.target.value)} className={inputCls}>
                     <option value="">Select…</option>
                     {EXPERIENCE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
                   </select>
@@ -462,11 +655,11 @@ export function OfferModalV2({
                 <label className={fieldLabelCls}>Location of Job / Training</label>
                 <div className="relative">
                   <MapPin size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base-content/40 pointer-events-none" />
-                  <input type="text" value={location} onChange={(e) => setLocation(e.target.value)}
+                  <input type="text" value={forms[eoiType].location} onChange={(e) => handleFieldChange("location", e.target.value)}
                     placeholder="City or address" className={`${inputCls} pl-9`} />
                 </div>
                 <label className="flex items-center gap-2 mt-2 cursor-pointer w-fit">
-                  <input type="checkbox" checked={isRemote} onChange={(e) => setIsRemote(e.target.checked)}
+                  <input type="checkbox" checked={forms[eoiType].isRemote} onChange={(e) => handleFieldChange("isRemote", e.target.checked)}
                     className="checkbox checkbox-primary checkbox-sm" />
                   <span className="text-xs font-medium text-base-content/70">Remote / Work from home option</span>
                 </label>
@@ -480,7 +673,7 @@ export function OfferModalV2({
                   </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-base-content/50 pointer-events-none">₹</span>
-                    <input type="number" value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)}
+                    <input type="number" value={forms[eoiType].salaryMin} onChange={(e) => handleFieldChange("salaryMin", e.target.value)}
                       placeholder="eg. 200000" className={`${inputCls} pl-8`} />
                   </div>
                 </div>
@@ -490,14 +683,14 @@ export function OfferModalV2({
                   </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-base-content/50 pointer-events-none">₹</span>
-                    <input type="number" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)}
+                    <input type="number" value={forms[eoiType].salaryMax} onChange={(e) => handleFieldChange("salaryMax", e.target.value)}
                       placeholder="eg. 500000" className={`${inputCls} pl-8`} />
                   </div>
                 </div>
                 <div>
                   <label className={fieldLabelCls}>Expected Start Date</label>
                   <div className="relative">
-                    <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+                    <input type="date" value={forms[eoiType].startDate} onChange={(e) => handleFieldChange("startDate", e.target.value)}
                       className={`${inputCls} pr-10`} />
                     <CalendarClock size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-base-content/40 pointer-events-none" />
                   </div>
@@ -507,20 +700,20 @@ export function OfferModalV2({
               {/* Duration */}
               <div>
                 <label className={fieldLabelCls}>Duration (if applicable — for internships, OJT, dual system)</label>
-                <input type="text" value={duration} onChange={(e) => setDuration(e.target.value)}
+                <input type="text" value={forms[eoiType].duration} onChange={(e) => handleFieldChange("duration", e.target.value)}
                   placeholder="e.g. 6 months, 1 year" className={inputCls} />
               </div>
             </section>
           )}
 
           {/* ── Section 2b: Collaboration fields ── */}
-          {eoiType === "Collaboration" && (
-            <section className="space-y-4">
+          {eoiType === "Collaboration" && forms[eoiType] && (
+            <section className="space-y-4 animate-in fade-in duration-300">
               <p className={sectionLabelCls}>Type of Collaboration <span className="text-error">*</span></p>
               <div className="space-y-2.5">
                 {COLLABORATION_OPTIONS.map((opt) => (
                   <label key={opt} className="flex items-center gap-3 cursor-pointer group p-3 rounded-xl border border-base-300 dark:border-base-700 hover:border-primary/40 hover:bg-primary/5 transition-all">
-                    <input type="checkbox" checked={collabTypes.includes(opt)} onChange={() => toggleCollab(opt)}
+                    <input type="checkbox" checked={forms[eoiType].collabTypes.includes(opt)} onChange={() => toggleCollab(opt)}
                       className="checkbox checkbox-primary checkbox-sm" />
                     <span className="text-sm font-medium text-base-content group-hover:text-primary transition-colors">{opt}</span>
                   </label>
@@ -530,14 +723,31 @@ export function OfferModalV2({
           )}
 
           {/* ── Section 3: Additional Details ── */}
-          {eoiType && (
-            <section>
+          {eoiType && forms[eoiType] && (
+            <section className="animate-in fade-in duration-300">
               <p className={sectionLabelCls}>Additional Details / Requirements</p>
-              <textarea value={additionalDetails} onChange={(e) => setAdditionalDetails(e.target.value)}
+              <textarea value={forms[eoiType].additionalDetails} onChange={(e) => handleFieldChange("additionalDetails", e.target.value)}
                 placeholder="Any other requirements, expectations, or context…"
                 rows={4}
                 className={`${inputCls} resize-y min-h-[90px] leading-relaxed`} />
             </section>
+          )}
+
+          {/* Tab Actions */}
+          {eoiType && forms[eoiType] && !forms[eoiType].isSaved && (
+            <div className="flex justify-end pt-2 animate-in fade-in duration-300">
+              <button
+                onClick={saveCurrentTab}
+                className="px-6 py-2 bg-primary/10 text-primary font-bold rounded-lg border border-primary/20 hover:bg-primary hover:text-white transition-all shadow-sm"
+              >
+                Save {eoiType} Details
+              </button>
+            </div>
+          )}
+          {eoiType && forms[eoiType] && forms[eoiType].isSaved && (
+            <div className="flex justify-end pt-2 items-center gap-2 text-green-600 font-semibold text-sm animate-in fade-in duration-300">
+              <CheckCircle2 size={16} /> Data saved for {eoiType}. You can fill another type or click Send.
+            </div>
           )}
 
           {/* Error */}

@@ -19,7 +19,7 @@ import {
   BookOpen,
   LogIn,
 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import MultiSelectDropdown, { Option } from "@/components/MultiSelectDropdown";
 import { useDispatch, useSelector } from "react-redux";
@@ -122,6 +122,13 @@ export default function FindInstitutesPage() {
   );
   const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user?.role === 'industry') {
+      router.push('/find-institutes');
+    }
+  }, [user, router]);
 
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [institutes, setInstitutes] = useState<InstituteRow[]>([]);
@@ -755,18 +762,20 @@ export default function FindInstitutesPage() {
                                     >
                                       <Eye size={14} />
                                     </button>
-                                    <button
-                                      onClick={() => {
-                                        if (!selected.has(inst.institute_id)) {
-                                          toggleSelect(inst.institute_id);
-                                        }
-                                        setShowLoginPrompt(true);
-                                      }}
-                                      className="px-3 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center gap-1.5 transition-all"
-                                    >
-                                      <LogIn size={14} />
-                                      Connect
-                                    </button>
+                                    {!user && (
+                                      <button
+                                        onClick={() => {
+                                          if (!selected.has(inst.institute_id)) {
+                                            toggleSelect(inst.institute_id);
+                                          }
+                                          setShowLoginPrompt(true);
+                                        }}
+                                        className="px-3 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center gap-1.5 transition-all"
+                                      >
+                                        <LogIn size={14} />
+                                        Connect
+                                      </button>
+                                    )}
                                   </div>
                                 </td>
                               </tr>
@@ -842,17 +851,19 @@ export default function FindInstitutesPage() {
                               >
                                 <Eye size={12} />
                               </button>
-                              <button
-                                onClick={() => {
-                                  if (!selected.has(inst.institute_id)) {
-                                    toggleSelect(inst.institute_id);
-                                  }
-                                  setShowLoginPrompt(true);
-                                }}
-                                className="flex-1 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-700"
-                              >
-                                <LogIn size={12} /> Connect
-                              </button>
+                              {!user && (
+                                <button
+                                  onClick={() => {
+                                    if (!selected.has(inst.institute_id)) {
+                                      toggleSelect(inst.institute_id);
+                                    }
+                                    setShowLoginPrompt(true);
+                                  }}
+                                  className="flex-1 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-700"
+                                >
+                                  <LogIn size={12} /> Connect
+                                </button>
+                              )}
                             </div>
                           </div>
                         );
@@ -861,7 +872,7 @@ export default function FindInstitutesPage() {
                   </div>
 
                   {/* Sticky Send Button */}
-                  {(selected.size > 0 || isSelectAll) && (
+                  {!user && (selected.size > 0 || isSelectAll) && (
                     <div className="sticky bottom-0 left-0 right-0 z-30 mt-4 bg-white border-t border-slate-200 shadow-lg">
                       <div className="px-4 py-4 lg:px-6">
                         <button
