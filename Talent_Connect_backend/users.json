@@ -1,0 +1,32 @@
+[
+  {
+    "id": 17,
+    "username": "admin",
+    "email": "admin@example.com",
+    "role": "superadmin"
+  },
+  {
+    "id": 18,
+    "username": "inst_00001",
+    "email": "principalgigtasr@gmail.com",
+    "role": "institute"
+  },
+  {
+    "id": 19,
+    "username": "inst_00002",
+    "email": "gtijal@gmail.com",
+    "role": "institute"
+  },
+  {
+    "id": 20,
+    "username": "inst_00003",
+    "email": "principalgitcktludhiana@gmail.com",
+    "role": "institute"
+  },
+  {
+    "id": 21,
+    "username": "inst_00004",
+    "email": "gpcfzr@gmail.com",
+    "role": "institute"
+  }
+]
