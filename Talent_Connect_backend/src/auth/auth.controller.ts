@@ -60,7 +60,8 @@ export class AuthController {
 
         if (!tokenPayload) {
             console.warn(`[SSO Callback] Missing payload in ${method} request.`);
-            return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:4000'}/login?error=Missing+SSO+Payload`);
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4000';
+            return res.redirect(`${frontendUrl}/login?error=Missing+SSO+Payload`);
         }
 
         try {
@@ -76,15 +77,18 @@ export class AuthController {
             } else if (role === 'superadmin') {
                 dashboardPath = '/admin/dashboard';
             }
-            const redirectUrl = new URL(`${process.env.FRONTEND_URL || 'http://localhost:4000'}${dashboardPath}`);
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4000';
+            const redirectUrl = new URL(`${frontendUrl}${dashboardPath}`);
             redirectUrl.searchParams.set('token', result.access_token);
 
+            console.log(`[SSO Callback] Redirecting to: ${redirectUrl.toString()}`);
             return res.redirect(redirectUrl.toString());
         } catch (error) {
             console.error('SSO Callback Error:', error);
             const errorLog = `--- SSO Callback Error at ${new Date().toISOString()} ---\n${error.stack}\n\n`;
             fs.appendFileSync(logFilePath, errorLog);
-            return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:4000'}/login?error=SSO+Failed`);
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4000';
+            return res.redirect(`${frontendUrl}/login?error=SSO+Failed`);
         }
     }
 }
