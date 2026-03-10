@@ -479,7 +479,7 @@ export default function FindInstitutesPage() {
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-tight">
-              Find Institutes
+              Explore Institutes
             </h1>
             <p className="text-sm text-slate-600 mt-0.5">
               Search | Filter | Connect
@@ -488,25 +488,7 @@ export default function FindInstitutesPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Total Sent EOI Counter */}
-          <div className="px-5 py-2.5 rounded-2xl bg-indigo-50 border border-indigo-100 shadow-sm flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white">
-              <Send size={18} />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">
-                Total EOI Sent
-              </p>
-              <div className="flex items-baseline gap-1">
-                <p className="text-xl font-extrabold text-slate-900 leading-none">
-                  {sentCount}
-                </p>
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
-                  offers
-                </span>
-              </div>
-            </div>
-          </div>
+
 
           {searched && !loading && (
             <div className="flex items-center gap-3">

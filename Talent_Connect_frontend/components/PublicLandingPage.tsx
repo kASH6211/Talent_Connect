@@ -128,6 +128,9 @@ export default function FindInstitutesPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [isSelectAll, setIsSelectAll] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
 
   const [districtOpts, setDistrictOpts] = useState<Option[]>([]);
   const [qualOpts, setQualOpts] = useState<Option[]>([]);
@@ -253,6 +256,7 @@ export default function FindInstitutesPage() {
     setLoading(true);
     setSearched(true);
     setSelected(new Set());
+    setIsSelectAll(false);
 
     const params = new URLSearchParams();
     if (filters.district_ids.length)
@@ -375,22 +379,36 @@ export default function FindInstitutesPage() {
     return null;
   };
 
-  const toggleSelect = (id: number) =>
+  const allSelected =
+    isSelectAll || (Array.isArray(institutes) &&
+      institutes.length > 0 &&
+      institutes.every((i) => selected.has(i.institute_id)));
+
+  const toggleSelect = (id: number) => {
+    setIsSelectAll(false);
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+  };
 
-  const allSelected =
-    institutes.length > 0 &&
-    institutes.every((i) => selected.has(i.institute_id));
-
-  const toggleAll = () =>
-    setSelected(
-      allSelected ? new Set() : new Set(institutes.map((i) => i.institute_id)),
-    );
+  const toggleAll = () => {
+    if (allSelected) {
+      setIsSelectAll(false);
+      setSelected(new Set());
+    } else {
+      setIsSelectAll(true);
+      setSelected(
+        new Set(
+          (Array.isArray(institutes) ? institutes : []).map(
+            (i) => i.institute_id,
+          ),
+        ),
+      );
+    }
+  };
 
   const institutesMap = new Map(
     institutes.map((i) => [i.institute_id, i.institute_name]),
@@ -413,24 +431,24 @@ export default function FindInstitutesPage() {
   return (
     <div className="w-full mx-auto">
       {/* Header - unchanged */}
-      <div className="bg-primary text-white pt-10 pb-16 px-4 lg:px-8 relative overflow-visible border-b border-white/5">
+      <div className="bg-primary text-white pt-8 pb-10 px-4 lg:px-8 relative overflow-visible border-b border-white/5">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl" />
         </div>
 
         <div className="max-w-5xl mx-auto relative z-10 text-center">
-          <div className="flex flex-col items-center gap-4 mb-10">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
+          <div className="flex flex-col items-center gap-2 mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white m-0 p-0">
               Explore Institutes in Punjab
             </h1>
-
           </div>
 
-          <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 shadow-2xl overflow-visible">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2 text-left">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-4 shadow-xl overflow-visible">
+            <div className="flex flex-col md:flex-row gap-4 items-end justify-between">
+              
+              <div className="flex-1 w-full space-y-1.5 text-left">
+                <label className="text-xs font-bold text-white ml-1 tracking-wide">
                   District / Location
                 </label>
                 <MultiSelectDropdown
@@ -442,11 +460,12 @@ export default function FindInstitutesPage() {
                     setCurrentPage(1);
                   }}
                   placeholder="All Locations"
-                  buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/40 h-11 rounded-xl hover:bg-white/20 transition-all text-xs"
+                  buttonClassName="bg-white/10 border-white/20 text-white placeholder:text-white/60 h-10 rounded-xl hover:bg-white/20 transition-all text-xs focus:ring-1 focus:ring-white/30"
                 />
               </div>
-              <div className="space-y-2 text-left">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">
+
+              <div className="flex-1 w-full space-y-1.5 text-left">
+                <label className="text-xs font-bold text-white ml-1 tracking-wide">
                   Qualification
                 </label>
                 <MultiSelectDropdown
@@ -458,11 +477,12 @@ export default function FindInstitutesPage() {
                     setCurrentPage(1);
                   }}
                   placeholder="All Qualifications"
-                  buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/40 h-11 rounded-xl hover:bg-white/20 transition-all text-xs"
+                  buttonClassName="bg-white/10 border-white/20 text-white placeholder:text-white/60 h-10 rounded-xl hover:bg-white/20 transition-all text-xs focus:ring-1 focus:ring-white/30"
                 />
               </div>
-              <div className="space-y-2 text-left">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 ml-1">
+
+              <div className="flex-1 w-full space-y-1.5 text-left">
+                <label className="text-xs font-bold text-white ml-1 tracking-wide">
                   Specialization
                 </label>
                 <MultiSelectDropdown
@@ -483,21 +503,24 @@ export default function FindInstitutesPage() {
                     setCurrentPage(1);
                   }}
                   placeholder="All Specializations"
-                  buttonClassName="bg-white/10 border-white/10 text-white placeholder:text-white/40 h-11 rounded-xl hover:bg-white/20 transition-all text-xs"
+                  buttonClassName="bg-white/10 border-white/20 text-white placeholder:text-white/60 h-10 rounded-xl hover:bg-white/20 transition-all text-xs focus:ring-1 focus:ring-white/30"
                 />
               </div>
-            </div>
-
-            <div className="flex justify-between items-center mt-6 pt-5 border-t border-white/5">
-              <button
-                onClick={resetFilters}
-                className="text-[10px] font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-2"
-              >
-                <X size={14} />
-                Reset Filters
-              </button>
-              <div className="text-[10px] font-medium text-slate-500 italic">
-                {loading ? "Searching..." : `Showing ${total} institutes`}
+              
+              <div className="flex md:flex-col items-center justify-between w-full md:w-auto h-full min-h-[40px] gap-2">
+                 <button
+                   onClick={resetFilters}
+                   className="text-white hover:bg-white/20 px-3 py-2 rounded-lg transition-colors text-xs font-bold flex items-center justify-center gap-2 whitespace-nowrap h-10 border border-white/10"
+                 >
+                   <X size={14} /> Reset
+                 </button>
+                 <div className="text-[11px] font-semibold text-white/80 whitespace-nowrap hidden md:block mt-1">
+                   {loading ? "Searching..." : `${total} found`}
+                 </div>
+                 {/* Mobile version count inline */}
+                 <div className="text-[11px] font-semibold text-white/80 whitespace-nowrap md:hidden">
+                    {loading ? "Searching..." : `${total} found`}
+                 </div>
               </div>
             </div>
           </div>
@@ -731,12 +754,10 @@ export default function FindInstitutesPage() {
                                     </button>
                                     <button
                                       onClick={() => {
-                                        toggleSelect(inst.institute_id);
-                                        dispatch(
-                                          updateLoginUi({
-                                            roleSelectModal: { open: true },
-                                          }),
-                                        );
+                                        if (!selected.has(inst.institute_id)) {
+                                          toggleSelect(inst.institute_id);
+                                        }
+                                        setShowLoginPrompt(true);
                                       }}
                                       className="px-3 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center gap-1.5 transition-all"
                                     >
@@ -820,12 +841,10 @@ export default function FindInstitutesPage() {
                               </button>
                               <button
                                 onClick={() => {
-                                  toggleSelect(inst.institute_id);
-                                  dispatch(
-                                    updateLoginUi({
-                                      roleSelectModal: { open: true },
-                                    }),
-                                  );
+                                  if (!selected.has(inst.institute_id)) {
+                                    toggleSelect(inst.institute_id);
+                                  }
+                                  setShowLoginPrompt(true);
                                 }}
                                 className="flex-1 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-700"
                               >
@@ -839,19 +858,11 @@ export default function FindInstitutesPage() {
                   </div>
 
                   {/* Sticky Send Button */}
-                  {selected.size > 0 && (
+                  {(selected.size > 0 || isSelectAll) && (
                     <div className="sticky bottom-0 left-0 right-0 z-30 mt-4 bg-white border-t border-slate-200 shadow-lg">
                       <div className="px-4 py-4 lg:px-6">
                         <button
-                          onClick={() =>
-                            dispatch(
-                              dispatch(
-                                updateLoginUi({
-                                  roleSelectModal: { open: true },
-                                }),
-                              ),
-                            )
-                          }
+                          onClick={() => setShowLoginPrompt(true)}
                           className={clsx(
                             "group w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl",
                             "bg-gradient-to-r from-primary via-blue-600 to-indigo-600",
@@ -865,8 +876,8 @@ export default function FindInstitutesPage() {
                             className="group-hover:rotate-12 transition-transform duration-300"
                           />
                           <span className="text-base">
-                            Send to <strong>{selected.size}</strong> institute
-                            {selected.size !== 1 ? "s" : ""}
+                            Send to <strong>{isSelectAll ? total : selected.size}</strong> institute
+                            {(isSelectAll ? total : selected.size) !== 1 ? "s" : ""}
                           </span>
                         </button>
                       </div>
@@ -997,6 +1008,40 @@ export default function FindInstitutesPage() {
             <button onClick={() => setSentSuccess(false)}>
               <X size={15} />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Login Prompt Modal */}
+      {showLoginPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <LogIn size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Login Required</h3>
+              <p className="text-sm text-slate-600 mb-6">
+                Please login or create an account to connect with institutes and send job offers.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLoginPrompt(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLoginPrompt(false);
+                    dispatch(updateLoginUi({ roleSelectModal: { open: true } }));
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30"
+                >
+                  Login
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
