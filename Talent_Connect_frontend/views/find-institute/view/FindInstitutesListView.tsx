@@ -783,7 +783,9 @@ export default function FindInstitutesPage() {
                                     <button
                                       onClick={(e: any) => {
                                         e.stopPropagation();
-                                        toggleSelect(inst.institute_id);
+                                        if (!selected.has(inst.institute_id)) {
+                                          toggleSelect(inst.institute_id);
+                                        }
                                         dispatch(
                                           updateUiInstitute({
                                             bulkOffer: { open: true },
@@ -881,7 +883,9 @@ export default function FindInstitutesPage() {
                               <button
                                 onClick={(e: any) => {
                                   e.stopPropagation();
-                                  toggleSelect(inst.institute_id);
+                                  if (!selected.has(inst.institute_id)) {
+                                    toggleSelect(inst.institute_id);
+                                  }
                                   dispatch(
                                     updateUiInstitute({
                                       bulkOffer: { open: true },

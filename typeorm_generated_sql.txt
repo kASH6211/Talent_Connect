@@ -1,0 +1,6 @@
+SELECT i.institute_id AS institute_id, i.institute_name AS institute_name, (
+                SELECT COALESCE(SUM(sc.studentcount), 0)
+                FROM student_count sc
+                JOIN mapping_institute_qualification miq ON sc.institute_qualification_id = miq.institute_qualification_id
+                WHERE miq."instituteId" = i.institute_id
+            ) AS "student_count" FROM "master_institute" "i" WHERE i.is_active = 'Y' LIMIT 5

@@ -190,6 +190,7 @@ export class InstituteService {
     const typeMap = Object.fromEntries(allTypes.map((t: any) => [t.institute_type_id, t.institute_type]));
     const ownMap = Object.fromEntries(allOwns.map((o: any) => [o.institute_ownership_type_id, o.institute_type]));
 
+
     const data = rows.map(r => ({
       institute_id: r.institute_id,
       institute_name: r.institute_name,
@@ -209,7 +210,6 @@ export class InstituteService {
       latitude: r.latitude ?? null,
       longitude: r.longitude ?? null,
     }));
-
     return { data, total, page, limit };
   }
 

@@ -1,0 +1,72 @@
+{
+  "sessions": [
+    {
+      "is_active": "Y",
+      "created_date": null,
+      "createdby": null,
+      "updated_date": null,
+      "updatedby": null,
+      "sessionid": 1,
+      "session": "2024-2026"
+    },
+    {
+      "is_active": "Y",
+      "created_date": null,
+      "createdby": null,
+      "updated_date": null,
+      "updatedby": null,
+      "sessionid": 2,
+      "session": "2025-2026"
+    },
+    {
+      "is_active": "Y",
+      "created_date": null,
+      "createdby": null,
+      "updated_date": null,
+      "updatedby": null,
+      "sessionid": 3,
+      "session": "2025-2027"
+    }
+  ],
+  "totalStudentCountRecords": "1743",
+  "totalMappingRecords": "1381",
+  "sampleCountRecords": [
+    {
+      "studentcountid": 2,
+      "studentcount": 15,
+      "institute_qualification_id": 1,
+      "instituteId": 1,
+      "session": "2025-2027"
+    },
+    {
+      "studentcountid": 3,
+      "studentcount": 31,
+      "institute_qualification_id": 2,
+      "instituteId": 1,
+      "session": "2024-2026"
+    },
+    {
+      "studentcountid": 4,
+      "studentcount": 44,
+      "institute_qualification_id": 2,
+      "instituteId": 1,
+      "session": "2025-2027"
+    },
+    {
+      "studentcountid": 7,
+      "studentcount": 29,
+      "institute_qualification_id": 3,
+      "instituteId": 1,
+      "session": "2024-2026"
+    },
+    {
+      "studentcountid": 8,
+      "studentcount": 17,
+      "institute_qualification_id": 3,
+      "instituteId": 1,
+      "session": "2025-2027"
+    }
+  ],
+  "orphanedCountRecords": "0",
+  "databaseCurrentYear": "2026"
+}
