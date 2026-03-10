@@ -10,9 +10,10 @@ export class QualificationService {
     private readonly repo: Repository<Qualification>,
   ) { }
 
-  async findAll(page?: number, limit?: number, search?: string) {
-    const take = Number(limit) || 10;
-    const skip = ((Number(page) || 1) - 1) * take;
+  async findAll(page?: number, limit?: number | string, search?: string) {
+    const isFetchingAll = limit === 0 || limit === '0' || limit === 'all';
+    const take = isFetchingAll ? undefined : (Number(limit) || 10);
+    const skip = isFetchingAll ? undefined : ((Number(page) || 1) - 1) * take!;
 
     const where: any = { is_active: 'Y' };
     if (search) {
@@ -21,11 +22,11 @@ export class QualificationService {
 
     const [data, total] = await this.repo.findAndCount({
       where,
-      take,
-      skip,
+      ...(take && { take }),
+      ...(skip !== undefined && { skip }),
       order: { qualificationid: 'DESC' } as any,
     });
-    return { data, total, page: Number(page) || 1, limit: take };
+    return { data, total, page: isFetchingAll ? 1 : (Number(page) || 1), limit: isFetchingAll ? total : take };
   }
 
   async findOne(id: number) {

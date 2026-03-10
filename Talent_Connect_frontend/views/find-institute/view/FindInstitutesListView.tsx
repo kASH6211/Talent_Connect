@@ -176,8 +176,8 @@ export default function FindInstitutesPage() {
     const loadStaticOptions = async () => {
       try {
         const [qualRes, distRes] = await Promise.all([
-          api.get("/qualification"),
-          api.get("/district?state_id=3"),
+          api.get("/qualification?limit=0"),
+          api.get("/district?state_id=3&limit=0"),
         ]);
 
         const qData = Array.isArray(qualRes.data)

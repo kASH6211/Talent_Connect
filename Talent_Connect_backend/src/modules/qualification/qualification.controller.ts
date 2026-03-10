@@ -16,7 +16,7 @@ export class QualificationController {
   @Get()
   findAll(
     @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('limit') limit?: number | string,
     @Query('search') search?: string,
   ) {
     return this.service.findAll(page, limit, search);

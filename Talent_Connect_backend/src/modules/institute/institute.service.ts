@@ -130,6 +130,14 @@ export class InstituteService {
 
     // 2. Get paginated results
     const qb = baseQuery('i');
+    let countFilters = '';
+    if (qualIds.length) {
+      countFilters += ` AND miq.qualificationid IN (${qualIds.join(',')})`;
+    }
+    if (streamIds.length) {
+      countFilters += ` AND miq."stream_branch_Id" IN (${streamIds.join(',')})`;
+    }
+
     qb.select([
       'i.institute_id              AS institute_id',
       'i.institute_name            AS institute_name',
@@ -152,7 +160,7 @@ export class InstituteService {
       SELECT COALESCE(SUM(sc.studentcount), 0)
       FROM student_count sc
       JOIN mapping_institute_qualification miq ON sc.institute_qualification_id = miq.institute_qualification_id
-      WHERE miq."instituteId" = i.institute_id
+      WHERE miq."instituteId" = i.institute_id ${countFilters}
     )`, 'student_count')
       .addSelect(`(
       SELECT COALESCE(SUM(sc.studentcount), 0)
@@ -161,11 +169,12 @@ export class InstituteService {
       JOIN master_session ms ON sc.sessionid = ms.sessionid
       WHERE miq."instituteId" = i.institute_id
         AND ms.session LIKE '%' || extract(year from current_date)::text
+        ${countFilters}
     )`, 'final_year_student_count')
       .addSelect(`(
       SELECT COUNT(*)
       FROM mapping_institute_qualification miq
-      WHERE miq."instituteId" = i.institute_id
+      WHERE miq."instituteId" = i.institute_id ${countFilters}
     )`, 'course_count');
 
     const sortCol = q.sort === 'name' ? 'i.institute_name' : 'student_count';
