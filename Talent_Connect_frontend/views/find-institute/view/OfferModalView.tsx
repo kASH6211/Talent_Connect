@@ -113,6 +113,7 @@ export function OfferModalV2({
   isSelectAll = false,
   searchFilters = {},
   searchSort = "student_count",
+  searchTerm = "",
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -126,6 +127,7 @@ export function OfferModalV2({
   isSelectAll?: boolean;
   searchFilters?: any;
   searchSort?: string;
+  searchTerm?: string;
 }) {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -218,6 +220,7 @@ export function OfferModalV2({
         district_ids: searchFilters?.district_ids?.join(","),
         qualification_ids: searchFilters?.qualification_ids?.join(","),
         stream_ids: searchFilters?.stream_ids?.join(","),
+        search: searchTerm,
         eoi_type: eoiType,
         job_title: jobTitle || undefined,
         nature_of_engagement: natureOfEngagement || undefined,

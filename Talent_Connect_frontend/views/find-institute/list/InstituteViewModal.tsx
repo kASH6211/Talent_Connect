@@ -30,6 +30,7 @@ export interface Institute {
   type?: string;
   ownership?: string;
   student_count?: number;
+  course_count?: number;
   established_year?: number;
   website?: string;
   affiliation?: string;
@@ -227,7 +228,7 @@ export function InstituteViewModal({
             </div>
             <div className="flex-1 bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-800 shadow-sm rounded-xl p-3 text-center">
               <p className="text-[11px] font-bold text-base-content/50 uppercase tracking-wider mb-1">Courses</p>
-              <p className="text-lg font-black text-base-content">15</p>
+              <p className="text-lg font-black text-base-content">{institute.course_count || '0'}</p>
             </div>
             <div className="flex-1 bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-800 shadow-sm rounded-xl p-3 text-center">
               <p className="text-[11px] font-bold text-secondary uppercase tracking-wider mb-1">Rank</p>

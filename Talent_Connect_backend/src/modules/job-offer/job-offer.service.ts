@@ -10,6 +10,7 @@ export interface BulkOfferDto {
     district_ids?: string;
     qualification_ids?: string;
     stream_ids?: string;
+    search?: string;
     eoi_type: string;           // 'Placement' | 'Industrial Training' | 'Collaboration'
     job_title?: string;
     job_description?: string;
@@ -49,6 +50,7 @@ export class JobOfferService {
                 district_ids: dto.district_ids,
                 qualification_ids: dto.qualification_ids,
                 stream_ids: dto.stream_ids,
+                search: dto.search,
                 limit: 5000, // Large enough for all Punjab institutes
             });
             instituteIds = searchResult.data.map(i => i.institute_id);

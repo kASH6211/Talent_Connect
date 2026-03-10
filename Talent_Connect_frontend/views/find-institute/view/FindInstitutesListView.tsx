@@ -71,9 +71,9 @@ function calculateAirDistance(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -88,6 +88,7 @@ interface InstituteRow {
   mobileno: string;
   student_count: number;
   final_year_student_count?: number;
+  course_count?: number;
   contactperson: string;
   po_mobile: string;
   po_email: string;
@@ -139,6 +140,7 @@ export default function FindInstitutesPage() {
 
   const [viewInstitute, setViewInstitute] = useState<boolean>(false);
   const [viewCourses, setViewCourses] = useState<boolean>(false);
+  const [isSelectAll, setIsSelectAll] = useState(false);
   const [currentInstitute, setCurrentInstitute] = useState<InstituteRow | null>(
     null,
   );
@@ -294,7 +296,8 @@ export default function FindInstitutesPage() {
         setStreamOpts([]);
       }
     };
-  }, []);
+    loadStreams();
+  }, [filters.qualification_ids]);
 
   const setFilter = (key: keyof Filters) => (vals: number[]) =>
     setFilters((f) => ({ ...f, [key]: vals }));
@@ -303,7 +306,7 @@ export default function FindInstitutesPage() {
     setLoading(true);
     setSearched(true);
     setSelected(new Set());
-    // setSearchTerm(""); // Don't clear search term on every search
+    setIsSelectAll(false);
 
     const params = new URLSearchParams();
     if (filters.district_ids.length)
@@ -410,27 +413,35 @@ export default function FindInstitutesPage() {
     return null;
   };
 
-  const toggleSelect = (id: number) =>
+  const allSelected =
+    isSelectAll || (Array.isArray(institutes) &&
+      institutes.length > 0 &&
+      institutes.every((i) => selected.has(i.institute_id)));
+
+  const toggleSelect = (id: number) => {
+    setIsSelectAll(false);
     setSelected((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+  };
 
-  const allSelected =
-    Array.isArray(institutes) &&
-    institutes.length > 0 &&
-    institutes.every((i) => selected.has(i.institute_id));
-  const toggleAll = () =>
-    setSelected(
-      allSelected
-        ? new Set()
-        : new Set(
-            (Array.isArray(institutes) ? institutes : []).map(
-              (i) => i.institute_id,
-            ),
+  const toggleAll = () => {
+    if (allSelected) {
+      setIsSelectAll(false);
+      setSelected(new Set());
+    } else {
+      setIsSelectAll(true);
+      setSelected(
+        new Set(
+          (Array.isArray(institutes) ? institutes : []).map(
+            (i) => i.institute_id,
           ),
-    );
+        ),
+      );
+    }
+  };
 
   const institutesMap = new Map(
     (Array.isArray(institutes) ? institutes : []).map((i) => [
@@ -439,7 +450,6 @@ export default function FindInstitutesPage() {
     ]),
   );
 
-  const sortedInstitutes = institutes; // Using server-side sort for now
 
   // Calculate actual limit for pagination math
   const currentLimit = itemsPerPage === "all" ? total : itemsPerPage;
@@ -474,16 +484,16 @@ export default function FindInstitutesPage() {
                 Found
               </p>
               <p className="text-xl font-black text-primary leading-tight">
-                {institutes.length}
+                {total}
               </p>
             </div>
-            {selected.size > 0 && (
+            {(selected.size > 0 || isSelectAll) && (
               <div className="px-4 py-2 rounded-lg bg-green-50 border border-green-300 text-center">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-green-700">
                   Selected
                 </p>
                 <p className="text-xl font-black text-green-600 leading-tight">
-                  {selected.size}
+                  {isSelectAll ? total : selected.size}
                 </p>
               </div>
             )}
@@ -536,86 +546,91 @@ export default function FindInstitutesPage() {
       {/* Results */}
       {searched && (
         <div className="space-y-4 relative pb-24 lg:pb-0">
-          {!loading && institutes.length > 0 && (
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={toggleAll}
-                  className="w-8 h-8 rounded-lg border border-slate-300 bg-slate-50 flex items-center justify-center text-slate-600 transition-all"
-                >
-                  {allSelected ? (
-                    <CheckSquare size={16} className="text-primary" />
-                  ) : (
-                    <Square size={16} />
-                  )}
-                </button>
-                <div className="flex flex-col">
-                  <p className="text-sm font-semibold text-slate-900">
-                    {total} institute{total !== 1 ? "s" : ""} found
-                    <span className="text-slate-600 font-normal ml-1.5 hidden sm:inline">
-                      • click rows to select
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleAll}
+                className="w-8 h-8 rounded-lg border border-slate-300 bg-slate-50 flex items-center justify-center text-slate-600 transition-all"
+              >
+                {allSelected ? (
+                  <CheckSquare size={16} className="text-primary" />
+                ) : (
+                  <Square size={16} />
+                )}
+              </button>
+              <div className="flex flex-col">
+                <p className="text-sm font-semibold text-slate-900">
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 size={14} className="animate-spin text-primary" />
+                      Searching...
                     </span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-600 font-medium">
-                  <span>Show:</span>
-                  <select
-                    className="bg-transparent border-0 outline-none text-slate-900 font-bold cursor-pointer"
-                    value={itemsPerPage}
-                    onChange={(e) => {
-                      setItemsPerPage(
-                        e.target.value === "all"
-                          ? "all"
-                          : Number(e.target.value),
-                      );
-                      setCurrentPage(1);
-                    }}
-                  >
-                    {[5, 10, 20, 25, 50, 100].map((size) => (
-                      <option key={size} value={size}>
-                        {size}
-                      </option>
-                    ))}
-                    <option value="all">All</option>
-                  </select>
-                </div>
-                <div className="relative flex-1 min-w-[240px] max-w-sm group">
-                  <input
-                    type="text"
-                    placeholder="Search institutes..."
-                    className="input input-bordered w-full pl-11 pr-5 text-sm border-slate-300 focus:ring-2 focus:ring-blue-100"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                  <Search
-                    size={16}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 "
-                  />
-                </div>
-
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 text-xs">
-                  <ArrowUpDown size={12} className="text-primary" />
-                  <select
-                    className="bg-transparent border-0 outline-none text-slate-900 font-medium cursor-pointer text-xs"
-                    value={sort}
-                    onChange={(e) => {
-                      setSort(
-                        e.target.value as "name" | "name-rev" | "student_count",
-                      );
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <option value="student_count">Students</option>
-                    <option value="name">A–Z</option>
-                    <option value="name-rev">Z–A</option>
-                  </select>
-                </div>
+                  ) : (
+                    <>
+                      {total} institute{total !== 1 ? "s" : ""} found
+                    </>
+                  )}
+                  <span className="text-slate-600 font-normal ml-1.5 hidden sm:inline">
+                    • click rows to select
+                  </span>
+                </p>
               </div>
             </div>
-          )}
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-600 font-medium">
+                <span>Show:</span>
+                <select
+                  className="bg-transparent border-0 outline-none text-slate-900 font-bold cursor-pointer"
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(
+                      e.target.value === "all" ? "all" : Number(e.target.value),
+                    );
+                    setCurrentPage(1);
+                  }}
+                >
+                  {[5, 10, 20, 25, 50, 100].map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                  <option value="all">All</option>
+                </select>
+              </div>
+              <div className="relative flex-1 min-w-[240px] max-w-sm group">
+                <input
+                  type="text"
+                  placeholder="Search institutes..."
+                  className="input input-bordered w-full pl-11 pr-5 text-sm border-slate-300 focus:ring-2 focus:ring-blue-100"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <Search
+                  size={16}
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 "
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 text-xs">
+                <ArrowUpDown size={12} className="text-primary" />
+                <select
+                  className="bg-transparent border-0 outline-none text-slate-900 font-medium cursor-pointer text-xs"
+                  value={sort}
+                  onChange={(e) => {
+                    setSort(
+                      e.target.value as "name" | "name-rev" | "student_count",
+                    );
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value="student_count">Students</option>
+                  <option value="name">A–Z</option>
+                  <option value="name-rev">Z–A</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-600">
@@ -673,13 +688,10 @@ export default function FindInstitutesPage() {
                               Courses
                             </th>
                             <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Enroll Students
+                              Students on roll
                             </th>
                             <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Available to Placement Students
-                            </th>
-                            <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Final Year
+                              Students Available for placement
                             </th>
                             <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
                               Actions
@@ -750,12 +762,6 @@ export default function FindInstitutesPage() {
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 text-primary text-xs font-bold">
-                                    <Users size={12} />
-                                    {inst.student_count.toLocaleString()}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-bold">
                                     <Users size={12} />
                                     {inst.final_year_student_count?.toLocaleString() ||
                                       "0"}
@@ -831,14 +837,22 @@ export default function FindInstitutesPage() {
                                 <h3 className="text-sm font-bold text-slate-900 mb-1">
                                   {inst.institute_name}
                                 </h3>
-                                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 mb-3">
-                                  <span className="flex items-center gap-1">
-                                    <MapPin size={11} /> {inst.district || "—"}
-                                  </span>
-                                  <span className="font-semibold text-primary">
-                                    <Users size={11} className="inline mr-1" />
-                                    {inst.student_count.toLocaleString()}
-                                  </span>
+                                <div className="flex items-center gap-2 text-[10px] font-medium text-slate-500 mb-2">
+                                  <MapPin size={10} /> {inst.district || "—"}
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 mt-2">
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">On Roll</span>
+                                    <span className="font-bold text-primary text-xs">
+                                      {inst.student_count.toLocaleString()}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">For Placement</span>
+                                    <span className="font-bold text-green-600 text-xs">
+                                      {inst.final_year_student_count?.toLocaleString() || "0"}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -886,7 +900,7 @@ export default function FindInstitutesPage() {
                   </div>
 
                   {/* Full-width Sticky Send Button in table footer area */}
-                  {selected.size > 0 && (
+                  {(selected.size > 0 || isSelectAll) && (
                     <div className="sticky bottom-0 left-0 right-0 z-30 mt-4 bg-white border-t border-slate-200 shadow-lg">
                       <div className="px-4 py-4 lg:px-6">
                         <button
@@ -906,8 +920,8 @@ export default function FindInstitutesPage() {
                             className="group-hover:rotate-12 transition-transform duration-300"
                           />
                           <span className="text-base">
-                            Send to <strong>{selected.size}</strong> institute
-                            {selected.size !== 1 ? "s" : ""}
+                            Send to <strong>{isSelectAll ? total : selected.size}</strong> institute
+                            {(isSelectAll ? total : selected.size) !== 1 ? "s" : ""}
                           </span>
                         </button>
                       </div>
@@ -1044,7 +1058,7 @@ export default function FindInstitutesPage() {
 
       {/* Modals */}
       <OfferModalV2
-        onClose={() => {}}
+        onClose={() => { }}
         isOpen={findInstituteUi?.bulkOffer?.open ?? false}
         selectedIds={Array.from(selected)}
         institutesMap={institutesMap}
@@ -1052,9 +1066,14 @@ export default function FindInstitutesPage() {
         streamOptions={streamOpts}
         prefilledQualIds={filters.qualification_ids}
         prefilledStreamIds={filters.stream_ids}
+        isSelectAll={isSelectAll}
+        searchFilters={filters}
+        searchSort={sort}
+        searchTerm={searchTerm}
         onSent={() => {
           setSentSuccess(true);
           setSelected(new Set());
+          setIsSelectAll(false);
         }}
       />
 

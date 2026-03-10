@@ -3,17 +3,18 @@ import { X, GraduationCap, Users } from "lucide-react";
 import api from "@/lib/api";
 
 interface CourseRow {
+    qualification: string;
     course: string;
     student_count: number;
     final_year_student_count: number;
 }
 
 const DUMMY_COURSES: CourseRow[] = [
-    { course: "ITI (Electrician)", student_count: 0, final_year_student_count: 0 },
-    { course: "ITI (Fitter)", student_count: 0, final_year_student_count: 0 },
-    { course: "ITI (Welder)", student_count: 0, final_year_student_count: 0 },
-    { course: "ITI (Machinist)", student_count: 0, final_year_student_count: 0 },
-    { course: "ITI (Computer Operator and Programming Assistant)", student_count: 0, final_year_student_count: 0 },
+    { qualification: "ITI", course: "ITI (Electrician)", student_count: 0, final_year_student_count: 0 },
+    { qualification: "ITI", course: "ITI (Fitter)", student_count: 0, final_year_student_count: 0 },
+    { qualification: "ITI", course: "ITI (Welder)", student_count: 0, final_year_student_count: 0 },
+    { qualification: "ITI", course: "ITI (Machinist)", student_count: 0, final_year_student_count: 0 },
+    { qualification: "ITI", course: "ITI (Computer Operator and Programming Assistant)", student_count: 0, final_year_student_count: 0 },
 ];
 
 interface Props {
@@ -103,6 +104,7 @@ export default function InstituteCoursesModal({
                             <table className="w-full text-left text-sm whitespace-nowrap">
                                 <thead className="bg-base-200/60 dark:bg-base-800/60">
                                     <tr>
+                                        <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Qualification</th>
                                         <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Course</th>
                                         <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Total Students on Roll</th>
                                         <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Final Year Student ready for placement</th>
@@ -111,6 +113,9 @@ export default function InstituteCoursesModal({
                                 <tbody className="divide-y divide-base-200 dark:divide-base-800">
                                     {courses.map((row, idx) => (
                                         <tr key={idx} className="hover:bg-base-200/50 transition-colors">
+                                            <td className="px-4 py-3 font-medium text-base-content/80">
+                                                {row.qualification}
+                                            </td>
                                             <td className="px-4 py-3 font-medium text-base-content/80">
                                                 {row.course}
                                             </td>
