@@ -1,0 +1,1 @@
+update or delete on table "mapping_institute_qualification" violates foreign key constraint "FK_793be7cf808664d94f399706329" on table "student_count"
