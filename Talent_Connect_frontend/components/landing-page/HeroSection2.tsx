@@ -52,7 +52,7 @@ const HeroSection2 = () => {
     {
       icon: GraduationCap,
       value: "coming soon",
-      label: "Successful Placement",
+      label: "Jobs Offered ",
       color: "text-green-500",
     },
   ];

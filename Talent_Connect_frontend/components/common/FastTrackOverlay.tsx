@@ -60,7 +60,7 @@ const FastTrackOverlay = () => {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 40, scale: 0.94 }}
             transition={{ type: "spring", damping: 24, stiffness: 200 }}
-            className="flex items-center gap-4 max-w-[420px] bg-white/95 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-2xl px-5 py-4"
+            className="bg-secondary flex items-center gap-4 max-w-[420px] bg-white/95 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-2xl px-5 py-4"
           >
             {/* Icon */}
             <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 text-primary">
@@ -69,16 +69,11 @@ const FastTrackOverlay = () => {
 
             <div className="flex-1">
               <p className="text-sm font-semibold text-gray-800 leading-snug">
-                Are you an{" "}
-                <span className="text-primary">Industry Partner?</span>
+                Already  registered with FastTrack Punjab portal? {" "}
+
               </p>
 
-              <p className="text-xs text-gray-600 leading-relaxed">
-                Login with{" "}
-                <span className="font-medium text-gray-700">
-                  FastTrack Punjab  Portal
-                </span>{" "}
-              </p>
+
             </div>
 
             {/* Login Button */}
@@ -91,7 +86,7 @@ const FastTrackOverlay = () => {
                 <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  Login
+                  Login Here
                   <ArrowRight
                     size={14}
                     className="group-hover:translate-x-1 transition-transform"

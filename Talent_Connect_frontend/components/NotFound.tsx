@@ -86,7 +86,7 @@ export default function NotFound() {
                 {/* Messaging with Strategic Typography */}
                 <motion.div variants={itemVariants} className="space-y-6 mb-16 max-w-lg mx-auto">
                     <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight uppercase leading-[0.9]">
-                        Lost in the <br /> <span className="text-primary/40">Hunar पंजाब</span> Hub?
+                        Lost in the <br /> <span className="text-primary/40">Hunar ਪੰਜਾਬ</span> Hub?
                     </h1>
                     <div className="h-1 w-16 bg-secondary/30 mx-auto rounded-full" />
                     <p className="text-sm font-bold text-slate-400 leading-loose uppercase tracking-[0.25em]">

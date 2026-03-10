@@ -472,7 +472,7 @@ export default function FindInstitutesPage() {
   return (
     <div className="w-full mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
         <div className="flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-blue-600/30">
             <Building2 size={22} className="text-white" strokeWidth={2} />
@@ -481,9 +481,7 @@ export default function FindInstitutesPage() {
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-tight">
               Explore Institutes
             </h1>
-            <p className="text-sm text-slate-600 mt-0.5">
-              Search | Filter | Connect
-            </p>
+
           </div>
         </div>
 
@@ -516,13 +514,13 @@ export default function FindInstitutesPage() {
       </div>
 
       {/* Filters Card */}
-      <div className="rounded-lg bg-white border border-slate-200 shadow-sm p-6 mb-8">
-        <div className="flex items-center gap-2.5 mb-5 pb-4 border-b border-slate-200">
+      <div className="rounded-lg bg-white border border-slate-200 shadow-sm p-6 mb-2">
+        {/* <div className="flex items-center gap-2.5 mb-1 pb-1 border-b border-slate-200">
           <Filter size={18} className="text-primary" />
-          <h2 className="text-base font-bold text-slate-900">Filters</h2>
-        </div>
+          <h2 className="text-base font-semibold text-slate-900">Filters</h2>
+        </div> */}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-1">
           <MultiSelectDropdown
             label="District"
             options={districtOpts}
@@ -560,7 +558,7 @@ export default function FindInstitutesPage() {
       {/* Results */}
       {
         searched && (
-          <div className="space-y-4 relative pb-24 lg:pb-0">
+          <div className="space-y-4 relative pb-10 lg:pb-0">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm">
               <div className="flex items-center gap-3">
                 <button

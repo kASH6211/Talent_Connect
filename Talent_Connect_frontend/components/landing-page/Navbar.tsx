@@ -19,6 +19,22 @@ import { useAuth } from "@/lib/AuthProvider";
 import { getDashboardRoute } from "@/lib/helper";
 import { useEffect, useRef, useState } from "react";
 
+const getProfileUrl = (role: string) => {
+  switch (role) {
+    case 'superadmin':
+      return '/admin/profile';
+
+    case 'industry':
+      return '/industry/profile';
+
+    case 'institute':
+      return '/institute/profile';
+
+    default:
+      return '/';
+  }
+}
+
 const pageLinks = [
   { label: "Home", to: "/" },
   { label: "Contact", to: "/contact" },
@@ -36,11 +52,11 @@ const Navbar = () => {
 
   const navLinks = user
     ? [
-        ...pageLinks.filter(
-          (link) => link.label === "Home" || link.label === "Contact",
-        ),
-        { label: "Dashboard", to: getDashboardRoute(role) },
-      ]
+      ...pageLinks.filter(
+        (link) => link.label === "Home" || link.label === "Contact",
+      ),
+      { label: "Dashboard", to: getDashboardRoute(role) },
+    ]
     : pageLinks;
 
   // Close dropdown when clicking outside
@@ -102,11 +118,10 @@ const Navbar = () => {
                 <Link
                   key={link.label}
                   href={link.to}
-                  className={`relative py-2 text-sm font-semibold transition-colors group ${
-                    isActive(link.to)
-                      ? "text-white"
-                      : "text-white/90 hover:text-white"
-                  }`}
+                  className={`relative py-2 text-sm font-semibold transition-colors group ${isActive(link.to)
+                    ? "text-white"
+                    : "text-white/90 hover:text-white"
+                    }`}
                 >
                   {link.label}
                   <span
@@ -165,7 +180,7 @@ const Navbar = () => {
                   </div>
 
                   <Link
-                    href={getDashboardRoute(user.role)}
+                    href={getProfileUrl(user.role)}
                     className="flex items-center gap-3 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors"
                     onClick={() => setUserDropdownOpen(false)}
                   >
@@ -251,11 +266,10 @@ const Navbar = () => {
                 <Link
                   key={link.label}
                   href={link.to}
-                  className={`block py-2 text-lg font-semibold transition-colors ${
-                    isActive(link.to)
-                      ? "text-secondary"
-                      : "text-white/90 hover:text-white"
-                  }`}
+                  className={`block py-2 text-lg font-semibold transition-colors ${isActive(link.to)
+                    ? "text-secondary"
+                    : "text-white/90 hover:text-white"
+                    }`}
                   onClick={() => setMobileOpen(false)}
                 >
                   {link.label}
@@ -267,7 +281,7 @@ const Navbar = () => {
               {user ? (
                 <div className="space-y-3">
                   <Link
-                    href={getDashboardRoute(user.role)}
+                    href={getProfileUrl(user.role)}
                     className="w-full flex items-center justify-center gap-3 bg-white/10 text-white py-4 rounded-lg text-sm font-semibold uppercase tracking-widest shadow-xl shadow-black/10"
                     onClick={() => setMobileOpen(false)}
                   >

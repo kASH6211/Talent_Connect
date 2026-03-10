@@ -14,9 +14,16 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("tc_token");
-    if (token) config.headers["Authorization"] = `Bearer ${token}`;
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+      console.log("Token attached to request:", config.url);
+    } else {
+      console.warn("No token found in localStorage for request:", config.url);
+    }
   }
   return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
 // redirect to login on 401
