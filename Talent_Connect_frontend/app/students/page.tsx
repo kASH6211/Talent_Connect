@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import CrudTable from '@/components/CrudTable';
 import CrudModal from '@/components/CrudModal';
 
@@ -49,9 +50,19 @@ const FIELDS = [
 export default function Page() {
     const [modalOpen, setModalOpen] = useState(false);
     const [editData, setEditData] = useState<any>(null);
+    const searchParams = useSearchParams();
+    const available = searchParams.get('available') === 'true';
+
     return (
         <>
-            <CrudTable title="Students" apiPath="student" queryKey="student" columns={COLUMNS} primaryKey="student_id" pagination={true}
+            <CrudTable
+                title={available ? "Students (Available for Placement)" : "Students"}
+                apiPath="student"
+                queryKey="student"
+                columns={COLUMNS}
+                primaryKey="student_id"
+                pagination={true}
+                extraParams={available ? { available: true } : {}}
                 onAdd={() => { setEditData(null); setModalOpen(true); }}
                 onEdit={(r) => { setEditData(r); setModalOpen(true); }} />
             {modalOpen && <CrudModal title="Student" apiPath="student" queryKey="student" primaryKey="student_id" fields={FIELDS} editData={editData} onClose={() => setModalOpen(false)} />}

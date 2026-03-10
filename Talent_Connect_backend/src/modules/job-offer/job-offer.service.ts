@@ -133,6 +133,12 @@ export class JobOfferService {
     }
 
     async findAll(page?: number, limit?: number) {
+        if (!page && !limit) {
+            return this.repo.find({
+                relations: ['industry', 'institute', 'institute.district'],
+                order: { offer_id: 'DESC' },
+            });
+        }
         const take = Number(limit) || 10;
         const skip = ((Number(page) || 1) - 1) * take;
         const [data, total] = await this.repo.findAndCount({

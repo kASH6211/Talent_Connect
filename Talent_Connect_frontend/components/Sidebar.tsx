@@ -122,6 +122,15 @@ const industryNav = [
   { icon: UserPen, label: "Profile", href: "/industry/profile" },
 ];
 
+const deptAdminNav = [
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dept-admin/dashboard" },
+  { icon: Search, label: "Explore Institutes", href: "/find-institutes" },
+  { icon: Factory, label: "Industries", href: "/industries" },
+  { icon: Users, label: "Students", href: "/students" },
+  { icon: Mail, label: "All Applications", href: "/all-requests" },
+  { icon: UserPen, label: "Profile", href: "/profile" },
+];
+
 function NavLink({ href, label, icon: Icon, collapsed }: any) {
   const pathname = usePathname();
   const active = pathname === href;
@@ -262,7 +271,9 @@ export default function Sidebar({
       ? instituteNav
       : role === "industry"
         ? industryNav
-        : adminNav;
+        : role === "dept_admin"
+          ? deptAdminNav
+          : adminNav;
 
   const filterNavItems = (items: any[], term: string): any[] => {
     if (!term) return items;
@@ -296,6 +307,7 @@ export default function Sidebar({
       admin: "Administrator",
       institute: "Institute Portal",
       industry: "Industry Partner",
+      dept_admin: "Department Admin",
     }[role || ""] || "User";
 
   return (

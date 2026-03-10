@@ -567,6 +567,14 @@ async function seed() {
             institute_id: null,
             industry_id: demoIndustryId,
         },
+        {
+            username: 'deptadmin',
+            email: 'deptadmin@talentconnect.gov.in',
+            password: 'deptadmin',
+            role: 'dept_admin',
+            institute_id: null,
+            industry_id: null,
+        },
     ];
 
     for (const u of usersToSeed) {

@@ -14,8 +14,13 @@ export class StudentController {
   @Get()
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.service.findAll(page, limit);
+  @ApiQuery({ name: 'available', required: false, type: Boolean })
+  findAll(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('available') available?: string,
+  ) {
+    return this.service.findAll(page, limit, available === 'true');
   }
   @Get(':id') findOne(@Param('id', ParseIntPipe) id: number) { return this.service.findOne(id); }
   @Post() create(@Body() dto: Partial<Student>) { return this.service.create(dto); }

@@ -80,7 +80,7 @@ export default function AdminDashboard({ username }: { username: string }) {
       count: counts.institutes,
       icon: Building2,
       color: "from-primary to-primary/70",
-      href: "/institutes",
+      href: "/find-institutes",
     },
     {
       label: "Industries",
@@ -101,7 +101,7 @@ export default function AdminDashboard({ username }: { username: string }) {
       count: counts.acceptedOffers || 0,
       icon: CheckCircle2,
       color: "from-emerald-500 to-emerald-600",
-      href: "/all-requests",
+      href: "/all-requests?status=Accepted",
     },
   ];
 

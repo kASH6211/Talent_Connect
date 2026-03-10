@@ -498,7 +498,7 @@ export default function FindInstitutesPage() {
                   {total}
                 </p>
               </div>
-              {(selected.size > 0 || isSelectAll) && (
+              {user?.role !== "dept_admin" && (selected.size > 0 || isSelectAll) && (
                 <div className="px-4 py-2 rounded-lg bg-green-50 border border-green-300 text-center">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-green-700">
                     Selected
@@ -561,16 +561,18 @@ export default function FindInstitutesPage() {
           <div className="space-y-4 relative pb-10 lg:pb-0">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm">
               <div className="flex items-center gap-3">
-                <button
-                  onClick={toggleAll}
-                  className="w-8 h-8 rounded-lg border border-slate-300 bg-slate-50 flex items-center justify-center text-slate-600 transition-all"
-                >
-                  {allSelected ? (
-                    <CheckSquare size={16} className="text-primary" />
-                  ) : (
-                    <Square size={16} />
-                  )}
-                </button>
+                {user?.role !== "dept_admin" && (
+                  <button
+                    onClick={toggleAll}
+                    className="w-8 h-8 rounded-lg border border-slate-300 bg-slate-50 flex items-center justify-center text-slate-600 transition-all"
+                  >
+                    {allSelected ? (
+                      <CheckSquare size={16} className="text-primary" />
+                    ) : (
+                      <Square size={16} />
+                    )}
+                  </button>
+                )}
                 <div className="flex flex-col">
                   <p className="text-sm font-semibold text-slate-900">
                     {loading ? (
@@ -583,9 +585,11 @@ export default function FindInstitutesPage() {
                         {total} institute{total !== 1 ? "s" : ""} found
                       </>
                     )}
-                    <span className="text-slate-600 font-normal ml-1.5 hidden sm:inline">
-                      • click rows to select
-                    </span>
+                    {user?.role !== "dept_admin" && (
+                      <span className="text-slate-600 font-normal ml-1.5 hidden sm:inline">
+                        • click rows to select
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>
@@ -676,21 +680,23 @@ export default function FindInstitutesPage() {
                         <table className="min-w-full divide-y divide-slate-200">
                           <thead>
                             <tr className="bg-slate-50">
-                              <th className="px-4 py-3 w-10">
-                                <button
-                                  onClick={toggleAll}
-                                  className="w-7 h-7 rounded-md border border-slate-300 bg-white flex items-center justify-center text-slate-600 transition-all mx-auto"
-                                >
-                                  {allSelected ? (
-                                    <CheckSquare
-                                      size={14}
-                                      className="text-blue-600"
-                                    />
-                                  ) : (
-                                    <Square size={14} />
-                                  )}
-                                </button>
-                              </th>
+                              {user?.role !== "dept_admin" && (
+                                <th className="px-4 py-3 w-10">
+                                  <button
+                                    onClick={toggleAll}
+                                    className="w-7 h-7 rounded-md border border-slate-300 bg-white flex items-center justify-center text-slate-600 transition-all mx-auto"
+                                  >
+                                    {allSelected ? (
+                                      <CheckSquare
+                                        size={14}
+                                        className="text-blue-600"
+                                      />
+                                    ) : (
+                                      <Square size={14} />
+                                    )}
+                                  </button>
+                                </th>
+                              )}
                               <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
                                 Institute Name
                               </th>
@@ -724,23 +730,25 @@ export default function FindInstitutesPage() {
                                       : "hover:bg-slate-50",
                                   )}
                                 >
-                                  <td className="px-4 py-3 text-center">
-                                    <button
-                                      onClick={() =>
-                                        toggleSelect(inst.institute_id)
-                                      }
-                                      className="w-5 h-5 rounded-md border border-slate-300 flex items-center justify-center mx-auto transition-all"
-                                    >
-                                      {isSelected ? (
-                                        <CheckSquare
-                                          size={14}
-                                          className="text-blue-600"
-                                        />
-                                      ) : (
-                                        <Square size={14} />
-                                      )}
-                                    </button>
-                                  </td>
+                                  {user?.role !== "dept_admin" && (
+                                    <td className="px-4 py-3 text-center">
+                                      <button
+                                        onClick={() =>
+                                          toggleSelect(inst.institute_id)
+                                        }
+                                        className="w-5 h-5 rounded-md border border-slate-300 flex items-center justify-center mx-auto transition-all"
+                                      >
+                                        {isSelected ? (
+                                          <CheckSquare
+                                            size={14}
+                                            className="text-blue-600"
+                                          />
+                                        ) : (
+                                          <Square size={14} />
+                                        )}
+                                      </button>
+                                    </td>
+                                  )}
                                   <td className="px-4 py-3">
                                     <span className="text-sm font-semibold text-slate-900">
                                       {inst.institute_name}
@@ -793,23 +801,25 @@ export default function FindInstitutesPage() {
                                       >
                                         <Eye size={14} />
                                       </button>
-                                      <button
-                                        onClick={(e: any) => {
-                                          e.stopPropagation();
-                                          if (!selected.has(inst.institute_id)) {
-                                            toggleSelect(inst.institute_id);
-                                          }
-                                          dispatch(
-                                            updateUiInstitute({
-                                              bulkOffer: { open: true },
-                                            }),
-                                          );
-                                        }}
-                                        className="px-3 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center gap-1.5 transition-all"
-                                      >
-                                        <LogIn size={14} />
-                                        Connect
-                                      </button>
+                                      {user?.role !== "dept_admin" && (
+                                        <button
+                                          onClick={(e: any) => {
+                                            e.stopPropagation();
+                                            if (!selected.has(inst.institute_id)) {
+                                              toggleSelect(inst.institute_id);
+                                            }
+                                            dispatch(
+                                              updateUiInstitute({
+                                                bulkOffer: { open: true },
+                                              }),
+                                            );
+                                          }}
+                                          className="px-3 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center gap-1.5 transition-all"
+                                        >
+                                          <LogIn size={14} />
+                                          Connect
+                                        </button>
+                                      )}
                                     </div>
                                   </td>
                                 </tr>
@@ -832,22 +842,24 @@ export default function FindInstitutesPage() {
                               )}
                             >
                               <div className="flex items-start gap-3 mb-3">
-                                <button
-                                  onClick={() => toggleSelect(inst.institute_id)}
-                                  className="mt-1"
-                                >
-                                  {isSelected ? (
-                                    <CheckSquare
-                                      size={16}
-                                      className="text-blue-600"
-                                    />
-                                  ) : (
-                                    <Square
-                                      size={16}
-                                      className="text-slate-400"
-                                    />
-                                  )}
-                                </button>
+                                {user?.role !== "dept_admin" && (
+                                  <button
+                                    onClick={() => toggleSelect(inst.institute_id)}
+                                    className="mt-1"
+                                  >
+                                    {isSelected ? (
+                                      <CheckSquare
+                                        size={16}
+                                        className="text-blue-600"
+                                      />
+                                    ) : (
+                                      <Square
+                                        size={16}
+                                        className="text-slate-400"
+                                      />
+                                    )}
+                                  </button>
+                                )}
                                 <div className="flex-1">
                                   <h3 className="text-sm font-bold text-slate-900 mb-1">
                                     {inst.institute_name}
@@ -893,22 +905,24 @@ export default function FindInstitutesPage() {
                                 >
                                   <Eye size={12} />
                                 </button>
-                                <button
-                                  onClick={(e: any) => {
-                                    e.stopPropagation();
-                                    if (!selected.has(inst.institute_id)) {
-                                      toggleSelect(inst.institute_id);
-                                    }
-                                    dispatch(
-                                      updateUiInstitute({
-                                        bulkOffer: { open: true },
-                                      }),
-                                    );
-                                  }}
-                                  className="flex-1 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-700"
-                                >
-                                  <LogIn size={12} /> Connect
-                                </button>
+                                {user?.role !== "dept_admin" && (
+                                  <button
+                                    onClick={(e: any) => {
+                                      e.stopPropagation();
+                                      if (!selected.has(inst.institute_id)) {
+                                        toggleSelect(inst.institute_id);
+                                      }
+                                      dispatch(
+                                        updateUiInstitute({
+                                          bulkOffer: { open: true },
+                                        }),
+                                      );
+                                    }}
+                                    className="flex-1 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-700"
+                                  >
+                                    <LogIn size={12} /> Connect
+                                  </button>
+                                )}
                               </div>
                             </div>
                           );
@@ -917,7 +931,7 @@ export default function FindInstitutesPage() {
                     </div>
 
                     {/* Full-width Sticky Send Button in table footer area */}
-                    {(selected.size > 0 || isSelectAll) && (
+                    {user?.role !== "dept_admin" && (selected.size > 0 || isSelectAll) && (
                       <div className="sticky bottom-0 left-0 right-0 z-30 mt-4 bg-white border-t border-slate-200 shadow-lg">
                         <div className="px-4 py-4 lg:px-6">
                           <button

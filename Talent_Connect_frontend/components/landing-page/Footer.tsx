@@ -1,7 +1,6 @@
 import { MapPin, Mail, Clock } from "lucide-react";
 const importantLinks = [
   { title: "About Department", link: "#" },
-  { title: "Institutes", link: "#" },
   { title: "Student Portal", link: "#" },
   { title: "Industry Connect", link: "#" },
   { title: "Placements", link: "#" },

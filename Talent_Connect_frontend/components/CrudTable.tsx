@@ -56,6 +56,7 @@ interface CrudTableProps {
   pagination?: boolean;
   extraActions?: React.ReactNode;
   onDataFetched?: (data: any) => void;
+  extraParams?: Record<string, any>;
 }
 
 export default function CrudTable({
@@ -70,6 +71,7 @@ export default function CrudTable({
   pagination = true,
   extraActions,
   onDataFetched,
+  extraParams,
 }: CrudTableProps) {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
@@ -89,9 +91,9 @@ export default function CrudTable({
   }, [search]);
 
   const { data, isLoading, isFetching, isError, refetch } = useQuery<any>({
-    queryKey: [queryKey, page, debouncedSearch],
+    queryKey: [queryKey, page, debouncedSearch, extraParams],
     queryFn: async () => {
-      const params: any = pagination ? { page, limit } : {};
+      const params: any = pagination ? { page, limit, ...extraParams } : { ...extraParams };
       if (debouncedSearch) params.search = debouncedSearch;
       const res = await api.get(apiPath, { params });
       return res.data;
