@@ -58,7 +58,7 @@ const HeroSection2 = () => {
   ];
 
   return (
-    <section className="relative w-full h-[350px] md:h-[450px] overflow-hidden">
+    <section className="relative w-full h-[280px] md:h-[380px] overflow-hidden">
       {/* Blurry Background Image */}
       <div className="absolute inset-0">
         <img
@@ -70,8 +70,8 @@ const HeroSection2 = () => {
       </div>
 
       {/* Content Container */}
-      <div className="relative z-10 h-full flex items-center justify-center px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-[1400px] w-full items-stretch">
+      <div className="relative z-10 h-full flex items-end justify-center px-4 pb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl w-full">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -80,18 +80,18 @@ const HeroSection2 = () => {
               transition={{ delay: index * 0.1, duration: 0.8 }}
               className="flex-1"
             >
-              <div className="bg-white/85 backdrop-blur-md p-8 rounded-[1.5rem] shadow-xl h-full flex flex-col items-center justify-center text-center border border-white/20">
-                <div className={`mb-4 p-3 rounded-2xl bg-slate-100`}>
-                  <stat.icon className={`w-8 h-8 ${stat.color}`} />
+              <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-xl flex flex-col items-center justify-center text-center border border-white/20">
+                <div className="mb-3 p-2.5 rounded-xl bg-slate-50">
+                  <stat.icon className={`w-7 h-7 ${stat.color}`} />
                 </div>
-                <p className="text-2xl md:text-4xl font-bold text-slate-900 mb-2">
+                <p className="text-xl md:text-3xl font-bold text-slate-900 mb-1.5">
                   {typeof stat.value === "number" ? (
                     <Counter value={stat.value || 0} suffix={stat.suffix} />
                   ) : (
                     stat.value.toString()
                   )}
                 </p>
-                <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] leading-tight">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-tight">
                   {stat.label}
                 </p>
               </div>
