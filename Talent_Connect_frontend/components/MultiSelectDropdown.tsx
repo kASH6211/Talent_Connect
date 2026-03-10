@@ -84,11 +84,16 @@ export default function MultiSelectDropdown({
         )}
       >
         <span className="truncate text-left">
-          {count === 0
-            ? (placeholder ?? "Select…")
-            : count === 1
-              ? (options ?? []).find((o) => o.value === selected[0])?.label
-              : `${count} selected`}
+          {count === 0 ? (
+            placeholder ?? "Select…"
+          ) : count <= 2 ? (
+            selected
+              .map((v) => options.find((o) => o.value === v)?.label)
+              .filter(Boolean)
+              .join(", ")
+          ) : (
+            `${count} selected`
+          )}
         </span>
         <div className="flex items-center gap-1 flex-shrink-0">
           {count > 0 && (

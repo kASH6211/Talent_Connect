@@ -17,7 +17,7 @@ const institutes = [
     icon: Wrench,
     name: "ITI",
     gov: 137,
-    pvt: 183,
+    pvt: "Coming Soon",
     students: 35150,
     courses: 69,
   },
@@ -25,7 +25,7 @@ const institutes = [
     icon: BookOpen,
     name: "Polytechnic",
     gov: 26,
-    pvt: 66,
+    pvt: "Coming Soon",
     students: 2415,
     courses: 30,
   },
@@ -59,7 +59,7 @@ const InstitutesSection = () => {
   const router = useRouter();
 
   return (
-    <section className="py-5 bg-background" id="institutes">
+    <section className="py-12 md:py-20 bg-slate-50 border-t border-slate-200" id="institutes">
       <div className="container mx-auto px-2 sm:px-4 md:px-5 lg:px-6 text-center">
         <h2 className="text-foreground text-2xl md:text-3xl text-primary font-bold mb-8">
           Explore Punjab Institutes
@@ -78,23 +78,20 @@ const InstitutesSection = () => {
                     ? () => router.push(`/search-institutes?type=${inst.name}`)
                     : undefined
                 }
-                className={`group border bg-white border-gray-200 rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md hover:border-primary/70 transition-all duration-300 ${
-                  isActive ? "cursor-pointer" : ""
-                }`}
+                className={`group border bg-white border-gray-200 rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md hover:border-primary/70 transition-all duration-300 ${isActive ? "cursor-pointer" : ""
+                  }`}
               >
                 {/* Top Section */}
                 <div className="p-5 md:p-6">
                   <div
-                    className={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center mb-3 md:mb-4 mx-auto transition-colors duration-300 ${
-                      isActive ? "group-hover:bg-primary" : "bg-muted"
-                    }`}
+                    className={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center mb-3 md:mb-4 mx-auto transition-colors duration-300 ${isActive ? "group-hover:bg-primary" : "bg-muted"
+                      }`}
                   >
                     <Icon
-                      className={`w-6 h-6 md:w-7 md:h-7 transition-colors duration-300 ${
-                        isActive
-                          ? "text-primary group-hover:text-white"
-                          : "text-primary"
-                      }`}
+                      className={`w-6 h-6 md:w-7 md:h-7 transition-colors duration-300 ${isActive
+                        ? "text-primary group-hover:text-white"
+                        : "text-primary"
+                        }`}
                     />
                   </div>
 

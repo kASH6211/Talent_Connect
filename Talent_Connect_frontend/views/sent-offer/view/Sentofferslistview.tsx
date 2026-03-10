@@ -13,8 +13,10 @@ import {
   CalendarDays,
   Building2,
   Eye,
-  TrendingUp,
+  Mail,
   MailCheck,
+  TrendingUp,
+  Users,
   XCircle,
   Search,
   ChevronLeft,
@@ -763,7 +765,7 @@ function OfferGroupCard({
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm transition-all hover:shadow-md">
       {/* Header */}
       <div
-        className="flex p-5 cursor-pointer"
+        className="flex p-5 cursor-pointer select-none"
         onClick={() => setOpen((o) => !o)}
       >
         {/* Left: Icon */}
@@ -795,7 +797,10 @@ function OfferGroupCard({
 
           {/* Job Title */}
           <div className="text-lg font-semibold text-gray-800 truncate">
-            {group.job_title || "—"}
+            {group.job_title ||
+              (group.eoi_type === "Collaboration"
+                ? group.collaboration_types?.replace(/\|/g, ", ")
+                : "—")}
           </div>
 
           {/* Pills */}
@@ -914,9 +919,7 @@ function OfferGroupCard({
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                   District
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                  Contact
-                </th>
+
                 <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
                   Status
                 </th>
@@ -935,21 +938,7 @@ function OfferGroupCard({
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {row.institute?.district?.districtname || "—"}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    <div className="flex flex-col gap-1">
-                      {row.institute?.emailId && (
-                        <span className="truncate">
-                          {row.institute.emailId}
-                        </span>
-                      )}
-                      {row.institute?.mobileno && (
-                        <span>{row.institute.mobileno}</span>
-                      )}
-                      {!row.institute?.emailId && !row.institute?.mobileno && (
-                        <span className="text-gray-400">No contact</span>
-                      )}
-                    </div>
-                  </td>
+
                   <td className="px-4 py-3 text-center">
                     <StatusBadge status={row.status} />
                   </td>
@@ -1011,8 +1000,6 @@ export default function SentOffersListView() {
   const [filter, setFilter] = useState<string>("All");
   const [eoiTypeFilter, setEoiTypeFilter] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [limit, setLimit] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
   const currentIndustry: any = useSelector(
     (state: RootState) => state?.industries?.currentIndustry,
@@ -1035,40 +1022,30 @@ export default function SentOffersListView() {
     };
   }, [currentIndustry]);
 
-  const fetchOffers = useCallback(
-    async (page = currentPage, currentLimit = limit) => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams();
-        params.set("page", page.toString());
-        params.set("limit", currentLimit.toString());
-        if (searchTerm) params.set("search", searchTerm);
-        // Backend doesn't support full filtering yet, so we'll still do some client-side,
-        // but we need to handle the new response format.
-        const res = await api.get(`/job-offer/sent?${params}`);
+  const fetchOffers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("limit", "5000"); // Fetch all
+      if (searchTerm) params.set("search", searchTerm);
+      const res = await api.get(`/job-offer/sent?${params}`);
 
-        let data = Array.isArray(res.data) ? res.data : res.data?.data || [];
-        if (!Array.isArray(data)) data = [];
+      let data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      if (!Array.isArray(data)) data = [];
 
-        setOffers(data);
-        setTotalRecords(res.data?.total || data.length);
-      } catch {
-        setError("Failed to load sent offers.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [searchTerm, currentPage, limit],
-  );
+      setOffers(data);
+      setTotalRecords(res.data?.total || data.length);
+    } catch {
+      setError("Failed to load sent offers.");
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchOffers();
   }, [fetchOffers]);
 
-  // Reset to first page when filter or search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filter, searchTerm]);
 
   const handleWithdraw = (offerId: number) =>
     setOffers((prev) =>
@@ -1099,15 +1076,9 @@ export default function SentOffersListView() {
   const total = baseOffers.length;
   const discussed = baseOffers.filter((o) => o.status === "Discussed").length;
   const accepted = baseOffers.filter((o) => o.status === "Accepted").length;
-  const pendingDiscuss = baseOffers.filter((o) => {
-    if (o.status !== "Sent" && o.status !== "Pending") return false;
-    const sentAgo = now - new Date(o.offer_date).getTime();
-    return sentAgo > TWO_DAYS_MS;
-  }).length;
-  const pendingAccept = baseOffers.filter((o) => {
-    // Offered back in 'Discussed' state for > 7 days
-    return o.status === "Discussed";
-  }).length;
+  const pending = baseOffers.filter(
+    (o) => o.status === "Sent" || o.status === "Pending",
+  ).length;
 
   const filteredOffers = baseOffers.filter((o) => {
     const s = o.status;
@@ -1115,10 +1086,7 @@ export default function SentOffersListView() {
       filter === "All" ||
       (filter === "Discussed" && s === "Discussed") ||
       (filter === "Accepted" && s === "Accepted") ||
-      (filter === "PendingDiscuss" &&
-        (s === "Sent" || s === "Pending") &&
-        now - new Date(o.offer_date).getTime() > TWO_DAYS_MS) ||
-      (filter === "PendingAccept" && s === "Discussed") ||
+      (filter === "Pending" && (s === "Sent" || s === "Pending")) ||
       s === filter;
     const instName = o.institute?.institute_name ?? "";
     const matchesSearch =
@@ -1131,16 +1099,6 @@ export default function SentOffersListView() {
 
   const groups = useMemo(() => groupOffers(filteredOffers), [filteredOffers]);
 
-  const onPageChange = (p: number) => {
-    setCurrentPage(p);
-    fetchOffers(p, limit);
-  };
-
-  const onLimitChange = (l: number) => {
-    setLimit(l);
-    setCurrentPage(1);
-    fetchOffers(1, l);
-  };
 
   const handleSearch = () => {
     // console.log("Search for:", searchTerm);
@@ -1286,98 +1244,149 @@ export default function SentOffersListView() {
         {/* Content */}
         {!loading && !error && offers.length > 0 && (
           <>
-            {/* Stat Cards - Icon on RIGHT */}
-            {/* Stat Cards - Clean & Professional */}
-            <div className="sol-fade-up sol-delay-1 grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
-              {/* Total Sent - Active/Filterable */}
+            {/* Stat Cards - Professional Grid */}
+            <div className="sol-fade-up sol-delay-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
+              {/* Total Sent */}
               <button
+                type="button"
                 onClick={() => setFilter("All")}
                 className={clsx(
-                  "group relative",
-                  "bg-white border rounded-xl shadow-sm",
-                  "p-7 transition-all duration-200 ease-out",
-                  "hover:shadow-md hover:-translate-y-0.5 hover:border-indigo-200/70",
+                  "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
                   filter === "All"
-                    ? "border-indigo-300/60 bg-indigo-50/30 shadow-indigo-100/40"
-                    : "border-gray-200/80",
+                    ? "border-indigo-300 bg-indigo-50/30"
+                    : "border-gray-200",
                 )}
               >
-                <div className="flex items-center gap-5">
-                  {/* Icon */}
-                  <div className="flex-shrink-0">
-                    <div
-                      className={clsx(
-                        "w-14 h-14 rounded-xl flex items-center justify-center",
-                        filter === "All"
-                          ? "bg-indigo-100 text-indigo-600"
-                          : "bg-gray-100 text-gray-500",
-                      )}
-                    >
-                      <TrendingUp size={28} strokeWidth={2} />
-                    </div>
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div
+                    className={clsx(
+                      "w-12 h-12 rounded-xl flex items-center justify-center",
+                      filter === "All"
+                        ? "bg-indigo-100 text-indigo-600"
+                        : "bg-gray-100 text-gray-500",
+                    )}
+                  >
+                    <Mail size={24} />
                   </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">
-                      Total EOI Sent
-                    </div>
-                    <div className="mt-1.5 text-3xl font-bold text-gray-900 tracking-tight">
-                      {total.toLocaleString()}
-                    </div>
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Total Sent
                   </div>
-                </div>
-
-                {/* Active indicator */}
-                {filter === "All" && (
-                  <div className="absolute top-5 right-5">
-                    <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100/80 text-indigo-700 border border-indigo-200/60">
-                      Viewing
-                    </span>
+                  <div className="text-2xl font-black text-gray-900">
+                    {total.toLocaleString()}
                   </div>
-                )}
-
-                {/* Hover arrow */}
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <ChevronRight size={20} className="text-indigo-400" />
                 </div>
               </button>
 
-              {/* Received Responses - Disabled/Coming Soon */}
-              <div
-                className={clsx(
-                  "relative",
-                  "bg-white border border-gray-200/70 rounded-xl shadow-sm",
-                  "p-7 opacity-80 cursor-not-allowed",
-                  "flex items-center gap-5",
-                )}
-              >
-                <div className="flex items-center gap-5 flex-1">
-                  {/* Icon */}
-                  <div className="flex-shrink-0">
-                    <div className="w-14 h-14 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">
-                      <ArrowDownToLine size={28} strokeWidth={2} />
-                    </div>
+              {/* Received */}
+              <div className="relative p-5 bg-white border border-gray-200 rounded-xl shadow-sm opacity-70 group overflow-hidden">
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">
+                    <ArrowDownToLine size={24} />
                   </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">
-                      Received Responses
-                    </div>
-                    <div className="mt-1.5 text-3xl font-bold text-gray-400 tracking-tight">
-                      {discussed.toLocaleString()}
-                    </div>
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Received
                   </div>
+                  <div className="text-2xl font-black text-gray-400">0</div>
                 </div>
-
-                {/* Coming Soon badge - subtle & professional */}
-                <div className="absolute top-5 right-5">
-                  <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
-                    Coming Soon
+                <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full border border-amber-200">
+                    COMING SOON
                   </span>
                 </div>
               </div>
+
+              {/* Discussed */}
+              <button
+                type="button"
+                onClick={() => setFilter("Discussed")}
+                className={clsx(
+                  "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
+                  filter === "Discussed"
+                    ? "border-blue-300 bg-blue-50/30"
+                    : "border-gray-200",
+                )}
+              >
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div
+                    className={clsx(
+                      "w-12 h-12 rounded-xl flex items-center justify-center",
+                      filter === "Discussed"
+                        ? "bg-blue-100 text-blue-600"
+                        : "bg-gray-100 text-gray-500",
+                    )}
+                  >
+                    <Users size={24} />
+                  </div>
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Discussed
+                  </div>
+                  <div className="text-2xl font-black text-gray-900">
+                    {discussed.toLocaleString()}
+                  </div>
+                </div>
+              </button>
+
+              {/* Pending */}
+              <button
+                type="button"
+                onClick={() => setFilter("Pending")}
+                className={clsx(
+                  "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
+                  filter === "Pending"
+                    ? "border-amber-300 bg-amber-50/30"
+                    : "border-gray-200",
+                )}
+              >
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div
+                    className={clsx(
+                      "w-12 h-12 rounded-xl flex items-center justify-center",
+                      filter === "Pending"
+                        ? "bg-amber-100 text-amber-600"
+                        : "bg-gray-100 text-gray-500",
+                    )}
+                  >
+                    <Loader2 size={24} />
+                  </div>
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Pending
+                  </div>
+                  <div className="text-2xl font-black text-gray-900">
+                    {pending.toLocaleString()}
+                  </div>
+                </div>
+              </button>
+
+              {/* Accepted */}
+              <button
+                type="button"
+                onClick={() => setFilter("Accepted")}
+                className={clsx(
+                  "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
+                  filter === "Accepted"
+                    ? "border-green-300 bg-green-50/30"
+                    : "border-gray-200",
+                )}
+              >
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div
+                    className={clsx(
+                      "w-12 h-12 rounded-xl flex items-center justify-center",
+                      filter === "Accepted"
+                        ? "bg-green-100 text-green-600"
+                        : "bg-gray-100 text-gray-500",
+                    )}
+                  >
+                    <MailCheck size={24} />
+                  </div>
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Accepted
+                  </div>
+                  <div className="text-2xl font-black text-gray-900">
+                    {accepted.toLocaleString()}
+                  </div>
+                </div>
+              </button>
             </div>
             {/* Filter label */}
             {filter !== "All" && (
@@ -1456,16 +1465,6 @@ export default function SentOffersListView() {
               )}
             </div>
 
-            {/* Global Pagination */}
-            <div className="mt-12">
-              <Pagination
-                total={totalRecords}
-                page={currentPage}
-                limit={limit}
-                onPageChange={onPageChange}
-                onLimitChange={onLimitChange}
-              />
-            </div>
           </>
         )}
       </div>
