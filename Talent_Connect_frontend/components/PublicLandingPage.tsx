@@ -438,24 +438,24 @@ export default function FindInstitutesPage() {
   return (
     <div className="w-full mx-auto">
       {/* Header - unchanged */}
-      <div className="bg-primary text-white pt-8 pb-10 px-4 lg:px-8 relative overflow-visible border-b border-white/5">
+      <div className="bg-primary text-white pt-4 pb-6 px-4 lg:px-8 relative overflow-visible border-b border-white/5">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl" />
         </div>
 
         <div className="max-w-5xl mx-auto relative z-10 text-center">
-          <div className="flex flex-col items-center gap-2 mb-6">
+          <div className="flex flex-col items-center gap-2 mb-3">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white m-0 p-0">
               Explore Institutes in Punjab
             </h1>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-4 shadow-xl overflow-visible">
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-white/20 p-4 shadow-xl overflow-visible">
             <div className="flex flex-col md:flex-row gap-4 items-end justify-between">
 
               <div className="flex-1 w-full space-y-1.5 text-left">
-                <label className="text-xs font-bold text-white ml-1 tracking-wide">
+                <label className="text-xs font-bold text-primary ml-2 mb-1.5 tracking-wide block">
                   District / Location
                 </label>
                 <MultiSelectDropdown
@@ -467,12 +467,12 @@ export default function FindInstitutesPage() {
                     setCurrentPage(1);
                   }}
                   placeholder="All Locations"
-                  buttonClassName="bg-white/10 border-white/20 text-white placeholder:text-white/60 h-10 rounded-xl hover:bg-white/20 transition-all text-xs focus:ring-1 focus:ring-white/30"
+                  buttonClassName="bg-base-200 border-slate-200 text-slate-600 placeholder:text-slate-800 h-10 rounded-xl hover:bg-base-300 transition-all text-xs focus:ring-1 focus:ring-primary/30"
                 />
               </div>
 
               <div className="flex-1 w-full space-y-1.5 text-left">
-                <label className="text-xs font-bold text-white ml-1 tracking-wide">
+                <label className="text-xs font-bold text-primary ml-2 mb-1.5 tracking-wide block">
                   Qualification
                 </label>
                 <MultiSelectDropdown
@@ -484,12 +484,12 @@ export default function FindInstitutesPage() {
                     setCurrentPage(1);
                   }}
                   placeholder="All Qualifications"
-                  buttonClassName="bg-white/10 border-white/20 text-white placeholder:text-white/60 h-10 rounded-xl hover:bg-white/20 transition-all text-xs focus:ring-1 focus:ring-white/30"
+                  buttonClassName="bg-base-200 border-slate-200 text-slate-600 placeholder:text-slate-500 h-10 rounded-xl hover:bg-base-300 transition-all text-xs focus:ring-1 focus:ring-primary/30"
                 />
               </div>
 
               <div className="flex-1 w-full space-y-1.5 text-left">
-                <label className="text-xs font-bold text-white ml-1 tracking-wide">
+                <label className="text-xs font-bold text-primary ml-2 mb-1.5 tracking-wide block">
                   Specialization
                 </label>
                 <MultiSelectDropdown
@@ -510,22 +510,22 @@ export default function FindInstitutesPage() {
                     setCurrentPage(1);
                   }}
                   placeholder="All Specializations"
-                  buttonClassName="bg-white/10 border-white/20 text-white placeholder:text-white/60 h-10 rounded-xl hover:bg-white/20 transition-all text-xs focus:ring-1 focus:ring-white/30"
+                  buttonClassName="bg-base-200 border-slate-200 text-slate-600 placeholder:text-slate-500 h-10 rounded-xl hover:bg-base-300 transition-all text-xs focus:ring-1 focus:ring-primary/30"
                 />
               </div>
 
               <div className="flex md:flex-col items-center justify-between w-full md:w-auto h-full min-h-[40px] gap-2">
                 <button
                   onClick={resetFilters}
-                  className="text-white hover:bg-white/20 px-3 py-2 rounded-lg transition-colors text-xs font-bold flex items-center justify-center gap-2 whitespace-nowrap h-10 border border-white/10"
+                  className="text-slate-600 hover:bg-slate-100 px-3 py-2 rounded-lg transition-colors text-xs font-bold flex items-center justify-center gap-2 whitespace-nowrap h-10 border border-slate-200"
                 >
                   <X size={14} /> Reset
                 </button>
-                <div className="text-[11px] font-semibold text-white/80 whitespace-nowrap hidden md:block mt-1">
+                <div className="text-[11px] font-bold text-primary whitespace-nowrap hidden md:block mt-1">
                   {loading ? "Searching..." : `${total} found`}
                 </div>
                 {/* Mobile version count inline */}
-                <div className="text-[11px] font-semibold text-white/80 whitespace-nowrap md:hidden">
+                <div className="text-[11px] font-bold text-primary whitespace-nowrap md:hidden">
                   {loading ? "Searching..." : `${total} found`}
                 </div>
               </div>

@@ -151,8 +151,8 @@ export default function MultiSelectDropdown({
                       disabled
                         ? "opacity-50 cursor-not-allowed"
                         : checked
-                          ? "bg-primary/10 text-base-content"
-                          : "text-base-content/70 hover:bg-base-300",
+                          ? "bg-primary/10 text-slate-900 font-semibold"
+                          : "text-slate-700 hover:bg-base-300",
                     )}
                   >
                     <span

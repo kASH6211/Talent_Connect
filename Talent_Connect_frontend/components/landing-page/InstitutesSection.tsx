@@ -61,7 +61,7 @@ const InstitutesSection = () => {
   return (
     <section className="py-2 md:py-2 bg-slate-50 border-t border-slate-200" id="institutes">
       <div className="container mx-auto px-2 sm:px-4 md:px-5 lg:px-6 text-center">
-        <h2 className="text-foreground text-2xl md:text-3xl text-primary font-bold mb-8">
+        <h2 className="text-foreground text-2xl md:text-3xl text-primary font-bold mb-8 mt-5">
           Explore Punjab Institutes
         </h2>
 
@@ -179,12 +179,12 @@ const InstitutesSection = () => {
         </div>
 
         {/* Find All Institutes Link at bottom */}
-        <div className="mt-8 md:mt-10 flex justify-center">
+        <div className="mt-4 md:mt-5 flex justify-center">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/search-institutes")}
-            className="flex items-center gap-3 text-sm font-semibold text-slate-600 hover:text-primary transition-colors group"
+            className="flex items-center gap-3 text-sm font-semibold text-slate-600"
           >
             Find All Institutes
             <div className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center group-hover:border-primary/30 group-hover:bg-primary/5 transition-all">

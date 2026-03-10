@@ -60,47 +60,48 @@ const FastTrackOverlay = () => {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 40, scale: 0.94 }}
             transition={{ type: "spring", damping: 24, stiffness: 200 }}
-            className="bg-secondary flex items-center gap-4 max-w-[420px] bg-white/95 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-2xl px-5 py-4"
+            className="flex flex-col gap-4 max-w-[380px] bg-slate-200/95 backdrop-blur-xl border border-slate-300 rounded-2xl shadow-2xl p-5"
           >
-            {/* Icon */}
-            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 text-primary">
-              <Briefcase size={20} />
-            </div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-4">
+                {/* Icon */}
+                <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary/10 text-primary">
+                  <Briefcase size={20} />
+                </div>
 
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-800 leading-snug">
-                Already  registered with FastTrack Punjab portal? {" "}
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-800 leading-snug">
+                    Already  registered with FastTrack Punjab portal? {" "}
+                  </p>
+                </div>
+              </div>
 
-              </p>
-
-
+              {/* Close */}
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="text-gray-400 hover:text-gray-700 transition-colors shrink-0"
+              >
+                <X size={18} />
+              </button>
             </div>
 
             {/* Login Button */}
             <button
               onClick={handleSSO}
               disabled={loading}
-              className="group px-4 py-2 bg-primary text-white text-sm font-semibold rounded-xl flex items-center gap-2 hover:bg-primary/90 shadow-md transition-all"
+              className="group w-fit px-3 py-1.5 bg-primary text-white text-[13px] font-semibold rounded-lg flex items-center justify-center gap-2 hover:bg-primary/90 shadow-md transition-all"
             >
               {loading ? (
-                <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
                   Login Here
                   <ArrowRight
-                    size={14}
+                    size={12}
                     className="group-hover:translate-x-1 transition-transform"
                   />
                 </>
               )}
-            </button>
-
-            {/* Close */}
-            <button
-              onClick={() => setIsExpanded(false)}
-              className="text-gray-400 hover:text-gray-700 transition-colors"
-            >
-              <X size={18} />
             </button>
           </motion.div>
         )}
