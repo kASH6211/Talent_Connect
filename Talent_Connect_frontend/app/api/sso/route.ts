@@ -4,6 +4,7 @@ export async function GET() {
     try {
         const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
         const returnUrl = `${backendUrl}/api/auth/sso/callback`;
+        console.log(`[SSO] Generating returnUrl: ${returnUrl}`);
         const targetUrl = `https://fasttrack.punjab.gov.in/testportalnode/api/talent-portal/getSSOLoginUrl?returnUrl=${encodeURIComponent(returnUrl)}`;
 
         const response = await fetch(targetUrl, {
