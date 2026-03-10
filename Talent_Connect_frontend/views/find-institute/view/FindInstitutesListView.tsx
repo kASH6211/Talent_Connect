@@ -144,6 +144,7 @@ export default function FindInstitutesPage() {
   const [currentInstitute, setCurrentInstitute] = useState<InstituteRow | null>(
     null,
   );
+  const [sentCount, setSentCount] = useState(0);
 
   const [userLocation, setUserLocation] = useState<[number, number] | null>(
     null,
@@ -210,6 +211,18 @@ export default function FindInstitutesPage() {
   }, []);
 
   useEffect(() => {
+    const fetchSentCount = async () => {
+      try {
+        const res = await api.get("/job-offer/sent?limit=1");
+        setSentCount(res.data?.total || 0);
+      } catch (err) {
+        console.error("Failed to fetch sent count", err);
+      }
+    };
+    fetchSentCount();
+  }, [sentSuccess]);
+
+  useEffect(() => {
     const loadStreams = async () => {
       try {
         setStreamOpts([]); // Clear previous options during load
@@ -252,10 +265,7 @@ export default function FindInstitutesPage() {
             const ids = masterStreamsMap.get(name)!;
             const validIdsInPortal = ids.filter((id) => inUseIds.has(id));
             if (validIdsInPortal.length > 0) {
-              const groupedValue =
-                validIdsInPortal.length === 1
-                  ? validIdsInPortal[0]
-                  : validIdsInPortal.join(",");
+              const groupedValue = validIdsInPortal.join(",");
               finalOptions.push({ value: groupedValue, label: name });
             }
           });
@@ -274,7 +284,7 @@ export default function FindInstitutesPage() {
           sortedNames.forEach((name) => {
             const ids = masterStreamsMap.get(name)!;
             // All in map are already "in use"
-            const groupedValue = ids.length === 1 ? ids[0] : ids.join(",");
+            const groupedValue = ids.join(",");
             finalOptions.push({ value: groupedValue, label: name });
           });
         }
@@ -477,28 +487,50 @@ export default function FindInstitutesPage() {
           </div>
         </div>
 
-        {searched && !loading && (
-          <div className="flex items-center gap-3">
-            <div className="px-4 py-2 rounded-lg bg-slate-100 border border-slate-300 text-center">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">
-                Found
-              </p>
-              <p className="text-xl font-black text-primary leading-tight">
-                {total}
-              </p>
+        <div className="flex items-center gap-3">
+          {/* Total Sent EOI Counter */}
+          <div className="px-5 py-2.5 rounded-2xl bg-indigo-50 border border-indigo-100 shadow-sm flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white">
+              <Send size={18} />
             </div>
-            {(selected.size > 0 || isSelectAll) && (
-              <div className="px-4 py-2 rounded-lg bg-green-50 border border-green-300 text-center">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-green-700">
-                  Selected
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">
+                Total EOI Sent
+              </p>
+              <div className="flex items-baseline gap-1">
+                <p className="text-xl font-extrabold text-slate-900 leading-none">
+                  {sentCount}
                 </p>
-                <p className="text-xl font-black text-green-600 leading-tight">
-                  {isSelectAll ? total : selected.size}
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+                  offers
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {searched && !loading && (
+            <div className="flex items-center gap-3">
+              <div className="px-4 py-2 rounded-lg bg-slate-100 border border-slate-300 text-center">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">
+                  Found
+                </p>
+                <p className="text-xl font-black text-primary leading-tight">
+                  {total}
                 </p>
               </div>
-            )}
-          </div>
-        )}
+              {(selected.size > 0 || isSelectAll) && (
+                <div className="px-4 py-2 rounded-lg bg-green-50 border border-green-300 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-green-700">
+                    Selected
+                  </p>
+                  <p className="text-xl font-black text-green-600 leading-tight">
+                    {isSelectAll ? total : selected.size}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Filters Card */}
@@ -544,521 +576,525 @@ export default function FindInstitutesPage() {
       </div>
 
       {/* Results */}
-      {searched && (
-        <div className="space-y-4 relative pb-24 lg:pb-0">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={toggleAll}
-                className="w-8 h-8 rounded-lg border border-slate-300 bg-slate-50 flex items-center justify-center text-slate-600 transition-all"
-              >
-                {allSelected ? (
-                  <CheckSquare size={16} className="text-primary" />
-                ) : (
-                  <Square size={16} />
-                )}
-              </button>
-              <div className="flex flex-col">
-                <p className="text-sm font-semibold text-slate-900">
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 size={14} className="animate-spin text-primary" />
-                      Searching...
-                    </span>
+      {
+        searched && (
+          <div className="space-y-4 relative pb-24 lg:pb-0">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleAll}
+                  className="w-8 h-8 rounded-lg border border-slate-300 bg-slate-50 flex items-center justify-center text-slate-600 transition-all"
+                >
+                  {allSelected ? (
+                    <CheckSquare size={16} className="text-primary" />
                   ) : (
-                    <>
-                      {total} institute{total !== 1 ? "s" : ""} found
-                    </>
+                    <Square size={16} />
                   )}
-                  <span className="text-slate-600 font-normal ml-1.5 hidden sm:inline">
-                    • click rows to select
-                  </span>
-                </p>
+                </button>
+                <div className="flex flex-col">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 size={14} className="animate-spin text-primary" />
+                        Searching...
+                      </span>
+                    ) : (
+                      <>
+                        {total} institute{total !== 1 ? "s" : ""} found
+                      </>
+                    )}
+                    <span className="text-slate-600 font-normal ml-1.5 hidden sm:inline">
+                      • click rows to select
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-600 font-medium">
+                  <span>Show:</span>
+                  <select
+                    className="bg-transparent border-0 outline-none text-slate-900 font-bold cursor-pointer"
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(
+                        e.target.value === "all" ? "all" : Number(e.target.value),
+                      );
+                      setCurrentPage(1);
+                    }}
+                  >
+                    {[5, 10, 20, 25, 50, 100].map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                    <option value="all">All</option>
+                  </select>
+                </div>
+                <div className="relative flex-1 min-w-[240px] max-w-sm group">
+                  <input
+                    type="text"
+                    placeholder="Search institutes..."
+                    className="input input-bordered w-full pl-11 pr-5 text-sm border-slate-300 focus:ring-2 focus:ring-blue-100"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Search
+                    size={16}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 "
+                  />
+                </div>
+
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 text-xs">
+                  <ArrowUpDown size={12} className="text-primary" />
+                  <select
+                    className="bg-transparent border-0 outline-none text-slate-900 font-medium cursor-pointer text-xs"
+                    value={sort}
+                    onChange={(e) => {
+                      setSort(
+                        e.target.value as "name" | "name-rev" | "student_count",
+                      );
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value="student_count">Students</option>
+                    <option value="name">A–Z</option>
+                    <option value="name-rev">Z–A</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-600 font-medium">
-                <span>Show:</span>
-                <select
-                  className="bg-transparent border-0 outline-none text-slate-900 font-bold cursor-pointer"
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    setItemsPerPage(
-                      e.target.value === "all" ? "all" : Number(e.target.value),
-                    );
-                    setCurrentPage(1);
-                  }}
-                >
-                  {[5, 10, 20, 25, 50, 100].map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                  <option value="all">All</option>
-                </select>
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-600">
+                <Loader2 size={32} className="animate-spin text-primary" />
+                <p className="text-sm">Searching institutes…</p>
               </div>
-              <div className="relative flex-1 min-w-[240px] max-w-sm group">
-                <input
-                  type="text"
-                  placeholder="Search institutes..."
-                  className="input input-bordered w-full pl-11 pr-5 text-sm border-slate-300 focus:ring-2 focus:ring-blue-100"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <Search
-                  size={16}
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 "
-                />
+            ) : institutes.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 gap-4">
+                <div className="w-14 h-14 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <Search size={24} className="text-primary" />
+                </div>
+                <div className="text-center">
+                  <p className="font-semibold text-slate-900">
+                    No institutes found
+                  </p>
+                  <p className="text-sm text-slate-600 mt-1">
+                    Try adjusting your filters
+                  </p>
+                </div>
               </div>
-
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 text-xs">
-                <ArrowUpDown size={12} className="text-primary" />
-                <select
-                  className="bg-transparent border-0 outline-none text-slate-900 font-medium cursor-pointer text-xs"
-                  value={sort}
-                  onChange={(e) => {
-                    setSort(
-                      e.target.value as "name" | "name-rev" | "student_count",
-                    );
-                    setCurrentPage(1);
-                  }}
-                >
-                  <option value="student_count">Students</option>
-                  <option value="name">A–Z</option>
-                  <option value="name-rev">Z–A</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-600">
-              <Loader2 size={32} className="animate-spin text-primary" />
-              <p className="text-sm">Searching institutes…</p>
-            </div>
-          ) : institutes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 gap-4">
-              <div className="w-14 h-14 rounded-lg bg-blue-50 flex items-center justify-center">
-                <Search size={24} className="text-primary" />
-              </div>
-              <div className="text-center">
-                <p className="font-semibold text-slate-900">
-                  No institutes found
-                </p>
-                <p className="text-sm text-slate-600 mt-1">
-                  Try adjusting your filters
-                </p>
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* 70/30 Layout: Table + Map */}
-              <div className="flex gap-6 flex-col lg:flex-row">
-                {/* Left: Table (70%) */}
-                <div className="flex-1 lg:w-[70%] relative">
-                  <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
-                    {/* Desktop Table */}
-                    <div className="overflow-x-auto hidden md:block">
-                      <table className="min-w-full divide-y divide-slate-200">
-                        <thead>
-                          <tr className="bg-slate-50">
-                            <th className="px-4 py-3 w-10">
-                              <button
-                                onClick={toggleAll}
-                                className="w-7 h-7 rounded-md border border-slate-300 bg-white flex items-center justify-center text-slate-600 transition-all mx-auto"
-                              >
-                                {allSelected ? (
-                                  <CheckSquare
-                                    size={14}
-                                    className="text-blue-600"
-                                  />
-                                ) : (
-                                  <Square size={14} />
-                                )}
-                              </button>
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Institute Name
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              District
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Courses
-                            </th>
-                            <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Students on roll
-                            </th>
-                            <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Students Available for placement
-                            </th>
-                            <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Actions
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-200">
-                          {institutes.map((inst) => {
-                            const isSelected = selected.has(inst.institute_id);
-                            return (
-                              <tr
-                                key={inst.institute_id}
-                                className={clsx(
-                                  "transition-colors cursor-pointer",
-                                  isSelected
-                                    ? "bg-blue-50"
-                                    : "hover:bg-slate-50",
-                                )}
-                              >
-                                <td className="px-4 py-3 text-center">
-                                  <button
-                                    onClick={() =>
-                                      toggleSelect(inst.institute_id)
-                                    }
-                                    className="w-5 h-5 rounded-md border border-slate-300 flex items-center justify-center mx-auto transition-all"
-                                  >
-                                    {isSelected ? (
-                                      <CheckSquare
-                                        size={14}
-                                        className="text-blue-600"
-                                      />
-                                    ) : (
-                                      <Square size={14} />
-                                    )}
-                                  </button>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <span className="text-sm font-semibold text-slate-900">
-                                    {inst.institute_name}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <span className="flex items-center gap-1.5 text-sm text-slate-700">
-                                    <MapPin
-                                      size={12}
-                                      className="text-slate-500"
+            ) : (
+              <>
+                {/* 70/30 Layout: Table + Map */}
+                <div className="flex gap-6 flex-col lg:flex-row">
+                  {/* Left: Table (70%) */}
+                  <div className="flex-1 lg:w-[70%] relative">
+                    <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
+                      {/* Desktop Table */}
+                      <div className="overflow-x-auto hidden md:block">
+                        <table className="min-w-full divide-y divide-slate-200">
+                          <thead>
+                            <tr className="bg-slate-50">
+                              <th className="px-4 py-3 w-10">
+                                <button
+                                  onClick={toggleAll}
+                                  className="w-7 h-7 rounded-md border border-slate-300 bg-white flex items-center justify-center text-slate-600 transition-all mx-auto"
+                                >
+                                  {allSelected ? (
+                                    <CheckSquare
+                                      size={14}
+                                      className="text-blue-600"
                                     />
-                                    {inst.district || "—"}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setCurrentInstitute(inst);
-                                      setViewCourses(true);
-                                    }}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 hover:text-blue-800 transition-all text-xs font-semibold"
-                                  >
-                                    <BookOpen size={14} /> View
-                                  </button>
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 text-primary text-xs font-bold">
-                                    <Users size={12} />
-                                    {inst.student_count.toLocaleString()}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                  <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 text-primary text-xs font-bold">
-                                    <Users size={12} />
-                                    {inst.final_year_student_count?.toLocaleString() ||
-                                      "0"}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                  <div className="flex items-center justify-center gap-1">
+                                  ) : (
+                                    <Square size={14} />
+                                  )}
+                                </button>
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Institute Name
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                District
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Courses
+                              </th>
+                              <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Students on roll
+                              </th>
+                              <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Students Available for placement
+                              </th>
+                              <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Actions
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200">
+                            {institutes.map((inst) => {
+                              const isSelected = selected.has(inst.institute_id);
+                              return (
+                                <tr
+                                  key={inst.institute_id}
+                                  className={clsx(
+                                    "transition-colors cursor-pointer",
+                                    isSelected
+                                      ? "bg-blue-50"
+                                      : "hover:bg-slate-50",
+                                  )}
+                                >
+                                  <td className="px-4 py-3 text-center">
+                                    <button
+                                      onClick={() =>
+                                        toggleSelect(inst.institute_id)
+                                      }
+                                      className="w-5 h-5 rounded-md border border-slate-300 flex items-center justify-center mx-auto transition-all"
+                                    >
+                                      {isSelected ? (
+                                        <CheckSquare
+                                          size={14}
+                                          className="text-blue-600"
+                                        />
+                                      ) : (
+                                        <Square size={14} />
+                                      )}
+                                    </button>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <span className="text-sm font-semibold text-slate-900">
+                                      {inst.institute_name}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <span className="flex items-center gap-1.5 text-sm text-slate-700">
+                                      <MapPin
+                                        size={12}
+                                        className="text-slate-500"
+                                      />
+                                      {inst.district || "—"}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3">
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setCurrentInstitute(inst);
-                                        setViewInstitute(true);
+                                        setViewCourses(true);
                                       }}
-                                      title="View Profile"
-                                      className="h-8 w-8 rounded-md bg-slate-100 border border-slate-300 text-slate-700 hover:bg-blue-50 flex items-center justify-center transition-all"
+                                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 hover:text-blue-800 transition-all text-xs font-semibold"
                                     >
-                                      <Eye size={14} />
+                                      <BookOpen size={14} /> View
                                     </button>
-                                    <button
-                                      onClick={(e: any) => {
-                                        e.stopPropagation();
-                                        if (!selected.has(inst.institute_id)) {
-                                          toggleSelect(inst.institute_id);
-                                        }
-                                        dispatch(
-                                          updateUiInstitute({
-                                            bulkOffer: { open: true },
-                                          }),
-                                        );
-                                      }}
-                                      className="px-3 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center gap-1.5 transition-all"
-                                    >
-                                      <LogIn size={14} />
-                                      Connect
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Mobile Cards */}
-                    <div className="md:hidden flex flex-col divide-y divide-slate-200">
-                      {institutes.map((inst) => {
-                        const isSelected = selected.has(inst.institute_id);
-                        return (
-                          <div
-                            key={inst.institute_id}
-                            className={clsx(
-                              "p-4 transition-colors",
-                              isSelected ? "bg-blue-50" : "",
-                            )}
-                          >
-                            <div className="flex items-start gap-3 mb-3">
-                              <button
-                                onClick={() => toggleSelect(inst.institute_id)}
-                                className="mt-1"
-                              >
-                                {isSelected ? (
-                                  <CheckSquare
-                                    size={16}
-                                    className="text-blue-600"
-                                  />
-                                ) : (
-                                  <Square
-                                    size={16}
-                                    className="text-slate-400"
-                                  />
-                                )}
-                              </button>
-                              <div className="flex-1">
-                                <h3 className="text-sm font-bold text-slate-900 mb-1">
-                                  {inst.institute_name}
-                                </h3>
-                                <div className="flex items-center gap-2 text-[10px] font-medium text-slate-500 mb-2">
-                                  <MapPin size={10} /> {inst.district || "—"}
-                                </div>
-                                <div className="grid grid-cols-2 gap-4 mt-2">
-                                  <div className="flex flex-col gap-0.5">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">On Roll</span>
-                                    <span className="font-bold text-primary text-xs">
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 text-primary text-xs font-bold">
+                                      <Users size={12} />
                                       {inst.student_count.toLocaleString()}
                                     </span>
-                                  </div>
-                                  <div className="flex flex-col gap-0.5">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">For Placement</span>
-                                    <span className="font-bold text-green-600 text-xs">
-                                      {inst.final_year_student_count?.toLocaleString() || "0"}
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 text-primary text-xs font-bold">
+                                      <Users size={12} />
+                                      {inst.final_year_student_count?.toLocaleString() ||
+                                        "0"}
                                     </span>
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <div className="flex items-center justify-center gap-1">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setCurrentInstitute(inst);
+                                          setViewInstitute(true);
+                                        }}
+                                        title="View Profile"
+                                        className="h-8 w-8 rounded-md bg-slate-100 border border-slate-300 text-slate-700 hover:bg-blue-50 flex items-center justify-center transition-all"
+                                      >
+                                        <Eye size={14} />
+                                      </button>
+                                      <button
+                                        onClick={(e: any) => {
+                                          e.stopPropagation();
+                                          if (!selected.has(inst.institute_id)) {
+                                            toggleSelect(inst.institute_id);
+                                          }
+                                          dispatch(
+                                            updateUiInstitute({
+                                              bulkOffer: { open: true },
+                                            }),
+                                          );
+                                        }}
+                                        className="px-3 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center gap-1.5 transition-all"
+                                      >
+                                        <LogIn size={14} />
+                                        Connect
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Mobile Cards */}
+                      <div className="md:hidden flex flex-col divide-y divide-slate-200">
+                        {institutes.map((inst) => {
+                          const isSelected = selected.has(inst.institute_id);
+                          return (
+                            <div
+                              key={inst.institute_id}
+                              className={clsx(
+                                "p-4 transition-colors",
+                                isSelected ? "bg-blue-50" : "",
+                              )}
+                            >
+                              <div className="flex items-start gap-3 mb-3">
+                                <button
+                                  onClick={() => toggleSelect(inst.institute_id)}
+                                  className="mt-1"
+                                >
+                                  {isSelected ? (
+                                    <CheckSquare
+                                      size={16}
+                                      className="text-blue-600"
+                                    />
+                                  ) : (
+                                    <Square
+                                      size={16}
+                                      className="text-slate-400"
+                                    />
+                                  )}
+                                </button>
+                                <div className="flex-1">
+                                  <h3 className="text-sm font-bold text-slate-900 mb-1">
+                                    {inst.institute_name}
+                                  </h3>
+                                  <div className="flex items-center gap-2 text-[10px] font-medium text-slate-500 mb-2">
+                                    <MapPin size={10} /> {inst.district || "—"}
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4 mt-2">
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">On Roll</span>
+                                      <span className="font-bold text-primary text-xs">
+                                        {inst.student_count.toLocaleString()}
+                                      </span>
+                                    </div>
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">For Placement</span>
+                                      <span className="font-bold text-green-600 text-xs">
+                                        {inst.final_year_student_count?.toLocaleString() || "0"}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                            </div>
 
-                            <div className="flex items-center gap-2 ml-7 flex-wrap">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCurrentInstitute(inst);
-                                  setViewCourses(true);
-                                }}
-                                className="flex-1 py-2 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-100"
-                              >
-                                <BookOpen size={12} /> View Courses
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCurrentInstitute(inst);
-                                  setViewInstitute(true);
-                                }}
-                                className="flex-[0.5] py-2 rounded-md bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold flex items-center justify-center hover:bg-slate-200"
-                              >
-                                <Eye size={12} />
-                              </button>
-                              <button
-                                onClick={(e: any) => {
-                                  e.stopPropagation();
-                                  if (!selected.has(inst.institute_id)) {
-                                    toggleSelect(inst.institute_id);
-                                  }
-                                  dispatch(
-                                    updateUiInstitute({
-                                      bulkOffer: { open: true },
-                                    }),
-                                  );
-                                }}
-                                className="flex-1 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-700"
-                              >
-                                <LogIn size={12} /> Connect
-                              </button>
+                              <div className="flex items-center gap-2 ml-7 flex-wrap">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentInstitute(inst);
+                                    setViewCourses(true);
+                                  }}
+                                  className="flex-1 py-2 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-100"
+                                >
+                                  <BookOpen size={12} /> View Courses
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentInstitute(inst);
+                                    setViewInstitute(true);
+                                  }}
+                                  className="flex-[0.5] py-2 rounded-md bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold flex items-center justify-center hover:bg-slate-200"
+                                >
+                                  <Eye size={12} />
+                                </button>
+                                <button
+                                  onClick={(e: any) => {
+                                    e.stopPropagation();
+                                    if (!selected.has(inst.institute_id)) {
+                                      toggleSelect(inst.institute_id);
+                                    }
+                                    dispatch(
+                                      updateUiInstitute({
+                                        bulkOffer: { open: true },
+                                      }),
+                                    );
+                                  }}
+                                  className="flex-1 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-700"
+                                >
+                                  <LogIn size={12} /> Connect
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Full-width Sticky Send Button in table footer area */}
-                  {(selected.size > 0 || isSelectAll) && (
-                    <div className="sticky bottom-0 left-0 right-0 z-30 mt-4 bg-white border-t border-slate-200 shadow-lg">
-                      <div className="px-4 py-4 lg:px-6">
+                    {/* Full-width Sticky Send Button in table footer area */}
+                    {(selected.size > 0 || isSelectAll) && (
+                      <div className="sticky bottom-0 left-0 right-0 z-30 mt-4 bg-white border-t border-slate-200 shadow-lg">
+                        <div className="px-4 py-4 lg:px-6">
+                          <button
+                            onClick={() =>
+                              dispatch(
+                                updateUiInstitute({ bulkOffer: { open: true } }),
+                              )
+                            }
+                            className={clsx(
+                              "group w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl",
+                              "bg-primary",
+                              "text-white font-medium shadow-xl",
+                            )}
+                          >
+                            <Send
+                              size={20}
+                              className="group-hover:rotate-12 transition-transform duration-300"
+                            />
+                            <span className="text-base">
+                              Send to <strong>{isSelectAll ? total : selected.size}</strong> institute
+                              {(isSelectAll ? total : selected.size) !== 1 ? "s" : ""}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-3 mt-4 shadow-sm">
                         <button
-                          onClick={() =>
-                            dispatch(
-                              updateUiInstitute({ bulkOffer: { open: true } }),
-                            )
-                          }
-                          className={clsx(
-                            "group w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl",
-                            "bg-primary",
-                            "text-white font-medium shadow-xl",
-                          )}
+                          onClick={() => goToPage(Math.max(1, currentPage - 1))}
+                          disabled={currentPage === 1}
+                          className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
                         >
-                          <Send
-                            size={20}
-                            className="group-hover:rotate-12 transition-transform duration-300"
-                          />
-                          <span className="text-base">
-                            Send to <strong>{isSelectAll ? total : selected.size}</strong> institute
-                            {(isSelectAll ? total : selected.size) !== 1 ? "s" : ""}
+                          <ChevronLeft size={14} /> Previous
+                        </button>
+
+                        <span className="text-xs text-slate-600 font-medium">
+                          Page {currentPage} of {totalPages}
+                          <span className="hidden sm:inline">
+                            {" "}
+                            · {total} institutes
                           </span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-3 mt-4 shadow-sm">
-                      <button
-                        onClick={() => goToPage(Math.max(1, currentPage - 1))}
-                        disabled={currentPage === 1}
-                        className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
-                      >
-                        <ChevronLeft size={14} /> Previous
-                      </button>
-
-                      <span className="text-xs text-slate-600 font-medium">
-                        Page {currentPage} of {totalPages}
-                        <span className="hidden sm:inline">
-                          {" "}
-                          · {total} institutes
                         </span>
-                      </span>
 
-                      <button
-                        onClick={() => goToPage(currentPage + 1)}
-                        disabled={currentPage >= totalPages}
-                        className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
-                      >
-                        Next <ChevronRight size={14} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right: Map Section (30%) */}
-                <div className="lg:w-[30%] h-fit lg:sticky lg:top-4">
-                  <div className="flex flex-col gap-3 bg-white rounded-lg border border-slate-200 shadow-sm p-4">
-                    <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                      <MapPin size={16} className="text-primary" /> Institutes
-                      Near You
-                    </h3>
-
-                    <div className="flex flex-col gap-2">
-                      <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="Search location..."
-                          className="input input-sm input-bordered w-full pl-9 pr-3 border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                          value={searchGeoTerm}
-                          onChange={(e) => setSearchGeoTerm(e.target.value)}
-                          onKeyDown={(e) =>
-                            e.key === "Enter" && handleGeoSearch()
-                          }
-                        />
-                        <Search
-                          size={14}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                        />
-                      </div>
-
-                      <div className="flex gap-2">
                         <button
-                          onClick={handleGeoSearch}
-                          className="flex-1 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg transition-all"
+                          onClick={() => goToPage(currentPage + 1)}
+                          disabled={currentPage >= totalPages}
+                          className="btn btn-outline btn-sm gap-1.5 text-xs disabled:opacity-40"
                         >
-                          Search
-                        </button>
-                        <button
-                          onClick={() => {
-                            setUserLocation(null);
-                            setSearchGeoTerm("");
-                          }}
-                          className="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold rounded-lg transition-all"
-                        >
-                          <X size={14} />
+                          Next <ChevronRight size={14} />
                         </button>
                       </div>
-                    </div>
+                    )}
+                  </div>
 
-                    <div className="w-full h-[350px] rounded-lg overflow-hidden border border-slate-200 shadow-inner bg-slate-100">
-                      <MapContainer
-                        center={userLocation || [31.1471, 75.3412]}
-                        zoom={userLocation ? 14 : 7}
-                        scrollWheelZoom={true}
-                        style={{ height: "100%", width: "100%" }}
-                      >
-                        <TileLayer
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                        />
-                        {punjabGeoJson && (
-                          <GeoJSON
-                            data={punjabGeoJson}
-                            style={() => ({
-                              color: "#1e40af",
-                              weight: 2,
-                              fillColor: "#1e40af",
-                              fillOpacity: 0.1,
-                            })}
+                  {/* Right: Map Section (30%) */}
+                  <div className="lg:w-[30%] h-fit lg:sticky lg:top-4">
+                    <div className="flex flex-col gap-3 bg-white rounded-lg border border-slate-200 shadow-sm p-4">
+                      <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                        <MapPin size={16} className="text-primary" /> Institutes
+                        Near You
+                      </h3>
+
+                      <div className="flex flex-col gap-2">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Search location..."
+                            className="input input-sm input-bordered w-full pl-9 pr-3 border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                            value={searchGeoTerm}
+                            onChange={(e) => setSearchGeoTerm(e.target.value)}
+                            onKeyDown={(e) =>
+                              e.key === "Enter" && handleGeoSearch()
+                            }
                           />
-                        )}
-                        {userLocation && <Marker position={userLocation} />}
-                        <MapClickEvent />
-                      </MapContainer>
-                    </div>
+                          <Search
+                            size={14}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                          />
+                        </div>
 
-                    <p className="text-xs text-slate-600 text-center italic">
-                      {!userLocation
-                        ? "Click on map or search location"
-                        : "✓ Location marked"}
-                    </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleGeoSearch}
+                            className="flex-1 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg transition-all"
+                          >
+                            Search
+                          </button>
+                          <button
+                            onClick={() => {
+                              setUserLocation(null);
+                              setSearchGeoTerm("");
+                            }}
+                            className="px-3 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold rounded-lg transition-all"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="w-full h-[350px] rounded-lg overflow-hidden border border-slate-200 shadow-inner bg-slate-100">
+                        <MapContainer
+                          center={userLocation || [31.1471, 75.3412]}
+                          zoom={userLocation ? 14 : 7}
+                          scrollWheelZoom={true}
+                          style={{ height: "100%", width: "100%" }}
+                        >
+                          <TileLayer
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                          />
+                          {punjabGeoJson && (
+                            <GeoJSON
+                              data={punjabGeoJson}
+                              style={() => ({
+                                color: "#1e40af",
+                                weight: 2,
+                                fillColor: "#1e40af",
+                                fillOpacity: 0.1,
+                              })}
+                            />
+                          )}
+                          {userLocation && <Marker position={userLocation} />}
+                          <MapClickEvent />
+                        </MapContainer>
+                      </div>
+
+                      <p className="text-xs text-slate-600 text-center italic">
+                        {!userLocation
+                          ? "Click on map or search location"
+                          : "✓ Location marked"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+              </>
+            )}
+          </div>
+        )
+      }
 
       {/* Success Toast */}
-      {sentSuccess && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <div className="flex items-center gap-3 px-5 py-3.5 rounded-lg bg-green-50 border border-green-300 text-green-700 shadow-lg font-medium text-sm">
-            <Send size={16} className="shrink-0" />
-            <span className="font-semibold">Job offers sent successfully!</span>
-            <button onClick={() => setSentSuccess(false)}>
-              <X size={15} />
-            </button>
+      {
+        sentSuccess && (
+          <div className="fixed bottom-6 right-6 z-50">
+            <div className="flex items-center gap-3 px-5 py-3.5 rounded-lg bg-green-50 border border-green-300 text-green-700 shadow-lg font-medium text-sm">
+              <Send size={16} className="shrink-0" />
+              <span className="font-semibold">Job offers sent successfully!</span>
+              <button onClick={() => setSentSuccess(false)}>
+                <X size={15} />
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Modals */}
       <OfferModalV2
@@ -1094,6 +1130,6 @@ export default function FindInstitutesPage() {
         instituteName={currentInstitute?.institute_name ?? ""}
         filters={filters}
       />
-    </div>
+    </div >
   );
 }

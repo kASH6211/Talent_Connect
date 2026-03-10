@@ -110,7 +110,7 @@ const instituteNav = [
 ];
 
 const industryNav = [
-  { icon: Search, label: "Find Institutes", href: "/find-institutes" },
+  { icon: Search, label: "Explore Institutes", href: "/find-institutes" },
   { icon: LayoutDashboard, label: "Dashboard", href: "/industry/dashboard" },
   { icon: AppWindow, label: "My Application", href: "/sent-offers" },
 ];

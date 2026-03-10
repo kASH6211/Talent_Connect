@@ -56,13 +56,13 @@ const PartnersSection = () => {
   const router = useRouter();
 
   return (
-    <section className="py-2 md:py-8 relative overflow-hidden" id="industries">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10 md:mb-12">
+    <section className="py-16 md:py-24 relative overflow-hidden bg-slate-50" id="industries">
+      <div className="max-w-[1600px] mx-auto px-1 sm:px-6 lg:px-8">
+        <div className="text-center mb-1 md:mb-5">
           <h2 className="text-foreground text-2xl md:text-3xl text-primary font-bold mb-8">
             Our Partners
           </h2>
-          <div className="h-1 w-20 bg-secondary mx-auto rounded-full"></div>
+
         </div>
 
         <div className="space-y-6 md:space-y-8">

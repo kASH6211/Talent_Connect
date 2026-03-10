@@ -421,8 +421,24 @@ export function OfferModalV2({
               {/* Relevant Course */}
               <div>
                 <label className={fieldLabelCls}>Relevant Course</label>
-                <MultiSelectDropdown label="Course" options={streamOptions} selected={streamIds}
-                  onChange={setStreamIds} placeholder="Any course" />
+                <MultiSelectDropdown
+                  label="Course"
+                  options={streamOptions}
+                  selected={streamOptions
+                    .filter((opt) => {
+                      const val = String(opt.value || "");
+                      const ids = val.split(",").map(Number);
+                      return ids.every((id) => streamIds.includes(id as any));
+                    })
+                    .map((opt) => opt.value)}
+                  onChange={(vals) => {
+                    const allIds = (vals as string[]).flatMap((v) =>
+                      String(v || "").split(",").map(Number),
+                    );
+                    setStreamIds(allIds);
+                  }}
+                  placeholder="Any course"
+                />
               </div>
 
               {/* Students required + Experience */}

@@ -47,21 +47,21 @@ const studentCards = [
 
 const StudentConnectSection = () => {
   return (
-    <section className="py-5" id="students">
+    <section className="py-16 md:py-24 bg-white" id="students">
       <div className="container px-4 max-w-[1600px] mx-auto">
         {/* Heading */}
         <div className="text-center mb-5">
           <h2 className="text-foreground text-2xl md:text-3xl text-primary font-bold mb-8">
             Get Started
           </h2>
-          <div className="h-1.5 w-24 bg-secondary mx-auto rounded-full"></div>
+
         </div>
 
         {/* Two Column Layout with Vertical Divider */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 relative border border-base-300 rounded-[2.5rem] overflow-hidden shadow-xl bg-white">
           {/* LEFT - INDUSTRIES (Theme: Light Blue/Primary) */}
-          <div className="p-10 lg:p-14 bg-slate-50">
-            <h3 className="text-2xl font-black mb-12 text-center text-primary uppercase tracking-[0.2em]">
+          <div className="p-3 lg:p-5 bg-slate-50">
+            <h3 className="text-2xl font-black mb-5 text-center text-primary uppercase tracking-[0.2em]">
               For Industries
             </h3>
 

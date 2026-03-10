@@ -70,13 +70,13 @@ const FastTrackOverlay = () => {
             <div className="flex-1">
               <p className="text-sm font-semibold text-gray-800 leading-snug">
                 Are you an{" "}
-                <span className="text-primary">Industry or Employer?</span>
+                <span className="text-primary">Industry Partner?</span>
               </p>
 
               <p className="text-xs text-gray-600 leading-relaxed">
-                Access the{" "}
+                Login with{" "}
                 <span className="font-medium text-gray-700">
-                  FastTrack Industry Portal
+                  FastTrack Punjab  Portal
                 </span>{" "}
               </p>
             </div>
