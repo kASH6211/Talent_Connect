@@ -231,8 +231,8 @@ export function InstituteViewModal({
               <p className="text-lg font-black text-base-content">{institute.course_count || '0'}</p>
             </div>
             <div className="flex-1 bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-800 shadow-sm rounded-xl p-3 text-center">
-              <p className="text-[11px] font-bold text-secondary uppercase tracking-wider mb-1">Rank</p>
-              <p className="text-lg font-black text-secondary">#12</p>
+              <p className="text-[11px] font-bold text-base-content/50 uppercase tracking-wider mb-1">coming soon</p>
+              <p className="text-lg font-black text-base-content">#1</p>
             </div>
           </div>
 
@@ -281,9 +281,9 @@ export function InstituteViewModal({
 
           <button
             onClick={() => { }}
-            className="h-10 px-6 rounded-xl bg-base-content text-base-100 text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity shadow-md"
+            className="h-10 px-6 rounded-xl bg-primary text-base-100 text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity shadow-md"
           >
-            View full profile
+            Coming soon
           </button>
         </div>
       </div>

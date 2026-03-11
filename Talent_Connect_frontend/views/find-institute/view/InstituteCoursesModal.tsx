@@ -126,7 +126,7 @@ export default function InstituteCoursesModal({
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3">
-                                                <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-secondary/10 text-secondary text-xs font-bold">
+                                                <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-primary/10 text-primary  text-xs font-bold">
                                                     <Users size={12} />
                                                     {row.final_year_student_count.toLocaleString()}
                                                 </span>

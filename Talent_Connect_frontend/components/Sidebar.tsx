@@ -93,7 +93,7 @@ const adminNav = [
 ];
 
 const instituteNav = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/institute/dashboard" },
+  // { icon: LayoutDashboard, label: "Dashboard", href: "/institute/dashboard" },
   { icon: Inbox, label: "My Inbox", href: "/institute/inbox" },
   { icon: LayoutDashboard, label: "Explore Industry", href: "/institute/explore-industry" },
   { icon: AppWindow, label: "My Application", href: "/institute/application" },
