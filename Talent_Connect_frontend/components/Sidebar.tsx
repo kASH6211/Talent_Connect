@@ -101,7 +101,7 @@ const instituteNav = [
   { icon: Users, label: "My Student", href: "/institute/student" },
   { icon: GraduationCap, label: "My Alumni", href: "/institute/alumini" },
   { icon: LayoutDashboard, label: "My Faculty", href: "/institute/faculty" },
-  { icon: Inbox, label: "Received EOI", href: "/received-offers" },
+  // { icon: Inbox, label: "Received EOI", href: "/received-offers" },
   // {
   //   icon: ClipboardList,
   //   label: "Mappings",
