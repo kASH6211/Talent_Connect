@@ -304,7 +304,7 @@ export default function ReceivedOffersPage() {
             value={eoiTypeFilter}
             onChange={(e) => setEoiTypeFilter(e.target.value)}
           >
-            <option value="All">All EOI Types</option>
+            <option value="All">All Received Types</option>
             <option value="Placement">🎓 Hiring</option>
             <option value="Training">🏭 Training</option>
             <option value="Collaboration">🤝 Collaboration</option>
@@ -343,7 +343,7 @@ export default function ReceivedOffersPage() {
             <Mail size={30} className="text-primary" />
           </div>
           <div>
-            <p className="font-bold text-base-content text-lg uppercase tracking-tight">No EOI found</p>
+            <p className="font-bold text-base-content text-lg uppercase tracking-tight">No Received Application found</p>
             <p className="text-sm text-base-content/50 mt-1">Try changing filters or wait for new responses</p>
           </div>
         </div>
