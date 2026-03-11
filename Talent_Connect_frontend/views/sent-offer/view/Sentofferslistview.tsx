@@ -1077,7 +1077,7 @@ export default function SentOffersListView() {
   const discussed = baseOffers.filter((o) => o.status === "Discussed").length;
   const accepted = baseOffers.filter((o) => o.status === "Accepted").length;
   const pending = baseOffers.filter(
-    (o) => o.status === "Sent" || o.status === "Pending",
+    (o) => (o.status === "Sent" || o.status === "Pending") && (now - new Date(o.offer_date).getTime() > TWO_DAYS_MS),
   ).length;
 
   const filteredOffers = baseOffers.filter((o) => {
@@ -1086,7 +1086,7 @@ export default function SentOffersListView() {
       filter === "All" ||
       (filter === "Discussed" && s === "Discussed") ||
       (filter === "Accepted" && s === "Accepted") ||
-      (filter === "Pending" && (s === "Sent" || s === "Pending")) ||
+      (filter === "Pending" && (s === "Sent" || s === "Pending") && (now - new Date(o.offer_date).getTime() > TWO_DAYS_MS)) ||
       s === filter;
     const instName = o.institute?.institute_name ?? "";
     const matchesSearch =
