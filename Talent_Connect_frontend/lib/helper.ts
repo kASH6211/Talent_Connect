@@ -4,7 +4,7 @@ export const getDashboardRoute = (role: string) => {
     case "admin":
       return "/admin/dashboard";
     case "institute":
-      return "/institute/dashboard";
+      return "/institute/inbox";
     case "industry":
       return "/sent-offers";
     case "dept_admin":
