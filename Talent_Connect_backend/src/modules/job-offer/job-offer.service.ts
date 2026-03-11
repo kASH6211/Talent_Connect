@@ -136,13 +136,21 @@ export class JobOfferService {
 
     /** Update status */
     async updateStatus(offer_id: number, status: string) {
-        await this.repo.update(offer_id, { status });
+        const updateObj: any = { status };
+        if (status === 'Discussed') {
+            updateObj.discussed_date = new Date().toISOString().substring(0, 10);
+        }
+        await this.repo.update(offer_id, updateObj);
         return this.repo.findOne({ where: { offer_id }, relations: ['industry', 'institute', 'institute.district'] });
     }
 
     /** Bulk update status */
     async bulkUpdateStatus(ids: number[], status: string) {
-        await this.repo.update({ offer_id: In(ids) }, { status });
+        const updateObj: any = { status };
+        if (status === 'Discussed') {
+            updateObj.discussed_date = new Date().toISOString().substring(0, 10);
+        }
+        await this.repo.update({ offer_id: In(ids) }, updateObj);
         return { success: true, count: ids.length };
     }
 

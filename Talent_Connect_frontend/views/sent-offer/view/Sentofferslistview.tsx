@@ -584,6 +584,7 @@ interface OfferRecord {
   | "Project completed"
   | "Withdrawn"
   | "Pending";
+  discussed_date?: string;
   institute: {
     institute_id: number;
     institute_name: string;
@@ -629,6 +630,8 @@ interface OfferGroup {
   projectInitiated: number;
   projectCompleted: number;
   withdrawn: number;
+  pendingToDiscuss: number;
+  pendingToAccept: number;
 }
 
 interface Option {
@@ -664,6 +667,8 @@ function salaryStr(min?: number, max?: number) {
 
 function groupOffers(offers: OfferRecord[]): OfferGroup[] {
   const map = new Map<string, OfferGroup>();
+  const now = new Date();
+
   for (const o of offers) {
     // Group by exact bulk-send batch ID, fallback to offer_id for older entries
     const key = o.batch_id || o.offer_id.toString();
@@ -703,11 +708,34 @@ function groupOffers(offers: OfferRecord[]): OfferGroup[] {
         projectInitiated: 0,
         projectCompleted: 0,
         withdrawn: 0,
+        pendingToDiscuss: 0,
+        pendingToAccept: 0,
       });
     }
     const g = map.get(key)!;
     g.rows.push(o);
     const s = o.status;
+
+    // Logic for Pending to Discuss & Pending to Accept
+    const offerDate = new Date(o.offer_date);
+    const diffSentDays = Math.floor((now.getTime() - offerDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    let isPendingToDiscuss = false;
+    if ((s === "Sent" || s === "Pending") && diffSentDays > 2) {
+      isPendingToDiscuss = true;
+      g.pendingToDiscuss++;
+    }
+
+    let isPendingToAccept = false;
+    if (s === "Discussed" && o.discussed_date) {
+      const discussedDate = new Date(o.discussed_date);
+      const diffDiscussedDays = Math.floor((now.getTime() - discussedDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDiscussedDays > 7) {
+        isPendingToAccept = true;
+        g.pendingToAccept++;
+      }
+    }
+
     if (s === "Sent" || s === "Pending") g.sent++;
     else if (s === "Discussed") g.discussed++;
     else if (s === "Accepted") g.accepted++;
@@ -905,17 +933,27 @@ function OfferGroupCard({
         <div className="flex flex-col items-end gap-3 flex-shrink-0 ml-4">
           <div className="flex flex-wrap gap-1">
             {group.sent > 0 && (
-              <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">
+              <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800" title="Sent">
                 {group.sent}
               </span>
             )}
+            {group.pendingToDiscuss > 0 && (
+              <span className="px-2 py-1 text-xs rounded bg-amber-100 text-amber-800" title="Pending to Discuss">
+                {group.pendingToDiscuss}
+              </span>
+            )}
             {group.discussed > 0 && (
-              <span className="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">
+              <span className="px-2 py-1 text-xs rounded bg-blue-50 text-blue-700" title="Discussed">
                 {group.discussed}
               </span>
             )}
+            {group.pendingToAccept > 0 && (
+              <span className="px-2 py-1 text-xs rounded bg-orange-100 text-orange-800" title="Pending to Accept">
+                {group.pendingToAccept}
+              </span>
+            )}
             {group.accepted > 0 && (
-              <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-800">
+              <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-800" title="Accepted">
                 {group.accepted}
               </span>
             )}
@@ -1027,8 +1065,12 @@ const getStatus = (status: string) => {
   switch (status) {
     case "Total Sent":
       return "All";
-    case "Pending":
-      return "Pending";
+    case "Pending to discuss":
+      return "Pending to discuss";
+    case "Pending to accept":
+      return "Pending to accept";
+    case "Discussed":
+      return "Discussed";
     case "Accepted":
       return "Accepted";
     case "Withdrawn":
@@ -1175,17 +1217,24 @@ export default function SentOffersListView() {
   const total = baseOffers.length;
   const discussed = baseOffers.filter((o) => o.status === "Discussed").length;
   const accepted = baseOffers.filter((o) => o.status === "Accepted").length;
-  const pending = baseOffers.filter(
+  const pendingToDiscuss = baseOffers.filter(
     (o) => (o.status === "Sent" || o.status === "Pending") && (now - new Date(o.offer_date).getTime() > TWO_DAYS_MS),
+  ).length;
+  const pendingToAccept = baseOffers.filter(
+    (o) => o.status === "Discussed" && o.discussed_date && (now - new Date(o.discussed_date).getTime() > SEVEN_DAYS_MS),
   ).length;
 
   const filteredOffers = baseOffers.filter((o) => {
     const s = o.status;
+    const isPendingToDiscuss = (s === "Sent" || s === "Pending") && (now - new Date(o.offer_date).getTime() > TWO_DAYS_MS);
+    const isPendingToAccept = s === "Discussed" && o.discussed_date && (now - new Date(o.discussed_date).getTime() > SEVEN_DAYS_MS);
+
     const matchesFilter =
       filter === "All" ||
       (filter === "Discussed" && s === "Discussed") ||
       (filter === "Accepted" && s === "Accepted") ||
-      (filter === "Pending" && (s === "Sent" || s === "Pending") && (now - new Date(o.offer_date).getTime() > TWO_DAYS_MS)) ||
+      (filter === "Pending to discuss" && isPendingToDiscuss) ||
+      (filter === "Pending to accept" && isPendingToAccept) ||
       s === filter;
     const instName = o.institute?.institute_name ?? "";
     const matchesSearch =
@@ -1376,23 +1425,36 @@ export default function SentOffersListView() {
                 </div>
               </button>
 
-              {/* Received */}
-              <div className="relative p-5 bg-white border border-gray-200 rounded-xl shadow-sm opacity-70 group overflow-hidden">
+              {/* Pending to discuss */}
+              <button
+                type="button"
+                onClick={() => setFilter("Pending to discuss")}
+                className={clsx(
+                  "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
+                  filter === "Pending to discuss"
+                    ? "border-amber-300 bg-amber-50/30"
+                    : "border-gray-200",
+                )}
+              >
                 <div className="flex flex-col items-center text-center gap-2">
-                  <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">
-                    <ArrowDownToLine size={24} />
+                  <div
+                    className={clsx(
+                      "w-12 h-12 rounded-xl flex items-center justify-center",
+                      filter === "Pending to discuss"
+                        ? "bg-amber-100 text-amber-600"
+                        : "bg-gray-100 text-gray-500",
+                    )}
+                  >
+                    <Clock size={24} />
                   </div>
-                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Received
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
+                    Pending to discuss
                   </div>
-                  <div className="text-2xl font-black text-gray-400">0</div>
+                  <div className="text-2xl font-black text-gray-900">
+                    {pendingToDiscuss.toLocaleString()}
+                  </div>
                 </div>
-                <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full border border-amber-200">
-                    COMING SOON
-                  </span>
-                </div>
-              </div>
+              </button>
 
               {/* Discussed */}
               <button
@@ -1416,7 +1478,7 @@ export default function SentOffersListView() {
                   >
                     <Users size={24} />
                   </div>
-                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
                     Discussed
                   </div>
                   <div className="text-2xl font-black text-gray-900">
@@ -1425,14 +1487,14 @@ export default function SentOffersListView() {
                 </div>
               </button>
 
-              {/* Pending */}
+              {/* Pending to accept */}
               <button
                 type="button"
-                onClick={() => setFilter("Pending")}
+                onClick={() => setFilter("Pending to accept")}
                 className={clsx(
                   "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
-                  filter === "Pending"
-                    ? "border-amber-300 bg-amber-50/30"
+                  filter === "Pending to accept"
+                    ? "border-orange-300 bg-orange-50/30"
                     : "border-gray-200",
                 )}
               >
@@ -1440,18 +1502,18 @@ export default function SentOffersListView() {
                   <div
                     className={clsx(
                       "w-12 h-12 rounded-xl flex items-center justify-center",
-                      filter === "Pending"
-                        ? "bg-amber-100 text-amber-600"
+                      filter === "Pending to accept"
+                        ? "bg-orange-100 text-orange-600"
                         : "bg-gray-100 text-gray-500",
                     )}
                   >
-                    <Loader2 size={24} />
+                    <AlertCircle size={24} />
                   </div>
-                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Pending
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
+                    Pending to accept
                   </div>
                   <div className="text-2xl font-black text-gray-900">
-                    {pending.toLocaleString()}
+                    {pendingToAccept.toLocaleString()}
                   </div>
                 </div>
               </button>
@@ -1478,7 +1540,7 @@ export default function SentOffersListView() {
                   >
                     <MailCheck size={24} />
                   </div>
-                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
                     Accepted
                   </div>
                   <div className="text-2xl font-black text-gray-900">

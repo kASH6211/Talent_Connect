@@ -123,4 +123,7 @@ export class JobOffer extends BaseEntity {
      */
     @Column({ type: 'varchar', length: 30, default: 'Sent' })
     status: string;
+
+    @Column({ type: 'varchar', length: 20, nullable: true })
+    discussed_date: string; // YYYY-MM-DD
 }
