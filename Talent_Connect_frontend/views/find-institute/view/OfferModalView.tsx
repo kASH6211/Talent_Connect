@@ -198,10 +198,12 @@ export function OfferModalV2({
   prefilledQualIds = [],
   prefilledStreamIds = [],
   isSelectAll = false,
+  exclude_ids = [],
   searchFilters = {},
   searchSort = "student_count",
   searchTerm = "",
   totalInstitutes,
+  filters,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -213,10 +215,12 @@ export function OfferModalV2({
   prefilledQualIds?: (number | string)[];
   prefilledStreamIds?: (number | string)[];
   isSelectAll?: boolean;
+  exclude_ids?: number[];
   searchFilters?: any;
   searchSort?: string;
   searchTerm?: string;
   totalInstitutes?: number;
+  filters?: any;
 }) {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -435,9 +439,10 @@ export function OfferModalV2({
         return api.post("/job-offer/bulk", {
           institute_ids: isSelectAll ? [] : selectedIds,
           is_select_all: isSelectAll,
-          district_ids: searchFilters?.district_ids?.join(","),
-          qualification_ids: searchFilters?.qualification_ids?.join(","),
-          stream_ids: searchFilters?.stream_ids?.join(","),
+          exclude_ids: isSelectAll ? exclude_ids : [],
+          district_ids: (filters || searchFilters)?.district_ids?.join(","),
+          qualification_ids: (filters || searchFilters)?.qualification_ids?.join(","),
+          stream_ids: (filters || searchFilters)?.stream_ids?.join(","),
           search: searchTerm,
           eoi_type: type,
           job_title: f.jobTitle || undefined,
@@ -537,7 +542,7 @@ export function OfferModalV2({
           <div className="cursor-pointer group" onClick={() => setShowAllInstitutes((v) => !v)}>
             <div className="flex items-center justify-between mb-2.5">
               <p className="text-[10px] font-bold uppercase tracking-widest text-base-content/50">
-                Send to · {isSelectAll ? `${totalInstitutes || "All matching"} institutes` : `${selectedIds.length} institute${selectedIds.length !== 1 ? "s" : ""}`}
+                Send to · {isSelectAll ? `${(totalInstitutes || institutesMap.size) - exclude_ids.length} institutes` : `${selectedIds.length} institute${selectedIds.length !== 1 ? "s" : ""}`}
               </p>
               <div className="flex items-center gap-1 text-[10px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                 {showAllInstitutes ? "HIDE LIST" : "VIEW LIST"}
@@ -566,7 +571,7 @@ export function OfferModalV2({
                 </div>
                 <div>
                   <p className="text-sm font-bold text-primary">
-                    {totalInstitutes || "All matching"} institutes selected
+                    {(totalInstitutes || institutesMap.size) - exclude_ids.length} institutes selected
                   </p>
                   <p className="text-xs text-base-content/50">Your EOI will be sent to every institute matching your current search criteria.</p>
                 </div>

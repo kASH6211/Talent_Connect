@@ -7,6 +7,7 @@ import { InstituteService } from '../institute/institute.service';
 export interface BulkOfferDto {
     institute_ids: number[];
     is_select_all?: boolean;
+    exclude_ids?: number[];
     district_ids?: string;
     qualification_ids?: string;
     stream_ids?: string;
@@ -60,7 +61,15 @@ export class JobOfferService {
                 search: dto.search,
                 limit: 5000, // Large enough for all Punjab institutes
             });
-            instituteIds = searchResult.data.map(i => i.institute_id);
+            let fetchedIds = searchResult.data.map(i => i.institute_id);
+
+            // Apply exclusions if provided
+            if (dto.exclude_ids && dto.exclude_ids.length > 0) {
+                const excludeSet = new Set(dto.exclude_ids.map(id => Number(id)));
+                fetchedIds = fetchedIds.filter(id => !excludeSet.has(id));
+            }
+
+            instituteIds = fetchedIds;
         }
 
         const now = new Date().toISOString();

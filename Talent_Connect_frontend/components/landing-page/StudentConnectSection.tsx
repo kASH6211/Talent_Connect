@@ -82,7 +82,7 @@ const StudentConnectSection = () => {
                     </h4>
 
                     {/* Expandable Description on Hover */}
-                    <div className="max-h-0 opacity-0 group-hover:max-h-32 group-hover:opacity-100 transition-all duration-500 ease-in-out">
+                    <div className="max-h-0 opacity-0 group-hover:max-h-32 group-hover:opacity-100 transition-all duration-500 ease-in-out mb-4">
                       <p className="text-sm text-slate-600 leading-relaxed italic mb-4 text-center">
                         {card.desc}
                       </p>
