@@ -19,6 +19,8 @@ import {
   IndianRupee,
   CalendarDays,
   Users,
+  Building,
+  ChevronDown,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import api from "@/lib/api";
@@ -31,16 +33,31 @@ interface OfferRow {
   offer_id: number;
   job_title: string;
   job_description?: string;
+  industry_id?: number;
+  batch_id?: string;
   salary_min?: number;
   salary_max?: number;
+  nature_of_engagement?: string;
+  experience_required?: string;
+  location?: string;
+  is_remote?: boolean;
   offer_date?: string;
+  start_date?: string;
   last_date?: string;
-  number_of_posts?: number;
+  duration?: string;
+  collaboration_types?: string;
+  additional_details?: string;
+  updated_date?: string;
   status: string;
   eoi_type: string;
+  number_of_posts?: number;
+  required_qualification_ids?: string;
   institute?: {
     institute_name: string;
     district?: { districtname: string };
+    lgddistrictId?: number;
+    institute_type_id?: number;
+    institute_sub_type_id?: number;
     address?: string;
     districtname?: string;
   };
@@ -200,6 +217,10 @@ export default function AllRequestsPage() {
   const [offDateEnd, setOffDateEnd] = useState("");
   const [lastDateStart, setLastDateStart] = useState("");
   const [lastDateEnd, setLastDateEnd] = useState("");
+  const [selectedDistrictId, setSelectedDistrictId] = useState("");
+  const [selectedInstTypeId, setSelectedInstTypeId] = useState("");
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [instTypes, setInstTypes] = useState<any[]>([]);
 
   // ── View modal ──
   const [viewOffer, setViewOffer] = useState<OfferRow | null>(null);
@@ -233,12 +254,21 @@ export default function AllRequestsPage() {
 
   useEffect(() => {
     fetchOffers();
-  }, [fetchOffers]);
+    if (role === "dept_admin") {
+      api.get("/district")
+        .then((res) => setDistricts(Array.isArray(res.data) ? res.data : res.data?.data || []))
+        .catch(console.error);
+      api.get("/institute-sub-type")
+        .then((res) => setInstTypes(Array.isArray(res.data) ? res.data : res.data?.data || []))
+        .catch(console.error);
+    }
+  }, [fetchOffers, role]);
 
   const filteredOffers = offers.filter((o) => {
     const name = o.institute?.institute_name ?? "";
     const districtName = getDistrictName(o);
     const title = o.job_title ?? "";
+    const industryName = o.industry?.industry_name ?? "";
     const status = o.status ?? "";
     const eoiType = o.eoi_type ?? "Placement";
 
@@ -247,7 +277,11 @@ export default function AllRequestsPage() {
       !offSearch ||
       name.toLowerCase().includes(searchLow) ||
       districtName.toLowerCase().includes(searchLow) ||
-      title.toLowerCase().includes(searchLow);
+      title.toLowerCase().includes(searchLow) ||
+      industryName.toLowerCase().includes(searchLow);
+
+    const matchDistrict = !selectedDistrictId || o.institute?.lgddistrictId === Number(selectedDistrictId);
+    const matchInstType = !selectedInstTypeId || o.institute?.institute_sub_type_id === Number(selectedInstTypeId);
 
     const matchStatus = (() => {
       if (offStatus === "All") return true;
@@ -310,8 +344,36 @@ export default function AllRequestsPage() {
         matchLastDate = false;
     }
 
-    return matchSearch && matchStatus && matchDate && matchLastDate && matchEoiType;
+    return matchSearch && matchStatus && matchDate && matchLastDate && matchEoiType && matchDistrict && matchInstType;
   });
+
+  const groupedIndustries = role === "dept_admin" ? (() => {
+    const industryGroups: Record<number, { industry_name: string; batches: Record<string, OfferRow[]> }> = {};
+
+    filteredOffers.forEach((o) => {
+      const indId = o.industry_id || 0;
+      const indName = o.industry?.industry_name || "Unknown Industry";
+      const batchId = o.batch_id || `fallback-${o.industry_id}-${o.job_title}-${o.offer_date}`;
+
+      if (!industryGroups[indId]) {
+        industryGroups[indId] = { industry_name: indName, batches: {} };
+      }
+      if (!industryGroups[indId].batches[batchId]) {
+        industryGroups[indId].batches[batchId] = [];
+      }
+      industryGroups[indId].batches[batchId].push(o);
+    });
+
+    return Object.entries(industryGroups).map(([id, group]) => ({
+      industry_id: Number(id),
+      industry_name: group.industry_name,
+      requests: Object.entries(group.batches).map(([bid, offers]) => ({
+        batch_id: bid,
+        offers,
+        mainOffer: offers[0],
+      })),
+    }));
+  })() : [];
 
 
   // ── Pagination ──
@@ -355,6 +417,7 @@ export default function AllRequestsPage() {
   };
 
   const statusTiles = [
+    ...(role === "dept_admin" ? [{ type: "All", label: "All Applications", icon: Send, color: "secondary" }] : []),
     { type: "Sent", label: "Received", icon: Send, color: "primary" },
     { type: "Pending", label: "Pending for Discussion", icon: Clock, color: "warning" },
     { type: "Discussed", label: "Discussed", icon: Users, color: "info" },
@@ -427,10 +490,10 @@ export default function AllRequestsPage() {
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-base-content tracking-tight leading-tight">
-              EOI {role === "dept_admin" ? "Received" : "Sent"}
+              {role === "dept_admin" ? "Applications" : "EOI"} {role === "dept_admin" ? "Received" : "Sent"}
             </h1>
             <p className="text-sm text-base-content/50 mt-0.5">
-              Track and manage all Expressions of Interest sent to institutes
+              Track and manage all {role === "dept_admin" ? "applications" : "expressions of interest"} {role === "dept_admin" ? "received from industries" : "sent to institutes"}
             </p>
           </div>
         </div>
@@ -574,55 +637,80 @@ export default function AllRequestsPage() {
           </div>
 
           <div className="flex flex-col gap-4">
-            {/* Row 1: Status and Search */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {/* Row 1: Primary Filters */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-base-content/60 mb-1.5 uppercase tracking-wide">
-                  {role === "dept_admin" ? "EOI Type" : "Status"}
+                  Application Type
                 </label>
-                {role === "dept_admin" ? (
-                  <select
-                    value={selectedEoiType}
-                    onChange={(e) => {
-                      setSelectedEoiType(e.target.value);
-                      offPag.setPage(1);
-                    }}
-                    className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-info"
-                  >
-                    <option value="All">All EOI Types</option>
-                    <option value="Placement">Hire Student</option>
-                    <option value="Industrial Training">Host for Training</option>
-                    <option value="Collaboration">Collaborate</option>
-                  </select>
-                ) : (
-                  <select
-                    value={offStatus}
-                    onChange={(e) => {
-                      setOffStatus(e.target.value);
-                      offPag.setPage(1);
-                    }}
-                    className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-info"
-                  >
-                    <option value="All">All Statuses</option>
-                    <option value="Sent">Received</option>
-                    <option value="Pending">Pending for Discussion (+2 days)</option>
-                    <option value="Pending_Acceptance">Pending for Acceptance (+7 days)</option>
-                    <option value="Discussed">Discussed</option>
-                    <option value="Accepted">Accepted</option>
-                    <option value="Rejected">Rejected</option>
-                    <option value="Initiated">Initiated</option>
-                    <option value="Completed">Completed</option>
-                  </select>
-                )}
+                <select
+                  value={selectedEoiType}
+                  onChange={(e) => {
+                    setSelectedEoiType(e.target.value);
+                    offPag.setPage(1);
+                  }}
+                  className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-info"
+                >
+                  <option value="All">All</option>
+                  <option value="Placement">Hiring</option>
+                  <option value="Industrial Training">Industrial Training</option>
+                  <option value="Collaboration">Collaboration</option>
+                </select>
               </div>
-              <div className="sm:col-span-1 md:col-span-2">
+
+              {role === "dept_admin" && (
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold text-base-content/60 mb-1.5 uppercase tracking-wide">
+                      Institute Type
+                    </label>
+                    <select
+                      value={selectedInstTypeId}
+                      onChange={(e) => {
+                        setSelectedInstTypeId(e.target.value);
+                        offPag.setPage(1);
+                      }}
+                      className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-info"
+                    >
+                      <option value="">All Institute Types</option>
+                      {instTypes.map((t) => (
+                        <option key={t.institute_sub_type_id} value={t.institute_sub_type_id}>
+                          {t.institute_sub_type}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-base-content/60 mb-1.5 uppercase tracking-wide">
+                      District
+                    </label>
+                    <select
+                      value={selectedDistrictId}
+                      onChange={(e) => {
+                        setSelectedDistrictId(e.target.value);
+                        offPag.setPage(1);
+                      }}
+                      className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-info"
+                    >
+                      <option value="">All Districts</option>
+                      {districts.map((d) => (
+                        <option key={d.lgddistrictId} value={d.lgddistrictId}>
+                          {d.districtname}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
+              <div className={clsx(role === "dept_admin" ? "col-span-1" : "col-span-1 sm:col-span-3 lg:col-span-1")}>
                 <label className="block text-xs font-semibold text-base-content/60 mb-1.5 uppercase tracking-wide">
                   Search
                 </label>
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search institute, job title…"
+                    placeholder="Search industry, institute, title…"
                     value={offSearch}
                     onChange={(e) => {
                       setOffSearch(e.target.value);
@@ -646,11 +734,36 @@ export default function AllRequestsPage() {
               </div>
             </div>
 
-            {/* Row 2: Dates */}
+            {/* Row 2: Dates & Status */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-              <div>
+              {role !== "dept_admin" && (
+                <div>
+                  <label className="block text-xs font-semibold text-base-content/60 mb-1.5 uppercase tracking-wide">
+                    Status
+                  </label>
+                  <select
+                    value={offStatus}
+                    onChange={(e) => {
+                      setOffStatus(e.target.value);
+                      offPag.setPage(1);
+                    }}
+                    className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-info"
+                  >
+                    <option value="All">All Statuses</option>
+                    <option value="Sent">Received</option>
+                    <option value="Pending">Pending for Discussion (+2 days)</option>
+                    <option value="Pending_Acceptance">Pending for Acceptance (+7 days)</option>
+                    <option value="Discussed">Discussed</option>
+                    <option value="Accepted">Accepted</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Initiated">Initiated</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+              )}
+              <div className={clsx(role === "dept_admin" ? "md:col-span-1" : "")}>
                 <label className="block text-xs font-semibold text-base-content/60 mb-1.5 uppercase tracking-wide">
-                  {role === "dept_admin" ? "Application Date (From)" : "Offer Date (From)"}
+                  Date (From)
                 </label>
                 <input
                   type="date"
@@ -664,7 +777,7 @@ export default function AllRequestsPage() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-base-content/60 mb-1.5 uppercase tracking-wide">
-                  {role === "dept_admin" ? "Application Date (To)" : "Offer Date (To)"}
+                  Date (To)
                 </label>
                 <input
                   type="date"
@@ -676,38 +789,6 @@ export default function AllRequestsPage() {
                   className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-info"
                 />
               </div>
-              {role !== "dept_admin" && (
-                <>
-                  <div>
-                    <label className="block text-xs font-semibold text-base-content/60 mb-1.5 uppercase tracking-wide">
-                      Last Date (From)
-                    </label>
-                    <input
-                      type="date"
-                      value={lastDateStart}
-                      onChange={(e) => {
-                        setLastDateStart(e.target.value);
-                        offPag.setPage(1);
-                      }}
-                      className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-info"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-base-content/60 mb-1.5 uppercase tracking-wide">
-                      Last Date (To)
-                    </label>
-                    <input
-                      type="date"
-                      value={lastDateEnd}
-                      onChange={(e) => {
-                        setLastDateEnd(e.target.value);
-                        offPag.setPage(1);
-                      }}
-                      className="w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-info"
-                    />
-                  </div>
-                </>
-              )}
             </div>
           </div>
 
@@ -715,6 +796,8 @@ export default function AllRequestsPage() {
             offStatus !== "All" ||
             offDateStart ||
             offDateEnd ||
+            selectedDistrictId ||
+            selectedInstTypeId ||
             lastDateStart ||
             lastDateEnd) && (
               <div className="mt-4 flex justify-end">
@@ -726,6 +809,8 @@ export default function AllRequestsPage() {
                     setOffDateEnd("");
                     setLastDateStart("");
                     setLastDateEnd("");
+                    setSelectedDistrictId("");
+                    setSelectedInstTypeId("");
                     offPag.setPage(1);
                   }}
                   className="btn btn-outline btn-sm text-xs"
@@ -744,9 +829,39 @@ export default function AllRequestsPage() {
         ) : filteredOffers.length === 0 ? (
           <EmptyState
             icon={<Send size={24} className="text-info" />}
-            title="No offers found"
-            sub="No industry offers match your filters"
+            title={`No ${role === "dept_admin" ? "applications" : "offers"} found`}
+            sub={`No ${role === "dept_admin" ? "applications" : "industry offers"} match your filters`}
           />
+        ) : role === "dept_admin" ? (
+          <div className="space-y-10">
+            {groupedIndustries.map((ind) => (
+              <div key={ind.industry_id} className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <div className="flex items-center gap-4 px-2">
+                  <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary shadow-sm">
+                    <Building size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-base-content tracking-tight">
+                      {ind.industry_name}
+                    </h2>
+                    <p className="text-xs text-base-content/40 font-medium uppercase tracking-wider">
+                      {ind.requests.length} Active Requests
+                    </p>
+                  </div>
+                  <div className="h-px flex-1 bg-gradient-to-r from-base-300 to-transparent dark:from-base-700 ml-4" />
+                </div>
+                <div className="space-y-4 pl-0 md:pl-4">
+                  {ind.requests.map((req) => (
+                    <RequestAccordion
+                      key={req.batch_id}
+                      industryRequest={req}
+                      setViewOffer={setViewOffer}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <>
             <div className="text-sm text-base-content/60 px-1">
@@ -878,35 +993,77 @@ export default function AllRequestsPage() {
 
       {/* ── Offer Detail Modal ─────────────────────────────────────────────── */}
       {viewOffer && (
-        <Modal title="Offer Details" onClose={() => setViewOffer(null)}>
-          <DetailRow
-            label="Institute"
-            value={viewOffer.institute?.address ?? "—"}
-          />
-          <DetailRow
-            label="District"
-            value={viewOffer.institute?.district?.districtname ?? "—"}
-          />
-          <DetailRow
-            label={viewOffer.eoi_type === "Industrial Training" ? "Training Program" : viewOffer.eoi_type === "Collaboration" ? "Collaboration Title" : "Job Title"}
-            value={viewOffer.job_title}
-          />
-          {viewOffer.job_description && (
-            <DetailRow label="Description" value={viewOffer.job_description} />
-          )}
-          <DetailRow
-            label={viewOffer.eoi_type === "Industrial Training" ? "Stipend Range" : viewOffer.eoi_type === "Collaboration" ? "Funding/Budget" : "Salary Range"}
-            value={salary(viewOffer.salary_min, viewOffer.salary_max)}
-          />
-          <DetailRow
-            label={viewOffer.eoi_type === "Industrial Training" ? "Slots" : viewOffer.eoi_type === "Collaboration" ? "Capacity" : "Number of Posts"}
-            value={viewOffer.number_of_posts?.toString() ?? "—"}
-          />
-          <DetailRow label="Offer Date" value={fmt(viewOffer.offer_date)} />
-          <DetailRow label="Last Date" value={fmt(viewOffer.last_date)} />
-          <div>
-            <p className="text-xs text-base-content/60 mb-1">Status</p>
-            <StatusBadge status={viewOffer.status} />
+        <Modal title={`${role === "dept_admin" ? "Application" : "EOI"} Details`} onClose={() => setViewOffer(null)}>
+          <div className="space-y-6">
+            <section className="space-y-3">
+              <h3 className="text-xs font-bold text-primary uppercase tracking-widest">Institute Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-base-200/40 dark:bg-base-800/40 p-4 rounded-xl border border-base-300 dark:border-base-700">
+                <DetailRow label="Institute" value={viewOffer.institute?.institute_name ?? "—"} />
+                <DetailRow label="District" value={viewOffer.institute?.district?.districtname ?? "—"} />
+                <div className="sm:col-span-2">
+                  <DetailRow label="Address" value={viewOffer.institute?.address ?? "—"} />
+                </div>
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <h3 className="text-xs font-bold text-primary uppercase tracking-widest">Industry Request Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-base-200/40 dark:bg-base-800/40 p-4 rounded-xl border border-base-300 dark:border-base-700">
+                <DetailRow label="Industry" value={viewOffer.industry?.industry_name ?? "—"} />
+                <DetailRow
+                  label={viewOffer.eoi_type === "Industrial Training" ? "Training Program" : viewOffer.eoi_type === "Collaboration" ? "Collaboration Title" : "Job Title"}
+                  value={viewOffer.job_title}
+                />
+                <DetailRow label="Application Type" value={viewOffer.eoi_type} />
+                <DetailRow label="Partnership Type" value={viewOffer.nature_of_engagement || "—"} />
+                <DetailRow
+                  label={viewOffer.eoi_type === "Industrial Training" ? "Stipend Range" : viewOffer.eoi_type === "Collaboration" ? "Funding/Budget" : "Salary Range"}
+                  value={salary(viewOffer.salary_min, viewOffer.salary_max)}
+                />
+                <DetailRow
+                  label={viewOffer.eoi_type === "Industrial Training" ? "Slots" : viewOffer.eoi_type === "Collaboration" ? "Capacity" : "Number of Posts"}
+                  value={viewOffer.number_of_posts?.toString() ?? "—"}
+                />
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <h3 className="text-xs font-bold text-primary uppercase tracking-widest">Requirements & Details</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-base-200/40 dark:bg-base-800/40 p-4 rounded-xl border border-base-300 dark:border-base-700">
+                <DetailRow label="Experience" value={viewOffer.experience_required || "—"} />
+                <DetailRow label="Location" value={`${viewOffer.location || "—"} ${viewOffer.is_remote ? "(Remote)" : ""}`} />
+                <DetailRow label="Duration" value={viewOffer.duration || "—"} />
+                <DetailRow label="Start Date" value={fmt(viewOffer.start_date)} />
+                {viewOffer.collaboration_types && (
+                  <div className="sm:col-span-2">
+                    <DetailRow label="Collaboration Types" value={viewOffer.collaboration_types} />
+                  </div>
+                )}
+                {viewOffer.job_description && (
+                  <div className="sm:col-span-2">
+                    <DetailRow label="Description" value={viewOffer.job_description} />
+                  </div>
+                )}
+                {viewOffer.additional_details && (
+                  <div className="sm:col-span-2">
+                    <DetailRow label="Additional Details" value={viewOffer.additional_details} />
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              <h3 className="text-xs font-bold text-primary uppercase tracking-widest">Status Tracking</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-base-200/40 dark:bg-base-800/40 p-4 rounded-xl border border-base-300 dark:border-base-700 items-end">
+                <div>
+                  <p className="text-xs text-base-content/60 mb-1.5 uppercase tracking-wide">Current Status</p>
+                  <StatusBadge status={viewOffer.status} />
+                </div>
+                <DetailRow label="Sent On" value={fmt(viewOffer.offer_date)} />
+                <DetailRow label="Last Updated" value={fmt(viewOffer.updated_date || viewOffer.offer_date)} />
+                <DetailRow label="Deadline" value={fmt(viewOffer.last_date)} />
+              </div>
+            </section>
           </div>
         </Modal>
       )}
@@ -916,6 +1073,127 @@ export default function AllRequestsPage() {
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
+function RequestAccordion({
+  industryRequest,
+  setViewOffer,
+}: {
+  industryRequest: any;
+  setViewOffer: (o: any) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { mainOffer, offers } = industryRequest;
+
+  return (
+    <div className={clsx(
+      "border transition-all duration-300 rounded-2xl overflow-hidden",
+      isOpen
+        ? "border-primary/30 ring-4 ring-primary/5 bg-base-100 dark:bg-base-900 shadow-xl"
+        : "border-base-300 dark:border-base-700 bg-base-100/50 dark:bg-base-900/50 hover:bg-base-100 dark:hover:bg-base-900 shadow-sm"
+    )}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-5 transition-colors group"
+      >
+        <div className="flex items-center gap-5">
+          <div className={clsx(
+            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
+            isOpen ? "bg-primary text-primary-content rotate-3 shadow-lg" : "bg-base-200 dark:bg-base-800 text-base-content/40 group-hover:text-primary group-hover:bg-primary/10"
+          )}>
+            <Briefcase size={22} />
+          </div>
+          <div className="text-left space-y-1">
+            <h3 className="font-bold text-base-content text-lg group-hover:text-primary transition-colors">
+              {mainOffer.job_title}
+            </h3>
+            <div className="flex items-center gap-3 text-xs text-base-content/50 font-medium">
+              <span className="flex items-center gap-1">
+                <CalendarDays size={12} />
+                {fmt(mainOffer.offer_date)}
+              </span>
+              <span className="w-1 h-1 rounded-full bg-base-content/20" />
+              <span className="flex items-center gap-1">
+                <Building2 size={12} />
+                {offers.length} Institutes
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className={clsx(
+          "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
+          isOpen ? "bg-primary/10 text-primary rotate-180" : "bg-base-200 dark:bg-base-800 text-base-content/30"
+        )}>
+          <ChevronDown size={20} />
+        </div>
+      </button>
+
+      <div className="px-6 pb-5 space-y-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-base-200/50 dark:bg-base-800/50 rounded-2xl border border-base-300 dark:border-base-700 shadow-inner mt-2">
+          <DetailRow label="Application Type" value={mainOffer.eoi_type} />
+          <DetailRow label="Students / Posts" value={mainOffer.number_of_posts?.toString() || "—"} />
+          <DetailRow label="Remuneration" value={salary(mainOffer.salary_min, mainOffer.salary_max)} />
+          <DetailRow label="Partnership Type" value={mainOffer.nature_of_engagement || "—"} />
+        </div>
+
+        {isOpen && (
+          <div className="overflow-x-auto rounded-2xl border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 shadow-inner animate-in fade-in slide-in-from-top-4 duration-300">
+            <table className="min-w-full divide-y divide-base-200 dark:divide-base-800">
+              <thead className="bg-base-200/30 dark:bg-base-800/30">
+                <tr>
+                  <Th>Institute</Th>
+                  <Th center>Application Type</Th>
+                  <Th center>Current Status</Th>
+                  <Th center>Last Updated On</Th>
+                  <Th right>Actions</Th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-base-200 dark:divide-base-800">
+                {offers.map((o: any) => (
+                  <tr key={o.offer_id} className="hover:bg-primary/5 transition-colors group/row">
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-info/10 flex items-center justify-center text-info shadow-sm">
+                          <Building2 size={16} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-base-content leading-tight">
+                            {o.institute?.institute_name}
+                          </p>
+                          <p className="text-xs text-base-content/50 mt-0.5">
+                            {getDistrictName(o)}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <span className="px-2.5 py-1 rounded-lg bg-base-200 dark:bg-base-800 text-[10px] font-bold text-base-content/70 uppercase tracking-wider">
+                        {o.eoi_type}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <StatusBadge status={o.status} />
+                    </td>
+                    <td className="px-4 py-4 text-center text-sm font-medium text-base-content/60">
+                      {fmt(o.updated_date || o.offer_date)}
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <button
+                        onClick={() => setViewOffer(o)}
+                        className="w-9 h-9 rounded-xl bg-base-200 dark:bg-base-800 hover:bg-primary hover:text-primary-content flex items-center justify-center transition-all ml-auto shadow-sm"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Th({
   children,
   center,
@@ -991,8 +1269,8 @@ function Modal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-base-100 dark:bg-base-900 rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto border border-base-300 dark:border-base-700 shadow-2xl">
-        <div className="flex items-center justify-between mb-5">
+      <div className="bg-base-100 dark:bg-base-900 rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col border border-base-300 dark:border-base-700 shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-base-300 dark:border-base-700 shrink-0 bg-base-100 dark:bg-base-900">
           <h2 className="text-lg font-bold text-base-content">{title}</h2>
           <button
             onClick={onClose}
@@ -1001,7 +1279,7 @@ function Modal({
             <X size={18} />
           </button>
         </div>
-        <div className="space-y-4">{children}</div>
+        <div className="p-6 overflow-y-auto space-y-4">{children}</div>
       </div>
     </div>
   );
