@@ -121,10 +121,10 @@ const instituteNav = [
 ];
 
 const industryNav = [
+  { icon: AppWindow, label: "My Application", href: "/sent-offers" },
   { icon: Search, label: "Explore Institutes", href: "/find-institutes" },
   { icon: Inbox, label: 'My Inbox', href: '/industry/inbox' },
   { icon: LayoutDashboard, label: "Dashboard", href: "/industry/dashboard" },
-  { icon: AppWindow, label: "My Application", href: "/sent-offers" },
   { icon: Building, label: "My Institutes", href: "/industry/institutes" },
   { icon: UserPen, label: "Profile", href: "/industry/profile" },
 ];
