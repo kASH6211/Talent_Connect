@@ -94,13 +94,13 @@ const adminNav = [
 
 const instituteNav = [
   // { icon: LayoutDashboard, label: "Dashboard", href: "/institute/dashboard" },
-  { icon: Inbox, label: "My Inbox", href: "/institute/inbox" },
-  { icon: LayoutDashboard, label: "Explore Industry", href: "/institute/explore-industry" },
-  { icon: AppWindow, label: "My Application", href: "/institute/application" },
-  { icon: Briefcase, label: "My Industry Partnership", href: "/institute/Partnership" },
-  { icon: Users, label: "My Student", href: "/institute/student" },
-  { icon: GraduationCap, label: "My Alumni", href: "/institute/alumini" },
-  { icon: LayoutDashboard, label: "My Faculty", href: "/institute/faculty" },
+  { icon: Inbox, label: "Inbox", href: "/institute/inbox" },
+  { icon: LayoutDashboard, label: "Explore Industries", href: "/institute/explore-industry" },
+  { icon: AppWindow, label: "Application Tracker", href: "/institute/application" },
+  { icon: Briefcase, label: "Industry Partners", href: "/institute/Partnership" },
+  { icon: Users, label: "Students", href: "/institute/student" },
+  { icon: GraduationCap, label: "Alumni", href: "/institute/alumini" },
+  { icon: LayoutDashboard, label: "Faculty", href: "/institute/faculty" },
   // { icon: Inbox, label: "Received EOI", href: "/received-offers" },
   // {
   //   icon: ClipboardList,
@@ -116,26 +116,26 @@ const instituteNav = [
   //     },
   //   ],
   // },
-  { icon: Users, label: "Student Counts", href: "/masters/student-counts" },
+  // { icon: Users, label: "Student Counts", href: "/masters/student-counts" },
   { icon: UserCircle, label: "My Profile", href: "/institute/profile" },
 ];
 
 const industryNav = [
-  { icon: AppWindow, label: "My Application", href: "/sent-offers" },
+  { icon: AppWindow, label: "Application Tracker", href: "/sent-offers" },
   { icon: Search, label: "Explore Institutes", href: "/find-institutes" },
-  { icon: Inbox, label: 'My Inbox', href: '/industry/inbox' },
+  { icon: Inbox, label: 'Inbox', href: '/industry/inbox' },
   // { icon: LayoutDashboard, label: "Dashboard", href: "/industry/dashboard" },
-  { icon: Building, label: "My Institutes", href: "/industry/institutes" },
+  { icon: Building, label: "Partner Institutes", href: "/industry/institutes" },
   { icon: UserPen, label: "Profile", href: "/industry/profile" },
 ];
 
 const deptAdminNav = [
   { icon: LayoutDashboard, label: "State Overview", href: "/dept-admin/state-overview" },
-  { icon: Building, label: "Industry Partnership", href: "/dept-admin/industry-partnership" },
-  { icon: Mail, label: "All Applications", href: "/all-requests" },
-  { icon: Factory, label: "Explore Industry", href: "/dept-admin/explore-industry" },
-  { icon: Search, label: "Explore Institutes", href: "/find-institutes" },
-  { icon: UserCircle, label: "My Profile", href: "/dept-admin/profile" },
+  { icon: Building, label: "Industry Partnerships", href: "/dept-admin/industry-partnership" },
+  { icon: Mail, label: "Application Tracker", href: "/all-requests" },
+  { icon: Factory, label: "Explore Industries", href: "/dept-admin/explore-industry" },
+  { icon: Search, label: "Institutes", href: "/find-institutes" },
+  { icon: UserCircle, label: "Profile", href: "/dept-admin/profile" },
 ];
 
 function NavLink({ href, label, icon: Icon, collapsed }: any) {

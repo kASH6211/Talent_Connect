@@ -27,42 +27,44 @@ const roles = [
   {
     name: "Industry",
     icon: Factory,
-    description: "Partner for placements",
+    description: "Discover Talent across Institutes",
     color: "from-blue-500 to-indigo-600",
     bg: "bg-blue-50"
   },
   {
-    name: "Student",
-    icon: GraduationCap,
-    description: "Explore opportunities",
-    color: "from-orange-500 to-amber-600",
-    bg: "bg-orange-50"
-  },
-  {
     name: "Institute",
     icon: Building2,
-    description: "Manage your portal",
+    description: "Manage industry Partnerships",
     color: "from-emerald-500 to-teal-600",
     bg: "bg-emerald-50"
   },
   {
-    name: "Faculty",
-    icon: BookOpen,
-    description: "Academic access",
-    color: "from-purple-500 to-violet-600",
-    bg: "bg-purple-50"
-  },
-  {
     name: "Department",
     icon: Landmark,
-    description: "Administrative view",
+    description: "Administrative View",
     color: "from-rose-500 to-pink-600",
     bg: "bg-rose-50"
   },
   {
+    name: "Student",
+    icon: GraduationCap,
+    description: "Explore Opportunities",
+    color: "from-orange-500 to-amber-600",
+    bg: "bg-orange-50"
+  },
+
+  {
+    name: "Faculty",
+    icon: BookOpen,
+    description: "Manage Academic Activities",
+    color: "from-purple-500 to-violet-600",
+    bg: "bg-purple-50"
+  },
+
+  {
     name: "Admin Tech",
     icon: Code,
-    description: "Technical support",
+    description: "Technical Support",
     color: "from-slate-700 to-slate-900",
     bg: "bg-slate-100"
   },

@@ -184,13 +184,13 @@ const InstitutesSection = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => router.push("/search-institutes")}
-            className="flex items-center gap-3 text-sm font-semibold text-slate-600"
+            className="flex items-center gap-3 text-sm font-semibold text-primary"
           >
             Find All Institutes
-            <div className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center group-hover:border-primary/30 group-hover:bg-primary/5 transition-all">
+            <div className="w-8 h-8  rounded-full border border-slate-300 flex items-center justify-center group-hover:border-primary/30 group-hover:bg-primary/5 transition-all">
               <ArrowRight
                 size={16}
-                className="text-slate-600 group-hover:text-primary group-hover:translate-x-1 transition-transform"
+                className="text-slate-600  group-hover:text-primary group-hover:translate-x-1 transition-transform"
               />
             </div>
           </motion.button>

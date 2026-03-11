@@ -1271,7 +1271,7 @@ export default function SentOffersListView() {
               <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-primary rounded-md text-white">
                 <MailCheck size={20} />
               </div>
-              Sent Application
+              Application Tracker
             </h1>
             <p className="sol-page-sub text-gray-600 mt-1 text-sm">
               Track every Expression of Interest you've sent to institutes.

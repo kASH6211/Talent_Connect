@@ -12,17 +12,17 @@ import {
 const industriesCards = [
   {
     icon: Briefcase,
-    title: "Placement",
+    title: "Placement Drives",
     desc: "Hire skilled students and alumni through a seamless, digitally facilitated campus hiring process",
   },
   {
     icon: Building2,
-    title: "1 to 6 Month Industrial Training",
-    desc: "Offer structured industrial training opportunities to students and manage the entire training lifecycle digitally",
+    title: "Industrial Training",
+    desc: "Host students for 1-6 months industrial training and manage end-to-end processes",
   },
   {
     icon: Handshake,
-    title: "Partner with Institutes",
+    title: "Institute Partnerships",
     desc: "Partner with institutes to support skill development through CSR initiatives",
   },
 ];
@@ -31,17 +31,17 @@ const studentCards = [
   {
     icon: Zap,
     title: "Upskilling",
-    desc: "Discover courses offered by nearby institutes and enhance your career opportunities",
+    desc: "Choose courses to enhance your career opportunities",
   },
   {
     icon: Search,
-    title: "Search Job",
-    desc: "Find and apply for job opportunities posted by companies looking for skilled candidates like you",
+    title: "Search Jobs",
+    desc: "Find and apply for job opportunities across all sectors",
   },
   {
     icon: MessageCircle,
-    title: "Counselling",
-    desc: "Get expert guidance to choose the right course, training path, and career based on your interests and goals",
+    title: "Career Counselling",
+    desc: "Get expert guidance to plan the most suitable career path",
   },
 ];
 
@@ -60,8 +60,8 @@ const StudentConnectSection = () => {
         {/* Two Column Layout with Vertical Divider */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 relative border border-base-300 rounded-[2.5rem] overflow-hidden shadow-xl bg-white">
           {/* LEFT - INDUSTRIES (Theme: Light Blue/Primary) */}
-          <div className="p-6 lg:p-10 bg-slate-50">
-            <h3 className="text-2xl font-black mb-8 text-center text-primary/80 uppercase tracking-[0.2em]">
+          <div className="p-6 lg:p-10 bg-primary/50">
+            <h3 className="text-2xl font-black mb-8 text-center text-primary uppercase tracking-[0.2em]">
               For Industries
             </h3>
 

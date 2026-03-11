@@ -490,7 +490,8 @@ export default function AllRequestsPage() {
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-base-content tracking-tight leading-tight">
-              {role === "dept_admin" ? "Applications" : "EOI"} {role === "dept_admin" ? "Received" : "Sent"}
+              {/* {role === "dept_admin" ? "Applications" : "EOI"} {role === "dept_admin" ? "Received" : "Sent"} */}
+              Application Tracker
             </h1>
             <p className="text-sm text-base-content/50 mt-0.5">
               Track and manage all {role === "dept_admin" ? "applications" : "expressions of interest"} {role === "dept_admin" ? "received from industries" : "sent to institutes"}

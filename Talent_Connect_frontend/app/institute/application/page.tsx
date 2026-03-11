@@ -290,7 +290,7 @@ export default function ReceivedOffersPage() {
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-base-content tracking-tight leading-tight">
-              Received Application
+               Application Tracker
             </h1>
             <p className="text-sm text-base-content/50 mt-0.5">
               Manage incoming Expressions of Interest from industry partners
