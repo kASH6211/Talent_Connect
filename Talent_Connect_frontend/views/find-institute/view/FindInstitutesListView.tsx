@@ -1092,8 +1092,8 @@ export default function FindInstitutesPage() {
 
       {/* Modals */}
       <OfferModalV2
-        onClose={() => { }}
         isOpen={findInstituteUi?.bulkOffer?.open ?? false}
+        onClose={() => dispatch(updateUiInstitute({ bulkOffer: { open: false } }))}
         selectedIds={Array.from(selected)}
         institutesMap={institutesMap}
         qualOptions={qualOpts}
@@ -1104,6 +1104,7 @@ export default function FindInstitutesPage() {
         searchFilters={filters}
         searchSort={sort}
         searchTerm={searchTerm}
+        totalInstitutes={total}
         onSent={() => {
           setSentSuccess(true);
           setSelected(new Set());

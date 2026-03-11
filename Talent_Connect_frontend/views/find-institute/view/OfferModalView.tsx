@@ -14,6 +14,7 @@ import {
   MapPin,
   CheckCircle2,
   AlertCircle,
+  HelpCircle,
 } from "lucide-react";
 
 import api from "@/lib/api";
@@ -45,6 +46,15 @@ export interface EoiFormState {
   duration: string;
   collabTypes: string[];
   additionalDetails: string;
+  // New fields
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  // Collaboration specific
+  prefQualIds: (number | string)[];
+  prefStreamIds: (number | string)[];
+  minStudents: string;
+  numInstitutes: string;
 }
 
 export const DEFAULT_FORM_STATE: EoiFormState = {
@@ -63,6 +73,15 @@ export const DEFAULT_FORM_STATE: EoiFormState = {
   duration: "",
   collabTypes: [],
   additionalDetails: "",
+  // New fields
+  contactName: "",
+  contactEmail: "",
+  contactPhone: "",
+  // Collaboration specific
+  prefQualIds: [],
+  prefStreamIds: [],
+  minStudents: "",
+  numInstitutes: "",
 };
 
 const NATURE_OPTIONS = [
@@ -182,6 +201,7 @@ export function OfferModalV2({
   searchFilters = {},
   searchSort = "student_count",
   searchTerm = "",
+  totalInstitutes,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -196,6 +216,7 @@ export function OfferModalV2({
   searchFilters?: any;
   searchSort?: string;
   searchTerm?: string;
+  totalInstitutes?: number;
 }) {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -210,6 +231,7 @@ export function OfferModalV2({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [showAllInstitutes, setShowAllInstitutes] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -254,8 +276,18 @@ export function OfferModalV2({
       "Industrial Training": { ...DEFAULT_FORM_STATE, qualIds: prefilledQualIds, streamIds: prefilledStreamIds },
       "Collaboration": { ...DEFAULT_FORM_STATE, qualIds: prefilledQualIds, streamIds: prefilledStreamIds },
     });
-    setSending(false); setError(""); setShowAllInstitutes(false);
+    setSending(false);
+    setError("");
+    setShowAllInstitutes(false);
+    setShowConfirm(false);
   };
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      clear();
+    }
+  }, [isOpen]);
 
   const handleClose = () => {
     setVisible(false);
@@ -286,11 +318,43 @@ export function OfferModalV2({
 
   const validateForm = (type: EoiType): string | null => {
     const f = forms[type];
-    if (type !== "Collaboration" && !f.jobTitle.trim()) {
-      return `Job Role / Title is required for ${type}`;
-    }
-    if (type === "Collaboration" && f.collabTypes.length === 0) {
-      return "Select at least one collaboration type";
+
+    // Contact details are always required
+    if (!f.contactName.trim()) return "Contact person name is required";
+    if (!f.contactEmail.trim()) return "Contact person email is required";
+    // Email regex check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(f.contactEmail.trim())) return "Please enter a valid email address";
+
+    if (!f.contactPhone.trim()) return "Contact person phone is required";
+    // Phone regex check (10 digits)
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(f.contactPhone.trim())) return "Phone number must be exactly 10 digits";
+
+    if (type === "Collaboration") {
+      if (f.collabTypes.length === 0) return "Select at least one collaboration type";
+      if (f.prefQualIds.length === 0) return "Preferred qualification is required";
+      if (f.prefStreamIds.length === 0) return "Preferred trade/course is required";
+      if (!f.minStudents.trim()) return "Minimum number of students required is mandatory";
+      if (!f.numInstitutes.trim()) return "Number of institutes is required";
+    } else {
+      if (!f.jobTitle.trim()) return "Job Role / Title is required";
+      if (type === "Placement" && !f.natureOfEngagement) return "Nature of engagement is required";
+      if (f.qualIds.length === 0) return "Qualification is required";
+      if (f.streamIds.length === 0) return "Course/Trade is required";
+      if (!f.numStudents.trim()) return "Number of students required is mandatory";
+      if (!f.experience) return "Experience required is mandatory";
+      if (!f.location.trim()) return "Location is required";
+      if (!f.salaryMin.trim()) return "Minimum salary/stipend is required";
+      if (!f.startDate) return "Expected start date is required";
+
+      // Conditional Duration
+      const isDurationMandatory =
+        f.natureOfEngagement === "Contractual employment" ||
+        f.natureOfEngagement === "Apprenticeship";
+      if (isDurationMandatory && !f.duration.trim()) {
+        return "Duration is required for Contractual/Apprenticeship engagement";
+      }
     }
     return null;
   };
@@ -331,71 +395,46 @@ export function OfferModalV2({
     );
   };
 
-  const handleSend = async () => {
+  const handleSend = () => {
     setError("");
     const types: EoiType[] = ["Placement", "Industrial Training", "Collaboration"];
 
-    let updatedForms = { ...forms };
+    // Identify forms that have some data (either explicitly saved or just partially filled)
+    const formsWithData = types.filter(t => forms[t].isSaved || isPartiallyFilled(t));
 
-    // Auto-save the current tab if it has data and isn't saved
-    if (eoiType && !forms[eoiType].isSaved && isPartiallyFilled(eoiType)) {
-      const err = validateForm(eoiType);
-      if (!err) {
-        updatedForms[eoiType] = { ...forms[eoiType], isSaved: true };
-        setForms(updatedForms);
-      }
-    }
-
-    const savedForms = types.filter(t => updatedForms[t].isSaved);
-    const draftForms = types.filter(t => !updatedForms[t].isSaved && isPartiallyFilled(t));
-
-    if (savedForms.length === 0 && draftForms.length === 0) {
-      setError("Please select and fill at least one Purpose of Engagement.");
+    if (formsWithData.length === 0) {
+      setError("Please fill at least one form (Placement, Training, or Collaboration).");
       return;
     }
 
-    if (savedForms.length === 0 && draftForms.length > 0) {
-      const err = validateForm(draftForms[0]);
-      if (err) {
-        setError(`Please fix errors in ${draftForms[0]} before sending: ${err}`);
-        if (eoiType !== draftForms[0]) setEoiType(draftForms[0]);
-        return;
-      }
-      // If only one draft and it's valid, prompt to send
-      const confirmDraft = window.confirm(`The details for ${draftForms[0]} haven't been saved. Do you want to send it anyway?`);
-      if (!confirmDraft) {
-        if (eoiType !== draftForms[0]) setEoiType(draftForms[0]);
-        return;
-      }
-    } else if (draftForms.length > 0 && savedForms.length > 0) {
-      const confirmSend = window.confirm(
-        `You have partially filled incomplete drafts for: ${draftForms.join(", ")}.\n\n` +
-        `Do you want to send ONLY the saved ones (${savedForms.join(", ")})?`
-      );
-      if (!confirmSend) return;
-    }
-
-    const formsToSend = savedForms.length > 0 ? savedForms : draftForms;
-
-    // Final validation of forms to be sent
-    for (const t of formsToSend) {
+    // Validate all forms that have data
+    for (const t of formsWithData) {
       const err = validateForm(t);
       if (err) {
-        setError(`Error in ${t}: ${err}`);
+        setError(`Please fix errors in ${t} before sending: ${err}`);
         if (eoiType !== t) setEoiType(t);
         return;
       }
     }
 
     if (!isSelectAll && selectedIds.length === 0) {
-      setError("Select at least one institute");
+      setError("Please select at least one institute.");
       return;
     }
+
+    setShowConfirm(true);
+  };
+
+  const submitEOI = async () => {
+    setError("");
+    const types: EoiType[] = ["Placement", "Industrial Training", "Collaboration"];
+    // Collect all forms that have data and were validated in handleSend
+    const formsToSend = types.filter(t => forms[t].isSaved || isPartiallyFilled(t));
 
     setSending(true);
     try {
       const promises = formsToSend.map((type) => {
-        const f = updatedForms[type];
+        const f = forms[type];
         return api.post("/job-offer/bulk", {
           institute_ids: isSelectAll ? [] : selectedIds,
           is_select_all: isSelectAll,
@@ -418,6 +457,15 @@ export function OfferModalV2({
           duration: f.duration || undefined,
           collaboration_types: f.collabTypes.join("|") || undefined,
           additional_details: f.additionalDetails || undefined,
+          // New contact fields
+          contact_name: f.contactName,
+          contact_email: f.contactEmail,
+          contact_phone: f.contactPhone,
+          // Collaboration specific
+          preferred_qualification_ids: f.prefQualIds.join(",") || undefined,
+          preferred_stream_ids: f.prefStreamIds.join(",") || undefined,
+          min_students_required: f.minStudents ? parseInt(f.minStudents) : undefined,
+          number_of_institutes_required: f.numInstitutes ? parseInt(f.numInstitutes) : undefined,
         });
       });
 
@@ -425,15 +473,13 @@ export function OfferModalV2({
 
       dispatch(updateUiInstitute({ bulkOffer: { open: false } }));
       onSent();
-      clear(); // Only clear state on successful submission
       handleClose();
-    } catch (e: any) {
-      setError(e?.response?.data?.message ?? "Failed to send EOI. Some forms might not have been sent.");
+    } catch {
+      setError("Failed to send EOI. Please try again.");
     } finally {
       setSending(false);
     }
   };
-
   const PREVIEW_COUNT = 4;
   const previewIds = selectedIds.slice(0, PREVIEW_COUNT);
   const remainingCount = selectedIds.length - PREVIEW_COUNT;
@@ -475,10 +521,10 @@ export function OfferModalV2({
               </div>
               <div>
                 <h2 className="text-xl font-bold text-base-content leading-tight tracking-tight">
-                  Connect with Institutes
+                  {showConfirm ? "Confirm Submission" : "Connect with Institutes"}
                 </h2>
                 <p className="text-sm text-base-content/50 mt-0.5">
-                  Submit an Expression of Interest to selected institutes
+                  {showConfirm ? "Please review the details before final submission" : "Submit an Expression of Interest to selected institutes"}
                 </p>
               </div>
             </div>
@@ -490,49 +536,41 @@ export function OfferModalV2({
             </button>
           </div>
 
-          {/* Send to */}
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-base-content/50 mb-2.5">
-              Send to · {isSelectAll ? "All matching institutes" : `${selectedIds.length} institute${selectedIds.length !== 1 ? "s" : ""}`}
-            </p>
+          {/* Selection Summary */}
+          <div className="cursor-pointer group" onClick={() => setShowAllInstitutes((v) => !v)}>
+            <div className="flex items-center justify-between mb-2.5">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-base-content/50">
+                Send to · {isSelectAll ? `${totalInstitutes || "All matching"} institutes` : `${selectedIds.length} institute${selectedIds.length !== 1 ? "s" : ""}`}
+              </p>
+              <div className="flex items-center gap-1 text-[10px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                {showAllInstitutes ? "HIDE LIST" : "VIEW LIST"}
+                <ChevronDown size={10} className={showAllInstitutes ? "rotate-180" : ""} />
+              </div>
+            </div>
+
             {!isSelectAll ? (
-              <>
-                <div className="flex flex-wrap gap-2">
-                  {previewIds.map((id) => (
-                    <span key={id} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 text-xs font-medium text-base-content/80">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                      {institutesMap.get(id) || `#${id}`}
-                    </span>
-                  ))}
-                  {remainingCount > 0 && (
-                    <button
-                      onClick={() => setShowAllInstitutes((v) => !v)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
-                    >
-                      {showAllInstitutes ? <><ChevronUp size={12} /> Show less</> : <><ChevronDown size={12} /> +{remainingCount} more</>}
-                    </button>
-                  )}
-                </div>
-                {showAllInstitutes && remainingCount > 0 && (
-                  <div className="mt-3 p-3 rounded-xl bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 max-h-36 overflow-y-auto">
-                    <div className="flex flex-wrap gap-2">
-                      {selectedIds.slice(PREVIEW_COUNT).map((id) => (
-                        <span key={id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-700 text-xs font-medium text-base-content/70">
-                          <Building2 size={10} className="text-primary flex-shrink-0" />
-                          {institutesMap.get(id) || `#${id}`}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+              <div className="flex flex-wrap gap-2">
+                {previewIds.map((id) => (
+                  <span key={id} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 text-xs font-medium text-base-content/80">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                    {institutesMap.get(id) || `#${id}`}
+                  </span>
+                ))}
+                {remainingCount > 0 && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
+                    +{remainingCount} more
+                  </span>
                 )}
-              </>
+              </div>
             ) : (
-              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-3">
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-3 group-hover:bg-primary/10 transition-colors">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                   <Building2 size={20} />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-primary">All matching institutes</p>
+                  <p className="text-sm font-bold text-primary">
+                    {totalInstitutes || "All matching"} institutes selected
+                  </p>
                   <p className="text-xs text-base-content/50">Your EOI will be sent to every institute matching your current search criteria.</p>
                 </div>
               </div>
@@ -540,8 +578,80 @@ export function OfferModalV2({
           </div>
         </div>
 
+
+        {showAllInstitutes && (
+          <div className="mt-3 p-3 rounded-xl bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="flex flex-wrap gap-2">
+              {isSelectAll ? (
+                <p className="text-xs text-base-content/50 italic px-2">
+                  Wait... in "Select All" mode, the full list is determined dynamically by your filters.
+                </p>
+              ) : (
+                selectedIds.map((id) => (
+                  <span key={id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-base-100 dark:bg-base-900 border border-base-300 dark:border-base-700 text-xs font-medium text-base-content/70">
+                    <Building2 size={10} className="text-primary flex-shrink-0" />
+                    {institutesMap.get(id) || `#${id}`}
+                  </span>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Static Error Message */}
+        {error && (
+          <div className="mx-6 mt-4 flex items-center justify-between gap-2.5 bg-error/10 border border-error/25 text-error text-sm px-4 py-3 rounded-xl animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle size={16} className="flex-shrink-0" />
+              <span className="font-medium">{error}</span>
+            </div>
+            <button
+              onClick={() => setError("")}
+              className="w-6 h-6 rounded-md hover:bg-error/10 flex items-center justify-center transition-colors"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
         {/* ── Scrollable Body ── */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 relative">
+          {showConfirm && (
+            <div className="absolute inset-0 bg-base-100 dark:bg-base-900 z-20 p-8 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-200">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-6">
+                <HelpCircle size={40} />
+              </div>
+              <h3 className="text-2xl font-black mb-3 text-base-content">Are you sure?</h3>
+              <p className="text-base-content/60 max-w-md mx-auto leading-relaxed mb-8">
+                You are about to send your <span className="font-bold text-primary">{
+                  (() => {
+                    const types: EoiType[] = ["Placement", "Industrial Training", "Collaboration"];
+                    const sendingForms = types.filter(t => forms[t].isSaved || isPartiallyFilled(t));
+                    return sendingForms.join(", ");
+                  })()
+                }</span> forms to <span className="font-bold text-primary">{isSelectAll ? (totalInstitutes || "all matching") : selectedIds.length}</span> institutes.
+                This action cannot be undone.
+              </p>
+
+              <div className="flex items-center gap-4 w-full max-w-xs">
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  disabled={sending}
+                  className="flex-1 h-12 rounded-xl border-2 border-base-300 dark:border-base-700 font-bold transition-all hover:bg-base-200 dark:hover:bg-base-800 disabled:opacity-50"
+                >
+                  Go Back
+                </button>
+                <button
+                  onClick={submitEOI}
+                  disabled={sending}
+                  className="flex-1 h-12 rounded-xl bg-primary text-primary-content font-bold shadow-lg shadow-primary/25 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {sending ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Yes, Send Now"}
+                </button>
+              </div>
+            </div>
+          )}
+
 
           {/* ── Section 1: Purpose of Engagement ── */}
           <section>
@@ -594,7 +704,7 @@ export function OfferModalV2({
               {/* Nature of Engagement */}
               {eoiType === "Placement" && (
                 <div>
-                  <label className={fieldLabelCls}>Nature of Engagement</label>
+                  <label className={fieldLabelCls}>Nature of Engagement <span className="text-error">*</span></label>
                   <select value={forms[eoiType].natureOfEngagement} onChange={(e) => handleFieldChange("natureOfEngagement", e.target.value)}
                     className={inputCls}>
                     <option value="">Select nature…</option>
@@ -606,16 +716,16 @@ export function OfferModalV2({
 
               {/* Qualification */}
               <div>
-                <label className={fieldLabelCls}>Qualification</label>
+                <label className={fieldLabelCls}>Qualification <span className="text-error">*</span></label>
                 <MultiSelectDropdown label="Qualification" options={qualOptions} selected={forms[eoiType].qualIds}
                   onChange={(vals) => handleFieldChange("qualIds", vals)} placeholder="Any qualification" disabledOptions={disabledQualIds} />
               </div>
 
               {/* Relevant Course */}
               <div>
-                <label className={fieldLabelCls}>Relevant Course</label>
+                <label className={fieldLabelCls}>Course / Trade <span className="text-error">*</span></label>
                 <MultiSelectDropdown
-                  label="Course"
+                  label="Course / Trade"
                   options={streamOptions}
                   selected={streamOptions
                     .filter((opt) => {
@@ -637,12 +747,16 @@ export function OfferModalV2({
               {/* Students required + Experience */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={fieldLabelCls}>Number of Students Required</label>
-                  <input type="number" value={forms[eoiType].numStudents} onChange={(e) => handleFieldChange("numStudents", e.target.value)}
+                  <label className={fieldLabelCls}>Number of Students Required <span className="text-error">*</span></label>
+                  <input type="text" value={forms[eoiType].numStudents}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      handleFieldChange("numStudents", val);
+                    }}
                     placeholder="e.g. 10" className={inputCls} />
                 </div>
                 <div>
-                  <label className={fieldLabelCls}>Experience Required</label>
+                  <label className={fieldLabelCls}>Experience Required <span className="text-error">*</span></label>
                   <select value={forms[eoiType].experience} onChange={(e) => handleFieldChange("experience", e.target.value)} className={inputCls}>
                     <option value="">Select…</option>
                     {EXPERIENCE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -652,7 +766,7 @@ export function OfferModalV2({
 
               {/* Location */}
               <div>
-                <label className={fieldLabelCls}>Location of Job / Training</label>
+                <label className={fieldLabelCls}>Location of Job / Training <span className="text-error">*</span></label>
                 <div className="relative">
                   <MapPin size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base-content/40 pointer-events-none" />
                   <input type="text" value={forms[eoiType].location} onChange={(e) => handleFieldChange("location", e.target.value)}
@@ -669,11 +783,15 @@ export function OfferModalV2({
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className={fieldLabelCls}>
-                    {eoiType === "Placement" ? "Min Salary" : "Min Stipend"}
+                    {eoiType === "Placement" ? "Min Salary" : "Min Stipend"} <span className="text-error">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-base-content/50 pointer-events-none">₹</span>
-                    <input type="number" value={forms[eoiType].salaryMin} onChange={(e) => handleFieldChange("salaryMin", e.target.value)}
+                    <input type="text" value={forms[eoiType].salaryMin}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "");
+                        handleFieldChange("salaryMin", val);
+                      }}
                       placeholder="eg. 200000" className={`${inputCls} pl-8`} />
                   </div>
                 </div>
@@ -683,12 +801,16 @@ export function OfferModalV2({
                   </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-base-content/50 pointer-events-none">₹</span>
-                    <input type="number" value={forms[eoiType].salaryMax} onChange={(e) => handleFieldChange("salaryMax", e.target.value)}
+                    <input type="text" value={forms[eoiType].salaryMax}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "");
+                        handleFieldChange("salaryMax", val);
+                      }}
                       placeholder="eg. 500000" className={`${inputCls} pl-8`} />
                   </div>
                 </div>
                 <div>
-                  <label className={fieldLabelCls}>Expected Start Date</label>
+                  <label className={fieldLabelCls}>Expected Start Date <span className="text-error">*</span></label>
                   <div className="relative">
                     <input type="date" value={forms[eoiType].startDate} onChange={(e) => handleFieldChange("startDate", e.target.value)}
                       className={`${inputCls} pr-10`} />
@@ -699,7 +821,10 @@ export function OfferModalV2({
 
               {/* Duration */}
               <div>
-                <label className={fieldLabelCls}>Duration (if applicable — for internships, OJT, dual system)</label>
+                <label className={fieldLabelCls}>
+                  Duration {(forms[eoiType].natureOfEngagement === "Contractual employment" || forms[eoiType].natureOfEngagement === "Apprenticeship") && <span className="text-error">*</span>}
+                  <span className="text-[10px] text-base-content/40 ml-1">(if applicable — for internships, OJT, dual system)</span>
+                </label>
                 <input type="text" value={forms[eoiType].duration} onChange={(e) => handleFieldChange("duration", e.target.value)}
                   placeholder="e.g. 6 months, 1 year" className={inputCls} />
               </div>
@@ -718,6 +843,85 @@ export function OfferModalV2({
                     <span className="text-sm font-medium text-base-content group-hover:text-primary transition-colors">{opt}</span>
                   </label>
                 ))}
+              </div>
+
+              <p className={sectionLabelCls}>Preferred Qualifications & Courses</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={fieldLabelCls}>Preferred Qualification <span className="text-error">*</span></label>
+                  <MultiSelectDropdown label="Qualification" options={qualOptions} selected={forms[eoiType].prefQualIds}
+                    onChange={(vals) => handleFieldChange("prefQualIds", vals)} placeholder="Select qualification" />
+                </div>
+                <div>
+                  <label className={fieldLabelCls}>Preferred Trade/Course <span className="text-error">*</span></label>
+                  <MultiSelectDropdown
+                    label="Trade/Course"
+                    options={streamOptions}
+                    selected={streamOptions
+                      .filter((opt) => {
+                        const val = String(opt.value || "");
+                        const ids = val.split(",").map(Number);
+                        return ids.every((id) => forms[eoiType].prefStreamIds.includes(id as any));
+                      })
+                      .map((opt) => opt.value)}
+                    onChange={(vals) => {
+                      const allIds = (vals as string[]).flatMap((v) =>
+                        String(v || "").split(",").map(Number),
+                      );
+                      handleFieldChange("prefStreamIds", allIds);
+                    }}
+                    placeholder="Select trade/course"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={fieldLabelCls}>Minimum number of students required <span className="text-error">*</span></label>
+                  <input type="text" value={forms[eoiType].minStudents}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      handleFieldChange("minStudents", val);
+                    }}
+                    placeholder="e.g. 50" className={inputCls} />
+                </div>
+                <div>
+                  <label className={fieldLabelCls}>Number of institutes <span className="text-error">*</span></label>
+                  <input type="text" value={forms[eoiType].numInstitutes}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      handleFieldChange("numInstitutes", val);
+                    }}
+                    placeholder="e.g. 5" className={inputCls} />
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* ── Section Contact Details ── */}
+          {eoiType && forms[eoiType] && (
+            <section className="space-y-4 animate-in fade-in duration-300">
+              <p className={sectionLabelCls}>Contact Person Details</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className={fieldLabelCls}>Name <span className="text-error">*</span></label>
+                  <input type="text" value={forms[eoiType].contactName} onChange={(e) => handleFieldChange("contactName", e.target.value)}
+                    placeholder="Full Name" className={inputCls} />
+                </div>
+                <div>
+                  <label className={fieldLabelCls}>Email <span className="text-error">*</span></label>
+                  <input type="email" value={forms[eoiType].contactEmail} onChange={(e) => handleFieldChange("contactEmail", e.target.value)}
+                    placeholder="email@example.com" className={inputCls} />
+                </div>
+                <div>
+                  <label className={fieldLabelCls}>Phone <span className="text-error">*</span></label>
+                  <input type="text" value={forms[eoiType].contactPhone}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      if (val.length <= 10) handleFieldChange("contactPhone", val);
+                    }}
+                    placeholder="10-digit Phone number" className={inputCls} />
+                </div>
               </div>
             </section>
           )}
@@ -750,43 +954,39 @@ export function OfferModalV2({
             </div>
           )}
 
-          {/* Error */}
-          {error && (
-            <div className="flex items-center gap-2.5 bg-error/10 border border-error/25 text-error text-sm px-4 py-3 rounded-xl">
-              <X size={15} className="flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+          {/* Error - Hidden from bottom (moved to top) */}
         </div>
 
         {/* ── Footer ── */}
-        <div className="flex-shrink-0 flex items-center justify-between gap-4 px-6 py-4 border-t border-base-200 dark:border-base-800 bg-base-200/50 dark:bg-base-800/50">
-          <p className="text-xs text-base-content/50 flex items-center gap-1.5 hidden sm:flex">
-            <Send size={12} /> EOI delivered instantly to selected institutes
-          </p>
-          <div className="flex items-center gap-2.5 ml-auto">
-            <button
-              onClick={handleClose}
-              disabled={sending}
-              className="px-4 h-9 rounded-lg border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 text-sm font-medium text-base-content hover:bg-base-200 dark:hover:bg-base-800 transition-colors disabled:opacity-40"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSend}
-              disabled={sending || !eoiType}
-              className="h-9 px-5 rounded-lg bg-primary hover:brightness-110 text-primary-content text-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
-            >
-              {sending ? (
-                <><Loader2 size={15} className="animate-spin" /> Sending…</>
-              ) : (
-                <><Send size={15} /> Send EOI to {isSelectAll ? "All" : selectedIds.length}</>
-              )}
-            </button>
+        {!showConfirm && (
+          <div className="flex-shrink-0 flex items-center justify-between gap-4 px-6 py-4 border-t border-base-200 dark:border-base-800 bg-base-200/50 dark:bg-base-800/50">
+            <p className="text-xs text-base-content/50 flex items-center gap-1.5 hidden sm:flex">
+              <Send size={12} /> EOI delivered instantly to selected institutes
+            </p>
+            <div className="flex items-center gap-2.5 ml-auto">
+              <button
+                onClick={handleClose}
+                disabled={sending}
+                className="px-4 h-9 rounded-lg border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 text-sm font-medium text-base-content hover:bg-base-200 dark:hover:bg-base-800 transition-colors disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSend}
+                disabled={sending || !eoiType}
+                className="h-9 px-5 rounded-lg bg-primary hover:brightness-110 text-primary-content text-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              >
+                {sending ? (
+                  <><Loader2 size={15} className="animate-spin" /> Sending…</>
+                ) : (
+                  <><Send size={15} /> Send EOI to {isSelectAll ? "All" : selectedIds.length}</>
+                )}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>,
-    document.body,
+    document.body
   );
 }
