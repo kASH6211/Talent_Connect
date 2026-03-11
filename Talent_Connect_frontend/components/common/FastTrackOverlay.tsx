@@ -17,7 +17,7 @@ const FastTrackOverlay = () => {
   const handleSSO = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("/api/sso");
+      const res = await axios.get("/api/api/sso");
       if (res.data?.url) {
         window.location.href = res.data.url;
       }
