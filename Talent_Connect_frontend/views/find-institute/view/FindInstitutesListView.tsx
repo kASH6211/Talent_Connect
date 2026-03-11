@@ -130,6 +130,7 @@ export default function FindInstitutesPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [excluded, setExcluded] = useState<Set<number>>(new Set());
 
   const [districtOpts, setDistrictOpts] = useState<Option[]>([]);
   const [qualOpts, setQualOpts] = useState<Option[]>([]);
@@ -317,7 +318,9 @@ export default function FindInstitutesPage() {
   const handleSearch = useCallback(async () => {
     setLoading(true);
     setSearched(true);
+    setSearched(true);
     setSelected(new Set());
+    setExcluded(new Set());
     setIsSelectAll(false);
 
     const params = new URLSearchParams();
@@ -431,27 +434,32 @@ export default function FindInstitutesPage() {
       institutes.every((i) => selected.has(i.institute_id)));
 
   const toggleSelect = (id: number) => {
-    setIsSelectAll(false);
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    if (isSelectAll) {
+      setExcluded((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+    } else {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+    }
   };
 
   const toggleAll = () => {
     if (allSelected) {
       setIsSelectAll(false);
       setSelected(new Set());
+      setExcluded(new Set());
     } else {
       setIsSelectAll(true);
-      setSelected(
-        new Set(
-          (Array.isArray(institutes) ? institutes : []).map(
-            (i) => i.institute_id,
-          ),
-        ),
-      );
+      setSelected(new Set());
+      setExcluded(new Set());
     }
   };
 
@@ -506,7 +514,7 @@ export default function FindInstitutesPage() {
                     Selected
                   </p>
                   <p className="text-xl font-black text-green-600 leading-tight">
-                    {isSelectAll ? total : selected.size}
+                    {isSelectAll ? total - excluded.size : selected.size}
                   </p>
                 </div>
               )}
@@ -679,24 +687,12 @@ export default function FindInstitutesPage() {
                     <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
                       {/* Desktop Table */}
                       <div className="overflow-x-auto hidden md:block">
-                        <table className="min-w-full divide-y divide-slate-200">
+                        <table className="min-w-full divide-y-2 divide-slate-200">
                           <thead>
-                            <tr className="bg-slate-50">
+                            <tr className="bg-slate-100 border-b-2 border-slate-200">
                               {user?.role !== "dept_admin" && (
                                 <th className="px-4 py-3 w-10">
-                                  <button
-                                    onClick={toggleAll}
-                                    className="w-7 h-7 rounded-md border border-slate-300 bg-white flex items-center justify-center text-slate-600 transition-all mx-auto"
-                                  >
-                                    {allSelected ? (
-                                      <CheckSquare
-                                        size={14}
-                                        className="text-blue-600"
-                                      />
-                                    ) : (
-                                      <Square size={14} />
-                                    )}
-                                  </button>
+                                  {/* Redundant select all removed, exists in summary bar */}
                                 </th>
                               )}
                               <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -721,7 +717,9 @@ export default function FindInstitutesPage() {
                           </thead>
                           <tbody className="divide-y divide-slate-200">
                             {institutes.map((inst) => {
-                              const isSelected = selected.has(inst.institute_id);
+                              const isSelected = isSelectAll
+                                ? !excluded.has(inst.institute_id)
+                                : selected.has(inst.institute_id);
                               return (
                                 <tr
                                   key={inst.institute_id}
@@ -953,8 +951,8 @@ export default function FindInstitutesPage() {
                               className="group-hover:rotate-12 transition-transform duration-300"
                             />
                             <span className="text-base">
-                              Send to <strong>{isSelectAll ? total : selected.size}</strong> institute
-                              {(isSelectAll ? total : selected.size) !== 1 ? "s" : ""}
+                              Send to <strong>{isSelectAll ? total - excluded.size : selected.size}</strong> institute
+                              {(isSelectAll ? total - excluded.size : selected.size) !== 1 ? "s" : ""}
                             </span>
                           </button>
                         </div>
@@ -995,11 +993,12 @@ export default function FindInstitutesPage() {
                   <div className="lg:w-[30%] h-fit lg:sticky lg:top-4">
                     <div className="flex flex-col gap-3 bg-white rounded-lg border border-slate-200 shadow-sm p-4">
                       <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                        <MapPin size={16} className="text-primary" /> Institutes
-                        Near You
+                        {/* <MapPin size={16} className="text-primary" /> Institutes
+                        Near You */}
+                        Coming Soon
                       </h3>
 
-                      <div className="flex flex-col gap-2">
+                      {/* <div className="flex flex-col gap-2">
                         <div className="relative">
                           <input
                             type="text"
@@ -1034,13 +1033,17 @@ export default function FindInstitutesPage() {
                             <X size={14} />
                           </button>
                         </div>
-                      </div>
+                      </div> */}
 
                       <div className="w-full h-[350px] rounded-lg overflow-hidden border border-slate-200 shadow-inner bg-slate-100">
                         <MapContainer
                           center={userLocation || [31.1471, 75.3412]}
                           zoom={userLocation ? 14 : 7}
-                          scrollWheelZoom={true}
+                          scrollWheelZoom={false}
+                          dragging={false}
+                          zoomControl={false}
+                          doubleClickZoom={false}
+                          touchZoom={false}
                           style={{ height: "100%", width: "100%" }}
                         >
                           <TileLayer
@@ -1059,15 +1062,15 @@ export default function FindInstitutesPage() {
                             />
                           )}
                           {userLocation && <Marker position={userLocation} />}
-                          <MapClickEvent />
+                          {/* <MapClickEvent /> */}
                         </MapContainer>
                       </div>
 
-                      <p className="text-xs text-slate-600 text-center italic">
+                      {/* <p className="text-xs text-slate-600 text-center italic">
                         {!userLocation
                           ? "Click on map or search location"
                           : "✓ Location marked"}
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </div>
@@ -1097,6 +1100,7 @@ export default function FindInstitutesPage() {
         isOpen={findInstituteUi?.bulkOffer?.open ?? false}
         onClose={() => dispatch(updateUiInstitute({ bulkOffer: { open: false } }))}
         selectedIds={Array.from(selected)}
+        exclude_ids={Array.from(excluded)}
         institutesMap={institutesMap}
         qualOptions={qualOpts}
         streamOptions={streamOpts}
@@ -1110,6 +1114,7 @@ export default function FindInstitutesPage() {
         onSent={() => {
           setSentSuccess(true);
           setSelected(new Set());
+          setExcluded(new Set());
           setIsSelectAll(false);
         }}
       />
