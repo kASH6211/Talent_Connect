@@ -94,6 +94,8 @@ interface InstituteRow {
   po_email: string;
   latitude?: string;
   longitude?: string;
+  address?: string;
+  google_map_link?: string;
   air_distance?: number;
   path_distance?: number;
 }

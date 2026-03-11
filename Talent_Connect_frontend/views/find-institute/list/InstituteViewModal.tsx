@@ -27,6 +27,7 @@ export interface Institute {
   state?: string;
   pincode?: string;
   address?: string;
+  google_map_link?: string;
   type?: string;
   ownership?: string;
   student_count?: number;
@@ -166,6 +167,13 @@ export function InstituteViewModal({
       : `https://${institute.website}`
     : undefined;
 
+  /* ── Map link helper ── */
+  const mapHref = institute.google_map_link
+    ? institute.google_map_link.startsWith("http")
+      ? institute.google_map_link
+      : `https://${institute.google_map_link}`
+    : undefined;
+
   /* ── Location string ── */
   const locationParts = [
     institute.district,
@@ -261,10 +269,29 @@ export function InstituteViewModal({
                 </div>
               </div>
 
-              <button className="flex flex-col items-center justify-center gap-2 w-28 rounded-xl border-2 border-base-300 dark:border-base-800 bg-base-100 dark:bg-base-900 hover:border-primary/50 text-base-content/70 hover:text-primary transition-all shadow-sm">
+              <a
+                href={mapHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                role="button"
+                className={`flex flex-col items-center justify-center gap-2 w-28 rounded-xl border-2 transition-all shadow-sm group relative ${mapHref
+                  ? "border-base-300 dark:border-base-800 bg-base-100 dark:bg-base-900 hover:border-primary/50 text-base-content/70 hover:text-primary cursor-pointer"
+                  : "border-base-200 dark:border-base-800 bg-base-200/50 dark:bg-base-800/50 text-base-content/30 cursor-not-allowed pointer-events-none"
+                  }`}
+                title={!mapHref ? "Location link not available" : ""}
+                onMouseDown={(e) => {
+                  if (!mapHref) e.preventDefault();
+                }}
+              >
                 <MapPin size={24} className="mb-1" />
                 <span className="text-[11px] font-bold text-center leading-tight">Map<br />Location</span>
-              </button>
+
+                {!mapHref && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    Location link not available
+                  </div>
+                )}
+              </a>
             </div>
           </div>
 
