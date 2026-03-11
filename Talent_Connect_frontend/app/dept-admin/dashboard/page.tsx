@@ -1,7 +1,8 @@
 "use client";
 
-import DeptAdminDashboard from "@/components/dashboards/DeptAdminDashboard";
+import { redirect } from "next/navigation";
 
 export default function DeptAdminDashboardPage() {
-    return <DeptAdminDashboard />;
+    redirect("/all-requests");
+    return null;
 }

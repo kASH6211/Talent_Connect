@@ -130,12 +130,12 @@ const industryNav = [
 ];
 
 const deptAdminNav = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dept-admin/dashboard" },
-  { icon: Search, label: "Explore Institutes", href: "/find-institutes" },
-  { icon: Factory, label: "Industries", href: "/industries" },
-  { icon: Users, label: "Students", href: "/students" },
+  { icon: LayoutDashboard, label: "State Overview", href: "/dept-admin/state-overview" },
+  { icon: Building, label: "Industry Partnership", href: "/dept-admin/industry-partnership" },
   { icon: Mail, label: "All Applications", href: "/all-requests" },
-  { icon: UserPen, label: "Profile", href: "/profile" },
+  { icon: Factory, label: "Explore Industry", href: "/dept-admin/explore-industry" },
+  { icon: Search, label: "Explore Institutes", href: "/find-institutes" },
+  { icon: UserCircle, label: "My Profile", href: "/dept-admin/profile" },
 ];
 
 function NavLink({ href, label, icon: Icon, collapsed }: any) {
