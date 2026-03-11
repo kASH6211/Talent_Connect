@@ -240,10 +240,9 @@ export default function StudentCountsPage() {
                     setModalOpen(true);
                 }}
                 onEdit={(r) => {
-                    // Pre-select institute if not institute user to show the right mappings
-                    if (user?.role !== 'institute') {
-                        setSelectedInstituteId(String(r.instituteQualification?.instituteId));
-                    }
+                    // Pre-select institute to show the right mappings
+                    const instId = r.instituteQualification?.instituteId || (user?.role === 'institute' ? user?.institute_id : "");
+                    setSelectedInstituteId(String(instId));
                     setModalOpen(true);
                 }}
                 onDataFetched={setFetchedData}
