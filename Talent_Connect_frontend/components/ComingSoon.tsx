@@ -1,6 +1,7 @@
 "use client";
-
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/AuthProvider";
+import { getDashboardRoute } from "@/lib/helper";
 
 interface ComingSoonProps {
   title?: string;
@@ -16,6 +17,7 @@ export default function ComingSoon({
   minHeight = "min-h-[60vh]"
 }: ComingSoonProps) {
   const router = useRouter();
+  const { role } = useAuth();
 
   const topText = (title === "Coming Soon" || title === "Coming Soon!") 
     ? "NEW FEATURE" 
@@ -47,10 +49,10 @@ export default function ComingSoon({
         </button>
       ) : (
         <button 
-          onClick={() => router.push('/')}
+          onClick={() => router.push(getDashboardRoute(role || ""))}
           className="px-8 py-3.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all shadow-xl active:scale-95"
         >
-          Return Home
+          Back to Dashboard
         </button>
       )}
     </div>

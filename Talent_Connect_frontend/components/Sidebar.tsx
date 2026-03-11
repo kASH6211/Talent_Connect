@@ -94,21 +94,28 @@ const adminNav = [
 
 const instituteNav = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/institute/dashboard" },
+  { icon: Inbox, label: "My Inbox", href: "/institute/inbox" },
+  { icon: LayoutDashboard, label: "Explore Industry", href: "/institute/explore-industry" },
+  { icon: AppWindow, label: "My Application", href: "/institute/application" },
+  { icon: Briefcase, label: "My Industry Partnership", href: "/institute/Partnership" },
+  { icon: Users, label: "My Student", href: "/institute/student" },
+  { icon: GraduationCap, label: "My Alumni", href: "/institute/alumini" },
+  { icon: LayoutDashboard, label: "My Faculty", href: "/institute/faculty" },
   { icon: Inbox, label: "Received EOI", href: "/received-offers" },
-  {
-    icon: ClipboardList,
-    label: "Mappings",
-    children: [
-      {
-        label: "Institute ↔ Qualification",
-        href: "/mappings/institute-qualification",
-      },
-      {
-        label: "Qualification ↔ Course",
-        href: "/mappings/stream-branch-qualification",
-      },
-    ],
-  },
+  // {
+  //   icon: ClipboardList,
+  //   label: "Mappings",
+  //   children: [
+  //     {
+  //       label: "Institute ↔ Qualification",
+  //       href: "/mappings/institute-qualification",
+  //     },
+  //     {
+  //       label: "Qualification ↔ Course",
+  //       href: "/mappings/stream-branch-qualification",
+  //     },
+  //   ],
+  // },
   { icon: Users, label: "Student Counts", href: "/masters/student-counts" },
   { icon: UserCircle, label: "My Profile", href: "/institute/profile" },
 ];
