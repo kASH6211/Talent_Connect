@@ -399,22 +399,19 @@ export function OfferModalV2({
     setError("");
     const types: EoiType[] = ["Placement", "Industrial Training", "Collaboration"];
 
-    // Identify forms that have some data (either explicitly saved or just partially filled)
-    const formsWithData = types.filter(t => forms[t].isSaved || isPartiallyFilled(t));
+    // 1. Identify Saved forms
+    const savedForms = types.filter(t => forms[t].isSaved);
 
-    if (formsWithData.length === 0) {
-      setError("Please fill at least one form (Placement, Training, or Collaboration).");
-      return;
-    }
+    // 2. Identify Drafts (filled but not saved)
+    const draftForms = types.filter(t => !forms[t].isSaved && isPartiallyFilled(t));
 
-    // Validate all forms that have data
-    for (const t of formsWithData) {
-      const err = validateForm(t);
-      if (err) {
-        setError(`Please fix errors in ${t} before sending: ${err}`);
-        if (eoiType !== t) setEoiType(t);
-        return;
+    if (savedForms.length === 0) {
+      if (draftForms.length > 0) {
+        setError(`You have draft data in ${draftForms.join(", ")}. Please save at least one form to proceed.`);
+      } else {
+        setError("Please fill and save at least one form (Placement, Training, or Collaboration).");
       }
+      return;
     }
 
     if (!isSelectAll && selectedIds.length === 0) {
@@ -428,8 +425,8 @@ export function OfferModalV2({
   const submitEOI = async () => {
     setError("");
     const types: EoiType[] = ["Placement", "Industrial Training", "Collaboration"];
-    // Collect all forms that have data and were validated in handleSend
-    const formsToSend = types.filter(t => forms[t].isSaved || isPartiallyFilled(t));
+    // ONLY collect forms that are explicitly saved
+    const formsToSend = types.filter(t => forms[t].isSaved);
 
     setSending(true);
     try {
@@ -578,6 +575,61 @@ export function OfferModalV2({
           </div>
         </div>
 
+        {/* ── Confirmation Overlay (Positioned to cover entire modal) ── */}
+        {showConfirm && (
+          <div className="absolute inset-0 bg-base-100 dark:bg-base-900 z-[100] p-8 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-6">
+              <HelpCircle size={40} />
+            </div>
+            <h3 className="text-2xl font-black mb-3 text-base-content">Are you sure?</h3>
+            <p className="text-base-content/60 max-w-md mx-auto leading-relaxed mb-4">
+              You are about to send your <span className="font-bold text-primary">{
+                (() => {
+                  const types: EoiType[] = ["Placement", "Industrial Training", "Collaboration"];
+                  const sendingForms = types.filter(t => forms[t].isSaved);
+                  return sendingForms.join(", ");
+                })()
+              }</span> forms to <span className="font-bold text-primary">{isSelectAll ? (totalInstitutes || "all matching") : selectedIds.length}</span> institutes.
+            </p>
+
+            {(() => {
+              const types: EoiType[] = ["Placement", "Industrial Training", "Collaboration"];
+              const draftForms = types.filter(t => !forms[t].isSaved && isPartiallyFilled(t));
+              if (draftForms.length > 0) {
+                return (
+                  <div className="bg-amber-100 border border-amber-200 rounded-xl p-4 mb-8 max-w-md">
+                    <div className="flex items-center gap-2 text-amber-800 font-bold text-sm mb-1">
+                      <AlertCircle size={16} /> Drafts Discard Warning
+                    </div>
+                    <p className="text-xs text-amber-700 font-medium">
+                      The following draft forms will be <span className="font-bold uppercase">discarded</span>: {draftForms.join(", ")}.
+                      Go back if you want to save them first.
+                    </p>
+                  </div>
+                );
+              }
+              return <div className="mb-8" />;
+            })()}
+
+            <div className="flex items-center gap-4 w-full max-w-xs">
+              <button
+                onClick={() => setShowConfirm(false)}
+                disabled={sending}
+                className="flex-1 h-12 rounded-xl border-2 border-base-300 dark:border-base-700 font-bold transition-all hover:bg-base-200 dark:hover:bg-base-800 disabled:opacity-50"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={submitEOI}
+                disabled={sending}
+                className="flex-1 h-12 rounded-xl bg-primary text-primary-content font-bold shadow-lg shadow-primary/25 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {sending ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Yes, Send Now"}
+              </button>
+            </div>
+          </div>
+        )}
+
 
         {showAllInstitutes && (
           <div className="mt-3 p-3 rounded-xl bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
@@ -616,41 +668,7 @@ export function OfferModalV2({
 
         {/* ── Scrollable Body ── */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 relative">
-          {showConfirm && (
-            <div className="absolute inset-0 bg-base-100 dark:bg-base-900 z-20 p-8 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-200">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-6">
-                <HelpCircle size={40} />
-              </div>
-              <h3 className="text-2xl font-black mb-3 text-base-content">Are you sure?</h3>
-              <p className="text-base-content/60 max-w-md mx-auto leading-relaxed mb-8">
-                You are about to send your <span className="font-bold text-primary">{
-                  (() => {
-                    const types: EoiType[] = ["Placement", "Industrial Training", "Collaboration"];
-                    const sendingForms = types.filter(t => forms[t].isSaved || isPartiallyFilled(t));
-                    return sendingForms.join(", ");
-                  })()
-                }</span> forms to <span className="font-bold text-primary">{isSelectAll ? (totalInstitutes || "all matching") : selectedIds.length}</span> institutes.
-                This action cannot be undone.
-              </p>
-
-              <div className="flex items-center gap-4 w-full max-w-xs">
-                <button
-                  onClick={() => setShowConfirm(false)}
-                  disabled={sending}
-                  className="flex-1 h-12 rounded-xl border-2 border-base-300 dark:border-base-700 font-bold transition-all hover:bg-base-200 dark:hover:bg-base-800 disabled:opacity-50"
-                >
-                  Go Back
-                </button>
-                <button
-                  onClick={submitEOI}
-                  disabled={sending}
-                  className="flex-1 h-12 rounded-xl bg-primary text-primary-content font-bold shadow-lg shadow-primary/25 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {sending ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Yes, Send Now"}
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Confirmation Overlay moved outside to main container */}
 
 
           {/* ── Section 1: Purpose of Engagement ── */}

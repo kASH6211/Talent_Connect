@@ -32,13 +32,15 @@ export class StreamBranchService {
     return result;
   }
 
-  async findAll(qualificationId?: number, page?: number, limit?: number, search?: string) {
+  async findAll(qualificationId?: number, page?: number, limit?: number | string, search?: string) {
+    const isFetchingAll = limit === 'all' || limit === 0 || limit === '0';
+
     const qb = this.repo.createQueryBuilder('sb')
       .leftJoinAndSelect('sb.qualification', 'qualification')
       .leftJoinAndSelect('sb.affiliation', 'affiliation')
       .leftJoinAndSelect('sb.nsqf', 'nsqf')
       .leftJoinAndSelect('sb.courseDuration', 'courseDuration')
-      .where('1=1');
+      .where('sb.is_active != :inactive', { inactive: 'N' });
 
     if (qualificationId) {
       qb.andWhere('sb.qualificationid = :qualificationId', { qualificationId });
@@ -53,18 +55,19 @@ export class StreamBranchService {
 
     qb.orderBy('sb.stream_branch_Id', 'ASC');
 
-    if (page && limit) {
-      const take = limit;
-      const skip = (page - 1) * take;
+    if (!isFetchingAll && page && limit) {
+      const take = Number(limit);
+      const skip = (Number(page) - 1) * take;
       const [data, total] = await qb.skip(skip).take(take).getManyAndCount();
-      return { data, total, page, limit: take };
+      return { data, total, page: Number(page), limit: take };
     }
 
     const results = await qb.getMany();
-    return results.map(sb => ({
+    const data = results.map(sb => ({
       ...sb,
       full_name: `${sb.stream_branch_name} - ${sb.affiliation?.affiliating_body || 'N/A'} - ${sb.courseDuration?.courseduration || 'N/A'}`
     }));
+    return { data, total: data.length, page: 1, limit: data.length };
   }
 
   async findOne(id: number) {

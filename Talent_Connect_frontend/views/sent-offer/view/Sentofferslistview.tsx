@@ -557,10 +557,24 @@ interface OfferRecord {
   salary_max?: number;
   offer_date: string;
   last_date?: string;
+  start_date?: string;
+  duration?: string;
   number_of_posts?: number;
   nature_of_engagement?: string;
   collaboration_types?: string;
   additional_details?: string;
+  contact_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  required_qualification_ids?: string;
+  required_stream_ids?: string;
+  experience_required?: string;
+  location?: string;
+  is_remote?: boolean;
+  preferred_qualification_ids?: string;
+  preferred_stream_ids?: string;
+  min_students_required?: number;
+  number_of_institutes_required?: number;
   status:
   | "Sent"
   | "Discussed"
@@ -588,8 +602,25 @@ interface OfferGroup {
   salary_max?: number;
   offer_date: string;
   last_date?: string;
+  start_date?: string;
+  duration?: string;
   number_of_posts?: number;
+  nature_of_engagement?: string;
   collaboration_types?: string;
+  additional_details?: string;
+  job_description?: string;
+  contact_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  required_qualification_ids?: string;
+  required_stream_ids?: string;
+  experience_required?: string;
+  location?: string;
+  is_remote?: boolean;
+  preferred_qualification_ids?: string;
+  preferred_stream_ids?: string;
+  min_students_required?: number;
+  number_of_institutes_required?: number;
   rows: OfferRecord[];
   sent: number;
   discussed: number;
@@ -598,6 +629,11 @@ interface OfferGroup {
   projectInitiated: number;
   projectCompleted: number;
   withdrawn: number;
+}
+
+interface Option {
+  label: string;
+  value: any;
 }
 
 function fmt(n?: number) {
@@ -640,8 +676,25 @@ function groupOffers(offers: OfferRecord[]): OfferGroup[] {
         salary_max: o.salary_max,
         offer_date: o.offer_date,
         last_date: o.last_date,
+        start_date: o.start_date,
+        duration: o.duration,
         number_of_posts: o.number_of_posts,
+        nature_of_engagement: o.nature_of_engagement,
         collaboration_types: o.collaboration_types,
+        additional_details: o.additional_details,
+        job_description: o.job_description,
+        contact_name: o.contact_name,
+        contact_email: o.contact_email,
+        contact_phone: o.contact_phone,
+        required_qualification_ids: o.required_qualification_ids,
+        required_stream_ids: o.required_stream_ids,
+        experience_required: o.experience_required,
+        location: o.location,
+        is_remote: o.is_remote,
+        preferred_qualification_ids: o.preferred_qualification_ids,
+        preferred_stream_ids: o.preferred_stream_ids,
+        min_students_required: o.min_students_required,
+        number_of_institutes_required: o.number_of_institutes_required,
         rows: [],
         sent: 0,
         discussed: 0,
@@ -1008,6 +1061,52 @@ export default function SentOffersListView() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedInstituteForModal, setSelectedInstituteForModal] =
     useState<any>(null);
+
+  const [qualOptions, setQualOptions] = useState<Option[]>([]);
+  const [streamOptions, setStreamOptions] = useState<Option[]>([]);
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const [qRes, sRes] = await Promise.all([
+          api.get("/qualification?limit=all"),
+          api.get("/stream-branch?limit=all"),
+        ]);
+
+        // Qualification mapping
+        const qData = qRes.data?.data || qRes.data || [];
+        setQualOptions(qData.map((q: any) => ({
+          label: q.qualification || q.qualificationname || "Unknown",
+          value: q.qualificationid
+        })));
+
+        // Stream mapping
+        const sData = sRes.data?.data || sRes.data || [];
+        setStreamOptions(sData.map((s: any) => ({
+          label: s.stream_branch_name || "Unknown",
+          value: s.stream_branch_Id ?? s.stream_branch_id
+        })));
+
+      } catch (err) {
+        console.error("Failed to fetch metadata", err);
+      }
+    };
+    fetchMetadata();
+  }, []);
+
+  const resolveNames = (ids: string | undefined, options: Option[]) => {
+    if (!ids) return "—";
+    const idList = ids.split(",").map(id => String(id).trim()).filter(Boolean);
+    if (idList.length === 0) return "—";
+
+    // Use a Set to display unique names only
+    const resolvedNames = idList.map(id => {
+      const opt = options.find(o => String(o.value).trim() === id);
+      return opt ? opt.label : id;
+    });
+
+    return Array.from(new Set(resolvedNames)).join(", ");
+  };
 
   useEffect(() => {
     const handleOpenModal = (e: any) => setSelectedInstituteForModal(e.detail);
@@ -1518,115 +1617,212 @@ export default function SentOffersListView() {
                     <div className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">
                       Role/Title
                     </div>
-                    <div className="font-semibold text-gray-900">
+                    <div className="font-semibold text-gray-900 text-sm">
                       {selectedOffer.job_title}
                     </div>
                   </div>
                 )}
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">
-                    Total Sent
+                {selectedOffer.nature_of_engagement && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <div className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">
+                      Engagement
+                    </div>
+                    <div className="font-semibold text-gray-900 text-sm">
+                      {selectedOffer.nature_of_engagement}
+                    </div>
                   </div>
-                  <div className="font-semibold text-gray-900">
-                    {selectedOffer.rows.length}
-                  </div>
-                </div>
+                )}
               </div>
 
-              {/* General Details Grid */}
+              {/* Requirements Grid */}
               <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 text-sm">
-                  Requirements & Details
+                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 text-xs uppercase tracking-wider">
+                  Engagement Details
                 </div>
                 <div className="divide-y divide-gray-100">
-                  {selectedOffer.rows[0]?.nature_of_engagement && (
-                    <div className="flex items-center p-3 text-sm">
-                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-xs uppercase">
-                        Nature of Engagement
+                  {selectedOffer.required_qualification_ids && (
+                    <div className="flex items-start p-3 text-sm">
+                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase pt-1">
+                        Qualifications
                       </div>
                       <div className="w-2/3 text-gray-900 font-medium">
-                        {selectedOffer.rows[0].nature_of_engagement}
+                        {resolveNames(selectedOffer.required_qualification_ids, qualOptions)}
+                      </div>
+                    </div>
+                  )}
+                  {selectedOffer.required_stream_ids && (
+                    <div className="flex items-start p-3 text-sm">
+                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase pt-1">
+                        Courses/Trades
+                      </div>
+                      <div className="w-2/3 text-gray-900 font-medium">
+                        {resolveNames(selectedOffer.required_stream_ids, streamOptions)}
                       </div>
                     </div>
                   )}
                   {selectedOffer.number_of_posts && (
                     <div className="flex items-center p-3 text-sm">
-                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-xs uppercase">
-                        No. of Openings
+                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase">
+                        Posts/Students
                       </div>
                       <div className="w-2/3 text-gray-900 font-medium">
                         {selectedOffer.number_of_posts}
                       </div>
                     </div>
                   )}
-                  {(selectedOffer.salary_min || selectedOffer.salary_max) && (
+                  {selectedOffer.experience_required && (
                     <div className="flex items-center p-3 text-sm">
-                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-xs uppercase">
-                        Compensation
+                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase">
+                        Experience
                       </div>
                       <div className="w-2/3 text-gray-900 font-medium">
-                        {salaryStr(
-                          selectedOffer.salary_min,
-                          selectedOffer.salary_max,
+                        {selectedOffer.experience_required}
+                      </div>
+                    </div>
+                  )}
+                  {selectedOffer.location && (
+                    <div className="flex items-center p-3 text-sm">
+                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase">
+                        Location
+                      </div>
+                      <div className="w-2/3 text-gray-900 font-medium flex items-center gap-2">
+                        {selectedOffer.location}
+                        {selectedOffer.is_remote && (
+                          <span className="bg-blue-50 text-blue-600 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">Remote</span>
                         )}
                       </div>
                     </div>
                   )}
-                  {selectedOffer.offer_date && (
+                  {(selectedOffer.salary_min || selectedOffer.salary_max) && (
                     <div className="flex items-center p-3 text-sm">
-                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-xs uppercase">
-                        Sent Date
+                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase">
+                        Compensation
                       </div>
                       <div className="w-2/3 text-gray-900 font-medium">
-                        {formatDate(selectedOffer.offer_date)}
+                        {salaryStr(selectedOffer.salary_min, selectedOffer.salary_max)}
                       </div>
                     </div>
                   )}
-                  {selectedOffer.last_date && (
+                  {selectedOffer.start_date && (
                     <div className="flex items-center p-3 text-sm">
-                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-xs uppercase">
-                        Closing Date
+                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase">
+                        Exp. Start Date
                       </div>
                       <div className="w-2/3 text-gray-900 font-medium">
-                        {formatDate(selectedOffer.last_date)}
+                        {formatDate(selectedOffer.start_date)}
                       </div>
                     </div>
                   )}
-                  {selectedOffer.collaboration_types && (
-                    <div className="flex items-start p-3 text-sm">
-                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-xs uppercase pt-1">
-                        Collaboration Types
+                  {selectedOffer.duration && (
+                    <div className="flex items-center p-3 text-sm">
+                      <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase">
+                        Duration
                       </div>
-                      <div className="w-2/3 text-gray-900 font-medium flex flex-wrap gap-2">
-                        {selectedOffer.collaboration_types
-                          .split("|")
-                          .map((t, i) => (
-                            <span
-                              key={i}
-                              className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold"
-                            >
-                              {t}
-                            </span>
-                          ))}
+                      <div className="w-2/3 text-gray-900 font-medium">
+                        {selectedOffer.duration}
                       </div>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Additional Details */}
-              {(selectedOffer.rows[0]?.job_description ||
-                selectedOffer.rows[0]?.additional_details) && (
-                  <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 text-sm">
-                      Additional Information
-                    </div>
-                    <div className="p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                      {selectedOffer.rows[0]?.job_description ||
-                        selectedOffer.rows[0]?.additional_details}
-                    </div>
+              {/* Collaboration Details */}
+              {selectedOffer.eoi_type === "Collaboration" && (
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 text-xs uppercase tracking-wider">
+                    Collaboration Requirements
                   </div>
-                )}
+                  <div className="divide-y divide-gray-100">
+                    {selectedOffer.collaboration_types && (
+                      <div className="flex items-start p-3 text-sm">
+                        <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase pt-1">
+                          Types
+                        </div>
+                        <div className="w-2/3 flex flex-wrap gap-1.5">
+                          {selectedOffer.collaboration_types.split("|").map((t, idx) => (
+                            <span key={idx} className="bg-purple-100 text-purple-700 px-2.5 py-1 rounded-lg text-[10px] font-bold">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {selectedOffer.preferred_qualification_ids && (
+                      <div className="flex items-start p-3 text-sm">
+                        <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase pt-1">
+                          Pref. Quals
+                        </div>
+                        <div className="w-2/3 text-gray-900 font-medium">
+                          {resolveNames(selectedOffer.preferred_qualification_ids, qualOptions)}
+                        </div>
+                      </div>
+                    )}
+                    {selectedOffer.preferred_stream_ids && (
+                      <div className="flex items-start p-3 text-sm">
+                        <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase pt-1">
+                          Pref. Courses
+                        </div>
+                        <div className="w-2/3 text-gray-900 font-medium">
+                          {resolveNames(selectedOffer.preferred_stream_ids, streamOptions)}
+                        </div>
+                      </div>
+                    )}
+                    {selectedOffer.min_students_required && (
+                      <div className="flex items-center p-3 text-sm">
+                        <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase">
+                          Min Students
+                        </div>
+                        <div className="w-2/3 text-gray-900 font-medium">
+                          {selectedOffer.min_students_required}
+                        </div>
+                      </div>
+                    )}
+                    {selectedOffer.number_of_institutes_required && (
+                      <div className="flex items-center p-3 text-sm">
+                        <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase">
+                          No. Institutes
+                        </div>
+                        <div className="w-2/3 text-gray-900 font-medium">
+                          {selectedOffer.number_of_institutes_required}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Contact Details */}
+              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 text-xs uppercase tracking-wider">
+                  Contact Person
+                </div>
+                <div className="grid grid-cols-1 divide-y divide-gray-100">
+                  <div className="flex items-center p-3 text-sm">
+                    <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase">Name</div>
+                    <div className="w-2/3 text-gray-900 font-medium">{selectedOffer.contact_name || "—"}</div>
+                  </div>
+                  <div className="flex items-center p-3 text-sm">
+                    <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase">Email</div>
+                    <div className="w-2/3 text-gray-900 font-medium">{selectedOffer.contact_email || "—"}</div>
+                  </div>
+                  <div className="flex items-center p-3 text-sm">
+                    <div className="w-1/3 text-gray-500 font-medium tracking-wide text-[10px] uppercase">Phone</div>
+                    <div className="w-2/3 text-gray-900 font-medium">{selectedOffer.contact_phone || "—"}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Details */}
+              {(selectedOffer.job_description || selectedOffer.additional_details) && (
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700 text-xs uppercase tracking-wider">
+                    Additional Information
+                  </div>
+                  <div className="p-4 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {selectedOffer.job_description || selectedOffer.additional_details}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Footer */}

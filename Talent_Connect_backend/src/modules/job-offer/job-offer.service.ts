@@ -28,6 +28,13 @@ export interface BulkOfferDto {
     duration?: string;
     collaboration_types?: string;
     additional_details?: string;
+    contact_name?: string;
+    contact_email?: string;
+    contact_phone?: string;
+    preferred_qualification_ids?: string;
+    preferred_stream_ids?: string;
+    min_students_required?: number;
+    number_of_institutes_required?: number;
     industry_id: number;
 }
 
@@ -80,6 +87,13 @@ export class JobOfferService {
             duration: dto.duration,
             collaboration_types: dto.collaboration_types,
             additional_details: dto.additional_details,
+            contact_name: dto.contact_name,
+            contact_email: dto.contact_email,
+            contact_phone: dto.contact_phone,
+            preferred_qualification_ids: dto.preferred_qualification_ids,
+            preferred_stream_ids: dto.preferred_stream_ids,
+            min_students_required: dto.min_students_required,
+            number_of_institutes_required: dto.number_of_institutes_required,
             status: 'Sent',
             is_active: 'Y',
             created_date: now,

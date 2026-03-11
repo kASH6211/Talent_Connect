@@ -93,6 +93,29 @@ export class JobOffer extends BaseEntity {
     @Column({ type: 'text', nullable: true })
     additional_details: string;
 
+    /** Contact person details */
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    contact_name: string;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    contact_email: string;
+
+    @Column({ type: 'varchar', length: 20, nullable: true })
+    contact_phone: string;
+
+    /** Collaboration specific fields */
+    @Column({ type: 'text', nullable: true })
+    preferred_qualification_ids: string;
+
+    @Column({ type: 'text', nullable: true })
+    preferred_stream_ids: string;
+
+    @Column({ type: 'int', nullable: true })
+    min_students_required: number;
+
+    @Column({ type: 'int', nullable: true })
+    number_of_institutes_required: number;
+
     /**
      * Status values:
      * Sent | Discussed | Accepted | Rejected | Project initiated | Project completed | Withdrawn

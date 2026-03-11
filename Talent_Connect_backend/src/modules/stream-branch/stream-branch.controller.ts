@@ -19,7 +19,7 @@ export class StreamBranchController {
     return this.service.findAll(
       qualificationId ? +qualificationId : undefined,
       page ? +page : undefined,
-      limit ? +limit : undefined,
+      limit,
       search,
     );
   }
