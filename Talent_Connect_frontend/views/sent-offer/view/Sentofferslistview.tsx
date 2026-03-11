@@ -1658,8 +1658,34 @@ export default function SentOffersListView() {
                         : "🤝 Collaboration"}
                   </span>
                 </div>
-                <div className="text-sm text-gray-500 font-medium">
-                  To: {selectedOffer.rows.length} Institute(s) targeted
+                <div className="text-sm text-gray-500 font-medium flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
+                  <span>To: {selectedOffer.rows.length} Institute(s) targeted</span>
+                  <span className="text-gray-300 hidden sm:inline">|</span>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                      Sent ({selectedOffer.sent})
+                    </span>
+                    <span className="text-gray-300">|</span>
+                    <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                      Discussed ({selectedOffer.discussed})
+                    </span>
+                    <span className="text-gray-300">|</span>
+                    <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                      Accepted ({selectedOffer.accepted})
+                    </span>
+                    <span className="text-gray-300">|</span>
+                    <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                      Rejected ({selectedOffer.rejected})
+                    </span>
+                    <span className="text-gray-300">|</span>
+                    <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                      Project Initiated ({selectedOffer.projectInitiated})
+                    </span>
+                    <span className="text-gray-300">|</span>
+                    <span className="bg-green-800/10 text-green-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                      Project Completed ({selectedOffer.projectCompleted})
+                    </span>
+                  </div>
                 </div>
               </div>
               <button
