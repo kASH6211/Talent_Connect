@@ -1420,7 +1420,8 @@ export default function SentOffersListView() {
         {!loading && !error && offers.length > 0 && (
           <>
             {/* Stat Cards - Professional Grid */}
-            <div className="sol-fade-up sol-delay-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-10">
+            <div className="sol-fade-up sol-delay-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
+
               {/* Total Sent */}
               <button
                 type="button"
@@ -1455,7 +1456,7 @@ export default function SentOffersListView() {
               {/* Pending to discuss */}
               <button
                 type="button"
-                onClick={() => setFilter("Response awaited")}
+                onClick={() => setFilter("Pending to discuss")}
                 className={clsx(
                   "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
                   filter === "Pending to discuss"
@@ -1474,7 +1475,8 @@ export default function SentOffersListView() {
                   >
                     <Clock size={24} />
                   </div>
-                 <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
+
                     Response awaited
                   </div>
                   <div className="text-2xl font-black text-gray-900">
@@ -1486,7 +1488,7 @@ export default function SentOffersListView() {
               {/* Discussed */}
               <button
                 type="button"
-                onClick={() => setFilter("Responded & Under Process")}
+             onClick={() => setFilter("Discussed")}
                 className={clsx(
                   "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
                   filter === "Discussed"
@@ -1505,7 +1507,7 @@ export default function SentOffersListView() {
                   >
                     <Users size={24} />
                   </div>
-                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+               <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
                      Under Process
                   </div>
                   <div className="text-2xl font-black text-gray-900">
@@ -1517,7 +1519,7 @@ export default function SentOffersListView() {
               {/* Pending to accept */}
               <button
                 type="button"
-                onClick={() => setFilter("Decision awaited")}
+                 onClick={() => setFilter("Pending to accept")}
                 className={clsx(
                   "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
                   filter === "Pending to accept"
@@ -1536,7 +1538,7 @@ export default function SentOffersListView() {
                   >
                     <AlertCircle size={24} />
                   </div>
-                   <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                     <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
                     Decision awaited
                   </div>
                   <div className="text-2xl font-black text-gray-900">
@@ -1567,7 +1569,7 @@ export default function SentOffersListView() {
                   >
                     <MailCheck size={24} />
                   </div>
-                   <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
                     Accepted
                   </div>
                   <div className="text-2xl font-black text-gray-900">
