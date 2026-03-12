@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   title: "HUNAR Punjab | Hub for Upskilling, Networking & Access to Rozgar",
   description: "Placement & Training Management Portal",
   icons: {
-    icon: "/Gov Logo.png",
-    shortcut: "/Gov Logo.png",
-    apple: "/Gov Logo.png",
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/public/logo.png",
   },
 };
 

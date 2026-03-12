@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import {
   CheckCircle2,
   XCircle,
@@ -118,6 +118,7 @@ function StatCard({ label, count, active, onClick, icon: Icon, activeColor }: {
     green: "border-success bg-success/10 shadow-success/20",
     red: "border-error bg-error/10 shadow-error/20",
     purple: "border-purple-400 bg-purple-50 shadow-purple-100",
+    yellow  :"border-yellow-400 bg-yellow-50 shadow-yellow-100",
   };
   const iconMap: Record<string, string> = {
     indigo: "bg-primary text-primary-content",
@@ -125,6 +126,7 @@ function StatCard({ label, count, active, onClick, icon: Icon, activeColor }: {
     green: "bg-success text-success-content",
     red: "bg-error text-error-content",
     purple: "bg-purple-600 text-white",
+    yellow :"bg-yellow-600 text-white",
   };
   const countMap: Record<string, string> = {
     indigo: "text-primary", amber: "text-warning", green: "text-success", red: "text-error", purple: "text-purple-700",
@@ -133,7 +135,7 @@ function StatCard({ label, count, active, onClick, icon: Icon, activeColor }: {
     <button
       onClick={onClick}
       className={clsx(
-        "group relative overflow-hidden rounded-2xl p-5 text-center w-full border-2 transition-all duration-300 cursor-pointer",
+        "group relative overflow-hidden rounded-2xl p-5 text-center w-full border-2 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-0",
         active ? `${colorMap[activeColor]} shadow-lg` : "border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 hover:border-base-400 shadow-sm hover:shadow-md"
       )}
     >
@@ -155,6 +157,7 @@ export default function ReceivedOffersPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("All");
   const [eoiTypeFilter, setEoiTypeFilter] = useState<string>("All");
+  const statContainerRef = useRef<HTMLDivElement>(null);
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -198,6 +201,17 @@ export default function ReceivedOffersPage() {
   useEffect(() => {
     load(1);
   }, [load]);
+
+  // clear selection when clicking outside the stat cards
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (statContainerRef.current && !statContainerRef.current.contains(e.target as Node)) {
+        setFilter("All");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const handleStatusChange = (offerId: number, newStatus: string) => {
     setOffers((prev) => prev.map((o) => o.offer_id === offerId ? { ...o, status: newStatus } : o));
@@ -266,10 +280,14 @@ export default function ReceivedOffersPage() {
   const accepted = baseOffers.filter((o) => o.status === "Accepted").length;
 
   const statConfig = [
-    { tab: "All", label: "Registered on Page", count: baseOffers.length, icon: Users, activeColor: "indigo" },
-    { tab: "PendingDiscuss", label: "Pending to Discuss (>2d)", count: pendingDisc, icon: Clock, activeColor: "amber" },
-    { tab: "Discussed", label: "Discussed", count: discussed, icon: CheckCircle2, activeColor: "purple" },
+    { tab: "All", label: "Received", count: baseOffers.length, icon: Users, activeColor: "indigo" },
+    { tab: "PendingDiscuss", label: "Response Pending", count: pendingDisc, icon: Clock, activeColor: "amber" },
+    { tab: "Discussed", label: " Under Process", count: discussed, icon: CheckCircle2, activeColor: "purple" },
+    { tab: "DesicionPending", label: "Desicion Pending", count: accepted, icon: CheckCircle2, activeColor: "yellow" },
     { tab: "Accepted", label: "Accepted", count: accepted, icon: CheckCircle2, activeColor: "green" },
+    { tab: "Rejected", label: "Rejected", count: accepted, icon: CheckCircle2, activeColor: "red" },
+    { tab: " ProjectInitiated", label: " Project Initiated", count: baseOffers.length, icon: Users, activeColor: "indigo" },
+    { tab: " ProjectCompleted", label: " Project Completed", count: pendingDisc, icon: Clock, activeColor: "green" },
   ];
 
   const filtered = useMemo(() => {
@@ -290,7 +308,7 @@ export default function ReceivedOffersPage() {
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-base-content tracking-tight leading-tight">
-               Application Tracker
+              Application Tracker
             </h1>
             <p className="text-sm text-base-content/50 mt-0.5">
               Manage incoming Expressions of Interest from industry partners
@@ -314,7 +332,7 @@ export default function ReceivedOffersPage() {
 
       {/* ── Stat Cards ── */}
       {!loading && offers.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div ref={statContainerRef} className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {statConfig.map(({ tab, label, count, icon, activeColor }) => (
             <StatCard key={tab} label={label} count={count} active={filter === tab}
               onClick={() => setFilter(tab)} icon={icon} activeColor={activeColor} />
@@ -350,7 +368,7 @@ export default function ReceivedOffersPage() {
       ) : (
         <div className="space-y-6">
           {/* Desktop Table View */}
-          <div className="hidden lg:block rounded-2xl border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 shadow-sm overflow-hidden">
+          <div className="hidden lg:block rounded-2xl border border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 shadow-sm overflow-visible">
             <table className="min-w-full divide-y divide-base-200 dark:divide-base-800">
               <thead className="bg-base-200/50 dark:bg-base-800/50">
                 <tr>
@@ -403,14 +421,14 @@ export default function ReceivedOffersPage() {
                           <>
                             <button
                               onClick={(e) => { e.stopPropagation(); updateSingleStatus(offer.offer_id, 'Accepted'); }}
-                              className="w-7 h-7 rounded-lg bg-success/10 text-success hover:bg-success hover:text-white flex items-center justify-center transition-all tooltip tooltip-bottom"
+                              className="relative w-7 h-7 rounded-lg bg-success/10 text-success hover:bg-success hover:text-white flex items-center justify-center transition-all tooltip tooltip-bottom"
                               data-tip="Accept"
                             >
                               <Check size={14} />
                             </button>
                             <button
                               onClick={(e) => { e.stopPropagation(); updateSingleStatus(offer.offer_id, 'Rejected'); }}
-                              className="w-7 h-7 rounded-lg bg-error/10 text-error hover:bg-error hover:text-white flex items-center justify-center transition-all tooltip tooltip-bottom"
+                              className="relative w-7 h-7 rounded-lg bg-error/10 text-error hover:bg-error hover:text-white flex items-center justify-center transition-all tooltip tooltip-bottom"
                               data-tip="Reject"
                             >
                               <X size={14} />
@@ -419,7 +437,7 @@ export default function ReceivedOffersPage() {
                         )}
                         <button
                           onClick={() => { setCurrentOffer(offer); setViewModal(true); }}
-                          className="w-7 h-7 rounded-lg bg-base-200 text-base-content/60 hover:bg-primary hover:text-white flex items-center justify-center transition-all tooltip tooltip-bottom"
+                          className="relative w-7 h-7 rounded-lg bg-base-200 text-base-content/60 hover:bg-primary hover:text-white flex items-center justify-center transition-all tooltip tooltip-bottom"
                           data-tip="View Details"
                         >
                           <Eye size={14} />

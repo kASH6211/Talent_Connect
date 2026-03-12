@@ -1444,7 +1444,7 @@ export default function SentOffersListView() {
                     <Mail size={24} />
                   </div>
                   <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Total Sent
+                    Sent
                   </div>
                   <div className="text-2xl font-black text-gray-900">
                     {total.toLocaleString()}
@@ -1486,7 +1486,7 @@ export default function SentOffersListView() {
               {/* Discussed */}
               <button
                 type="button"
-                onClick={() => setFilter("Responded & Under Process")}
+                onClick={() => setFilter("Under Process")}
                 className={clsx(
                   "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
                   filter === "Discussed"
@@ -1506,7 +1506,7 @@ export default function SentOffersListView() {
                     <Users size={24} />
                   </div>
                 <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Responded & Under Process
+                     Under Process
                   </div>
                   <div className="text-2xl font-black text-gray-900">
                     {discussed.toLocaleString()}

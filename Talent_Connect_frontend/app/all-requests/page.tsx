@@ -212,7 +212,8 @@ export default function AllRequestsPage() {
 
   // ── Filters ──
   const [offSearch, setOffSearch] = useState("");
-  const [offStatus, setOffStatus] = useState("All");
+  // start with no active tile; empty string treated as "all"
+  const [offStatus, setOffStatus] = useState("");
   const [offDateStart, setOffDateStart] = useState("");
   const [offDateEnd, setOffDateEnd] = useState("");
   const [lastDateStart, setLastDateStart] = useState("");
@@ -231,6 +232,9 @@ export default function AllRequestsPage() {
     let statusParam = searchParams.get("status");
     if (statusParam) {
       const low = statusParam.toLowerCase();
+      if (low === "all") {
+        statusParam = ""; // map explicit "all" to empty
+      }
       if (low === "project completed") statusParam = "Completed";
       if (low === "project initiated") statusParam = "Initiated";
       setOffStatus(statusParam);
@@ -284,7 +288,7 @@ export default function AllRequestsPage() {
     const matchInstType = !selectedInstTypeId || o.institute?.institute_sub_type_id === Number(selectedInstTypeId);
 
     const matchStatus = (() => {
-      if (offStatus === "All") return true;
+      if (!offStatus || offStatus === "All") return true;
       let s = status.toLowerCase();
       let target = offStatus.toLowerCase();
 
@@ -417,15 +421,16 @@ export default function AllRequestsPage() {
   };
 
   const statusTiles = [
-    ...(role === "dept_admin" ? [{ type: "All", label: "All Applications", icon: Send, color: "secondary" }] : []),
+    // avoid secondary/yellow colours; keep everything primary/info/success/error
+    // ...(role === "dept_admin" ? [{ type: "All", label: "All Applications", icon: Send, color: "primary" }] : []),
     { type: "Sent", label: "Received", icon: Send, color: "primary" },
-    { type: "Pending", label: "Pending for Discussion", icon: Clock, color: "warning" },
-    { type: "Discussed", label: "Discussed", icon: Users, color: "info" },
-    { type: "Pending_Acceptance", label: "Pending for Acceptance", icon: Clock, color: "warning" },
+    { type: "Pending", label: "Response Pending", icon: Clock, color: "primary" },
+    { type: "Discussed", label: " Under Process", icon: Users, color: "info" },
+    { type: "Pending_Acceptance", label: "Desicion Pending", icon: Clock, color: "primary" },
     { type: "Accepted", label: "Accepted", icon: CheckCircle2, color: "success" },
     { type: "Rejected", label: "Rejected", icon: XCircle, color: "error" },
-    { type: "Initiated", label: "Initiated", icon: TrendingUp, color: "primary" },
-    { type: "Completed", label: "Completed", icon: CheckCircle2, color: "success" },
+    // { type: "Initiated", label: "Initiated", icon: TrendingUp, color: "primary" },
+    // { type: "Completed", label: "Completed", icon: CheckCircle2, color: "success" },
   ];
 
 
@@ -510,13 +515,13 @@ export default function AllRequestsPage() {
             <button
               key={tile.type}
               onClick={() => {
-                setOffStatus(offStatus === tile.type ? "All" : tile.type);
+                setOffStatus(offStatus === tile.type ? "" : tile.type);
                 offPag.setPage(1);
               }}
               className={clsx(
-                "p-4 rounded-2xl border-2 transition-all flex flex-col items-start gap-2 text-left group",
+                "p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center group hover:shadow-md hover:scale-[1.02] focus:outline-none focus:ring-0 active:scale-[0.98]",
                 offStatus === tile.type
-                  ? `border-${tile.color} bg-${tile.color}/5 ring-4 ring-${tile.color}/10`
+                  ? `border-${tile.color} bg-${tile.color}/5`
                   : "border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 hover:border-base-400"
               )}
             >
@@ -526,16 +531,14 @@ export default function AllRequestsPage() {
               )}>
                 <tile.icon size={20} />
               </div>
-              <div>
-                <div className="flex items-center justify-between w-full">
-                  <h3 className="font-bold text-base-content text-sm truncate mr-2">{tile.label}</h3>
-                  <span className={clsx(
-                    "px-2.5 py-1 rounded-lg text-lg font-black shrink-0",
-                    `bg-${tile.color}/10 text-${tile.color}`
-                  )}>
-                    {getStatusCount(tile.type)}
-                  </span>
-                </div>
+              <div className="flex flex-col items-center gap-1">
+                <h3 className="font-bold text-base-content text-base">{tile.label}</h3>
+                <span className={clsx(
+                  "px-2.5 py-1 rounded-lg text-xl font-black",
+                  `bg-${tile.color}/10 text-${tile.color}`
+                )}>
+                  {getStatusCount(tile.type)}
+                </span>
               </div>
             </button>
           ))
@@ -546,7 +549,7 @@ export default function AllRequestsPage() {
               label: "All EOIs",
               desc: "View all categories",
               icon: Send,
-              color: "secondary",
+              color: "primary", // avoid secondary
               count: offers.length,
             },
             {
@@ -581,9 +584,9 @@ export default function AllRequestsPage() {
                 offPag.setPage(1);
               }}
               className={clsx(
-                "p-5 rounded-2xl border-2 transition-all flex flex-col items-start gap-3 text-left group",
+                "p-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 text-center group",
                 selectedEoiType === tile.type
-                  ? `border-${tile.color} bg-${tile.color}/5 ring-4 ring-${tile.color}/10`
+                  ? `border-${tile.color} bg-${tile.color}/5`
                   : "border-base-300 dark:border-base-700 bg-base-100 dark:bg-base-900 hover:border-base-400"
               )}
             >
@@ -593,16 +596,14 @@ export default function AllRequestsPage() {
               )}>
                 <tile.icon size={24} />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-base-content">{tile.label}</h3>
-                  <span className={clsx(
-                    "px-2 py-0.5 rounded-full text-xs font-black",
-                    `bg-${tile.color}/10 text-${tile.color}`
-                  )}>
-                    {tile.count}
-                  </span>
-                </div>
+              <div className="flex flex-col items-center gap-1">
+                <h3 className="font-bold text-base-content">{tile.label}</h3>
+                <span className={clsx(
+                  "px-2 py-0.5 rounded-full text-sm font-black",
+                  `bg-${tile.color}/10 text-${tile.color}`
+                )}>
+                  {tile.count}
+                </span>
                 <p className="text-xs text-base-content/50 mt-1">{tile.desc}</p>
               </div>
             </button>
@@ -627,9 +628,9 @@ export default function AllRequestsPage() {
               disabled={filteredOffers.length === 0}
               className={clsx(
                 "btn btn-sm gap-2 transition-colors duration-200",
-                "bg-secondary text-secondary-content hover:brightness-110",
+                "btn-primary hover:brightness-110",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
-                "shadow-sm hover:shadow-md border border-secondary/30",
+                "shadow-sm hover:shadow-md"
               )}
             >
               <TrendingUp size={14} />
@@ -805,7 +806,7 @@ export default function AllRequestsPage() {
                 <button
                   onClick={() => {
                     setOffSearch("");
-                    setOffStatus("All");
+                    setOffStatus("");
                     setOffDateStart("");
                     setOffDateEnd("");
                     setLastDateStart("");

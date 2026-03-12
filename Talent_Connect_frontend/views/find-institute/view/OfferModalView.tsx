@@ -702,7 +702,7 @@ export function OfferModalV2({
               />
               <EoiTypeCard
                 value="Collaboration"
-                label="Collaborate with Institute"
+                label="Institute and Student Development via CSR"
                 desc="Industrial visits, workshops, lab setup, CSR support"
                 selected={eoiType === "Collaboration"}
                 isSaved={forms["Collaboration"].isSaved}

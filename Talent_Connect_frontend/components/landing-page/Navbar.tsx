@@ -84,7 +84,7 @@ const Navbar = () => {
         >
           <div className="relative">
             <img
-              src={"/Gov Logo.png"}
+              src={"/logo.png"}
               alt="Govt of Punjab Logo"
               className="h-14 w-14 object-contain drop-shadow-md"
             />
