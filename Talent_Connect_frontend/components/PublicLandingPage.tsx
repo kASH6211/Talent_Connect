@@ -683,11 +683,11 @@ export default function FindInstitutesPage() {
                             <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
                               Courses
                             </th>
-                            <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            <th className="px-2 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
                               Students on roll
                             </th>
-                            <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Students Available for placement
+                            <th className="px-2 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              Students Available<br />for placement
                             </th>
                             <th className="px-4 py-3 text-center text-xs font-bold text-slate-700 uppercase tracking-wider">
                               Actions

@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowDownToLine,
+  CloudCog,
 } from "lucide-react";
 import api from "@/lib/api";
 import { useSelector } from "react-redux";
@@ -1252,6 +1253,7 @@ export default function SentOffersListView() {
     // console.log("Search for:", searchTerm);
   };
 
+
   return (
     <>
       <style>{styles}</style>
@@ -1393,7 +1395,7 @@ export default function SentOffersListView() {
         {!loading && !error && offers.length > 0 && (
           <>
             {/* Stat Cards - Professional Grid */}
-            <div className="sol-fade-up sol-delay-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
+            <div className="sol-fade-up sol-delay-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-10">
               {/* Total Sent */}
               <button
                 type="button"
@@ -1428,7 +1430,7 @@ export default function SentOffersListView() {
               {/* Pending to discuss */}
               <button
                 type="button"
-                onClick={() => setFilter("Pending to discuss")}
+                onClick={() => setFilter("Response awaited")}
                 className={clsx(
                   "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
                   filter === "Pending to discuss"
@@ -1447,8 +1449,8 @@ export default function SentOffersListView() {
                   >
                     <Clock size={24} />
                   </div>
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
-                    Pending to discuss
+                 <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Response awaited
                   </div>
                   <div className="text-2xl font-black text-gray-900">
                     {pendingToDiscuss.toLocaleString()}
@@ -1459,7 +1461,7 @@ export default function SentOffersListView() {
               {/* Discussed */}
               <button
                 type="button"
-                onClick={() => setFilter("Discussed")}
+                onClick={() => setFilter("Responded & Under Process")}
                 className={clsx(
                   "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
                   filter === "Discussed"
@@ -1478,8 +1480,8 @@ export default function SentOffersListView() {
                   >
                     <Users size={24} />
                   </div>
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
-                    Discussed
+                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Responded & Under Process
                   </div>
                   <div className="text-2xl font-black text-gray-900">
                     {discussed.toLocaleString()}
@@ -1490,7 +1492,7 @@ export default function SentOffersListView() {
               {/* Pending to accept */}
               <button
                 type="button"
-                onClick={() => setFilter("Pending to accept")}
+                onClick={() => setFilter("Decision awaited")}
                 className={clsx(
                   "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
                   filter === "Pending to accept"
@@ -1509,8 +1511,8 @@ export default function SentOffersListView() {
                   >
                     <AlertCircle size={24} />
                   </div>
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
-                    Pending to accept
+                   <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Decision awaited
                   </div>
                   <div className="text-2xl font-black text-gray-900">
                     {pendingToAccept.toLocaleString()}
@@ -1540,7 +1542,7 @@ export default function SentOffersListView() {
                   >
                     <MailCheck size={24} />
                   </div>
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
+                   <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Accepted
                   </div>
                   <div className="text-2xl font-black text-gray-900">

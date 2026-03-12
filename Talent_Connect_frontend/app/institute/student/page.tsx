@@ -193,7 +193,7 @@ export default function StudentCountsPage() {
         <div className="p-4 space-y-3">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                 <div>
-                    <h1 className="text-2xl font-bold">Student Count Management</h1>
+                    <h1 className="text-2xl font-bold">Student  Management</h1>
                     <p className="text-sm text-base-content/60">Manage enrollment numbers for mapped courses</p>
                 </div>
 
@@ -213,7 +213,7 @@ export default function StudentCountsPage() {
             </div>
 
             {/* Qualification Breakdown Tiles */}
-            {fetchedData?.qualificationStats?.length > 0 && (
+            {/* {fetchedData?.qualificationStats?.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                     {fetchedData.qualificationStats.map((stat: any, idx: number) => (
                         <div key={idx} className="bg-base-100 border border-base-200 rounded-xl p-2 shadow-sm hover:shadow-md transition-shadow">
@@ -227,10 +227,10 @@ export default function StudentCountsPage() {
                         </div>
                     ))}
                 </div>
-            )}
+            )} */}
 
             <CrudTable
-                title="Student Counts"
+                title=""
                 apiPath="student-count"
                 queryKey="student-count"
                 columns={COLUMNS}

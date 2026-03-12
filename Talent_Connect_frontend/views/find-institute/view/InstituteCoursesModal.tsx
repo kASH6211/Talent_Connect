@@ -66,7 +66,7 @@ export default function InstituteCoursesModal({
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <div
-                className="bg-base-100 rounded-2xl w-[800px] max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden "
+                className="bg-base-100 rounded-2xl w-[1200px] max-w-6xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden "
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}

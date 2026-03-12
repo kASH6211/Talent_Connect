@@ -61,7 +61,7 @@ const StudentConnectSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 relative border border-base-300 rounded-[2.5rem] overflow-hidden shadow-xl bg-white">
           {/* LEFT - INDUSTRIES (Theme: Light Blue/Primary) */}
           <div className="p-6 lg:p-10 bg-primary/50">
-            <h3 className="text-2xl font-black mb-8 text-center text-primary uppercase tracking-[0.2em]">
+            <h3 className="text-2xl font-black mb-8 text-center text-white uppercase tracking-[0.2em]">
               For Industries
             </h3>
 
@@ -106,7 +106,7 @@ const StudentConnectSection = () => {
           <div className="lg:hidden w-full h-px bg-slate-200"></div>
 
           {/* RIGHT - STUDENTS (Theme: Neutral/Slate) */}
-          <div className="p-6 lg:p-10 bg-gray-100">
+          <div className="p-6 lg:p-10 bg-gray-100 flex-1">
             <h3 className="text-2xl font-black mb-8 text-center text-primary/80 uppercase tracking-[0.2em]">
               For Students
             </h3>
@@ -117,7 +117,7 @@ const StudentConnectSection = () => {
                 return (
                   <div
                     key={card.title}
-                    className="group relative bg-slate-50 border border-slate-100 p-6 rounded-2xl hover:border-primary/50 hover:shadow-md transition-all duration-500 cursor-default overflow-hidden flex flex-col items-center text-center h-full min-h-[220px]"
+                    className="group relative bg-white border border-slate-200 p-6 rounded-2xl hover:border-primary/50 hover:shadow-md transition-all duration-500 cursor-default overflow-hidden flex flex-col items-center text-center h-full min-h-[220px]"
                   >
                     <div className="mb-6 p-4 bg-primary/10 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all duration-500">
                       <Icon className="w-8 h-8" />

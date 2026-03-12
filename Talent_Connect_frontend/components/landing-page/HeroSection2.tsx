@@ -62,7 +62,7 @@ const HeroSection2 = () => {
       {/* Blurry Background Image */}
       <div className="absolute inset-0">
         <img
-          src="/hero-image.png"
+          src="/hero-image (2).png"
           alt="Hero background"
           className="w-full h-full object-cover blur-[4px] scale-105"
         />
