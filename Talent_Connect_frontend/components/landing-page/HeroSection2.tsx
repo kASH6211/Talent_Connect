@@ -13,10 +13,9 @@ const Counter = ({
 }) => {
   const [displayValue, setDisplayValue] = useState(0);
   const ref = useRef(null);
-  const isInView = useInView(ref);
 
   useEffect(() => {
-    if (isInView && typeof value == "number") {
+    if (typeof value == "number") {
       const controls = animate(0, value, {
         duration: 2.5,
         ease: "easeOut",
@@ -24,7 +23,7 @@ const Counter = ({
       });
       return controls.stop;
     }
-  }, [value, isInView]);
+  }, [value]);
 
   return (
     <span ref={ref}>

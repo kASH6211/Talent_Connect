@@ -1486,7 +1486,7 @@ export default function SentOffersListView() {
               {/* Discussed */}
               <button
                 type="button"
-                onClick={() => setFilter("Under Process")}
+                onClick={() => setFilter("Responded & Under Process")}
                 className={clsx(
                   "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
                   filter === "Discussed"

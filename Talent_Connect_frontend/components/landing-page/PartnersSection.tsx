@@ -11,16 +11,32 @@ import {
 import { useRouter } from "next/navigation";
 
 const csrPartners = [
-  { name: "Hyundai", logo: "/logos/hyundai.png" },
-  { name: "Tata Motors", logo: "/logos/tata.png" },
-  { name: "Mahindra", logo: "/logos/mahindra.png" },
-  { name: "Maruti Suzuki", logo: "/logos/maruti.png" },
+  { name: "Hyundai", logo: "/crs-partners/1.png" },
+  { name: "Hyundai", logo: "/crs-partners/2.png" },
+  { name: "Hyundai", logo: "/crs-partners/3.png" },
+  { name: "Hyundai", logo: "/crs-partners/4.png" },
+  { name: "Hyundai", logo: "/crs-partners/5.png" },
+  { name: "Hyundai", logo: "/crs-partners/6.png" },
+  { name: "Hyundai", logo: "/crs-partners/7.png" },
+  { name: "Hyundai", logo: "/crs-partners/8.png" },
+  { name: "Hyundai", logo: "/crs-partners/9.png" },
+  { name: "Hyundai", logo: "/crs-partners/10.png" },
+  { name: "Hyundai", logo: "/crs-partners/11.png" },
+  { name: "Hyundai", logo: "/crs-partners/12.png" },
 ];
 
 const trainingPartners = [
-  { name: "Bosch India", logo: "/logos/bosch.png" },
-  { name: "ABB India", logo: "/logos/abb.png" },
-  { name: "Hero MotoCorp", logo: "/logos/hero.png" },
+  { name: "Bosch India", logo: "/training-partner/12.png" },
+  { name: "Bosch India", logo: "/training-partner/13.png" },
+  { name: "Bosch India", logo: "/training-partner/14.png" },
+  { name: "Bosch India", logo: "/training-partner/15.png" },
+  { name: "Bosch India", logo: "/training-partner/16.png" },
+  { name: "Bosch India", logo: "/training-partner/17.png" },
+  { name: "Bosch India", logo: "/training-partner/18.png" },
+  { name: "Bosch India", logo: "/training-partner/19.png" },
+  { name: "Bosch India", logo: "/training-partner/20.png" },
+  { name: "Bosch India", logo: "/training-partner/21.png" },
+
 ];
 
 const LogoMarquee = ({
@@ -38,7 +54,7 @@ const LogoMarquee = ({
         {[...partners, ...partners].map((partner, index) => (
           <div
             key={index}
-            className="flex items-center justify-center bg-white border border-gray-200 rounded-xl px-5 py-4 min-w-[160px] shadow-sm"
+            className="flex items-center justify-center bg-white border border-gray-200 rounded-xl px-5 py-4 min-w-[160px] shadow-sm "
           >
             <img
               src={partner.logo}
