@@ -635,6 +635,14 @@ interface OfferGroup {
   pendingToAccept: number;
 }
 
+interface HistoryRecord {
+  id: number;
+  offer_id: number;
+  status: string;
+  response: string;
+  created_at: string;
+}
+
 interface Option {
   label: string;
   value: any;
@@ -1043,7 +1051,7 @@ function OfferGroupCard({
                         const customEvent = new CustomEvent(
                           "openInstituteModal",
                           {
-                            detail: row.institute,
+                            detail: row,
                           },
                         );
                         window.dispatchEvent(customEvent);
@@ -1102,6 +1110,8 @@ export default function SentOffersListView() {
   );
   const [selectedOffer, setSelectedOffer] = useState<OfferGroup | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [history, setHistory] = useState<HistoryRecord[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [selectedInstituteForModal, setSelectedInstituteForModal] =
     useState<any>(null);
 
@@ -1152,7 +1162,22 @@ export default function SentOffersListView() {
   };
 
   useEffect(() => {
-    const handleOpenModal = (e: any) => setSelectedInstituteForModal(e.detail);
+    const handleOpenModal = (e: any) => {
+      const row = e.detail;
+      setSelectedInstituteForModal(row.institute);
+
+      // Fetch history for this specific offer
+      if (row.offer_id) {
+        setHistoryLoading(true);
+        api.get(`/job-offer/${row.offer_id}/history`)
+          .then(res => setHistory(res.data || []))
+          .catch(err => {
+            console.error("Failed to fetch history:", err);
+            setHistory([]);
+          })
+          .finally(() => setHistoryLoading(false));
+      }
+    };
     window.addEventListener("openInstituteModal", handleOpenModal);
     return () =>
       window.removeEventListener("openInstituteModal", handleOpenModal);
@@ -1952,51 +1977,67 @@ export default function SentOffersListView() {
               </button>
             </div>
             {/* Body */}
-            <div className="p-6 overflow-y-auto">
-              <div className="space-y-4">
-                <div className="flex border-b border-gray-100 pb-3">
-                  <div className="w-1/3 text-gray-500 text-sm font-semibold uppercase tracking-wider text-xs">
-                    Email
+            <div className="p-6 overflow-y-auto min-h-[400px]">
+              {historyLoading ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                  <Loader2 className="animate-spin text-blue-600" size={40} />
+                  <p className="text-sm text-gray-500 font-bold tracking-widest uppercase">Fetching timeline...</p>
+                </div>
+              ) : history.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+                  <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-300">
+                    <Clock size={32} />
                   </div>
-                  <div className="w-2/3 text-sm font-medium text-gray-900">
-                    {selectedInstituteForModal.emailId || "N/A"}
+                  <p className="text-sm text-gray-500 font-medium max-w-xs">
+                    No status history found. This might be an older record.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden text-xs">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="bg-gray-50/80 backdrop-blur text-[10px] uppercase tracking-[0.2em] text-gray-500 font-black border-b border-gray-100">
+                        <tr>
+                          <th className="px-6 py-4">Status</th>
+                          <th className="px-6 py-4">Date</th>
+                          <th className="px-6 py-4">Institute Response</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {history.slice().reverse().map((h) => (
+                          <tr key={h.id} className="group hover:bg-gray-50/50 transition-colors">
+                            <td className="px-6 py-5">
+                              <StatusBadge status={h.status} />
+                            </td>
+                            <td className="px-6 py-5 text-[13px] text-gray-600 font-semibold whitespace-nowrap">
+                              {formatDate(h.created_at)}
+                              <div className="text-[10px] text-gray-400 font-medium mt-0.5">
+                                {new Date(h.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                              </div>
+                            </td>
+                            <td className="px-6 py-5">
+                              {h.response ? (
+                                <div className="text-[13px] text-gray-700 leading-relaxed bg-blue-50/50 p-3 rounded-xl border border-blue-100/50 italic">
+                                  "{h.response}"
+                                </div>
+                              ) : (
+                                <span className="text-gray-300 text-xs italic">— No response provided —</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex gap-3">
+                    <AlertCircle className="text-amber-600 flex-shrink-0" size={18} />
+                    <p className="text-[11px] text-amber-800 leading-normal font-medium">
+                      This timeline tracks all status changes made by the institute. Responses are captured at the time of status update from the institute's action center.
+                    </p>
                   </div>
                 </div>
-                <div className="flex border-b border-gray-100 pb-3">
-                  <div className="w-1/3 text-gray-500 text-sm font-semibold uppercase tracking-wider text-xs">
-                    Phone
-                  </div>
-                  <div className="w-2/3 text-sm font-medium text-gray-900">
-                    {selectedInstituteForModal.mobileno ||
-                      selectedInstituteForModal.phone ||
-                      "N/A"}
-                  </div>
-                </div>
-                <div className="flex border-b border-gray-100 pb-3">
-                  <div className="w-1/3 text-gray-500 text-sm font-semibold uppercase tracking-wider text-xs">
-                    Address
-                  </div>
-                  <div className="w-2/3 text-sm font-medium text-gray-900 whitespace-pre-wrap">
-                    {selectedInstituteForModal.address || "N/A"}
-                  </div>
-                </div>
-                <div className="flex border-b border-gray-100 pb-3">
-                  <div className="w-1/3 text-gray-500 text-sm font-semibold uppercase tracking-wider text-xs">
-                    Contact Person
-                  </div>
-                  <div className="w-2/3 text-sm font-medium text-gray-900">
-                    {selectedInstituteForModal.contactperson || "N/A"}
-                  </div>
-                </div>
-                <div className="flex pb-3">
-                  <div className="w-1/3 text-gray-500 text-sm font-semibold uppercase tracking-wider text-xs">
-                    Designation
-                  </div>
-                  <div className="w-2/3 text-sm font-medium text-gray-900">
-                    {selectedInstituteForModal.designation || "N/A"}
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
             {/* Footer */}
             <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">

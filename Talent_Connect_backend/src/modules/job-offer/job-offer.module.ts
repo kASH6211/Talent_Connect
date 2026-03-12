@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JobOffer } from './job-offer.entity';
+import { JobOfferStatusHistory } from './job-offer-status-history.entity';
 import { JobOfferService } from './job-offer.service';
 import { JobOfferController } from './job-offer.controller';
 
@@ -8,7 +9,7 @@ import { InstituteModule } from '../institute/institute.module';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([JobOffer]),
+        TypeOrmModule.forFeature([JobOffer, JobOfferStatusHistory]),
         InstituteModule,
     ],
     providers: [JobOfferService],
