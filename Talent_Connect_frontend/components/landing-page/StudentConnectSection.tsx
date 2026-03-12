@@ -60,8 +60,8 @@ const StudentConnectSection = () => {
         {/* Two Column Layout with Vertical Divider */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 relative border border-base-300 rounded-[2.5rem] overflow-visible shadow-xl bg-white">
           {/* LEFT - INDUSTRIES (Theme: Light Blue/Primary) */}
-          <div className="p-6 lg:p-10 bg-primary/50">
-            <h3 className="text-2xl font-black mb-8 text-center text-white uppercase tracking-[0.2em]">
+          <div className="p-6 lg:p-10 bg-blue-100">
+            <h3 className="text-2xl font-black mb-8 text-center text-primary uppercase tracking-[0.2em]">
               For Industries
             </h3>
 
