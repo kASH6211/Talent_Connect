@@ -426,7 +426,7 @@ export default function AllRequestsPage() {
     { type: "Sent", label: "Received", icon: Send, color: "primary" },
     { type: "Pending", label: "Response Pending", icon: Clock, color: "primary" },
     { type: "Discussed", label: " Under Process", icon: Users, color: "info" },
-    { type: "Pending_Acceptance", label: "Desicion Pending", icon: Clock, color: "primary" },
+    { type: "Pending_Acceptance", label: "Decision Pending", icon: Clock, color: "primary" },
     { type: "Accepted", label: "Accepted", icon: CheckCircle2, color: "success" },
     { type: "Rejected", label: "Rejected", icon: XCircle, color: "error" },
     // { type: "Initiated", label: "Initiated", icon: TrendingUp, color: "primary" },
