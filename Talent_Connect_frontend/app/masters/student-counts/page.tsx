@@ -8,13 +8,18 @@ import { Pencil, Trash2, Check, X, Plus, RefreshCw, AlertCircle, Save, Users } f
 import clsx from "clsx";
 import { useOptions } from "@/hooks/useOptions";
 import CrudTable from "@/components/CrudTable";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
+import { openConfirm } from "@/store/common/confirmSlice";
 
 export default function StudentCountsPage() {
     const { user } = useAuth();
     const qc = useQueryClient();
+    const dispatch = useDispatch<AppDispatch>();
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedInstituteId, setSelectedInstituteId] = useState<string>("");
     const [bulkData, setBulkData] = useState<any[]>([]);
+    const [selectedMappingId, setSelectedMappingId] = useState<string>("");
 
     // State to hold data from CrudTable for summary stats
     const [fetchedData, setFetchedData] = useState<any>(null);
@@ -70,7 +75,7 @@ export default function StudentCountsPage() {
                     nsqf: ext.instituteQualification?.streamBranch?.nsqf?.nsqf_level || mapping?.streamBranch?.nsqf?.nsqf_level || "—",
                     duration: ext.instituteQualification?.streamBranch?.courseDuration?.courseduration || mapping?.streamBranch?.courseDuration?.courseduration || "—",
                     sessionid: ext.sessionid || "",
-                    studentcount: ext.studentcount || "",
+                    studentcount: (ext.studentcount !== null && ext.studentcount !== undefined) ? ext.studentcount : "",
                     studentcountid: ext.studentcountid || null,
                 });
             });
@@ -115,7 +120,10 @@ export default function StudentCountsPage() {
     });
 
     const deleteMutation = useMutation({
-        mutationFn: (id: number) => deleteOne("student-count", id),
+        mutationFn: (id: number) => {
+            console.log("MUTATION FN START for ID:", id);
+            return deleteOne("student-count", id);
+        },
         onSuccess: () => qc.invalidateQueries({ queryKey: ["student-count"] }),
     });
 
@@ -125,15 +133,75 @@ export default function StudentCountsPage() {
         setBulkData(newData);
     };
 
+    const handleAddRow = () => {
+        if (!selectedMappingId) return;
+        const mappingList = Array.isArray(mappings) ? mappings : mappings?.data || [];
+        const mapping = mappingList.find((m: any) => String(m.institute_qualification_id) === selectedMappingId);
+
+        if (mapping) {
+            setBulkData(prev => [...prev, {
+                institute_qualification_id: mapping.institute_qualification_id,
+                qualification: mapping.qualification?.qualification || "—",
+                course: mapping.streamBranch?.stream_branch_name || "—",
+                affiliation: mapping.streamBranch?.affiliation?.affiliating_body || "—",
+                nsqf: mapping.streamBranch?.nsqf?.nsqf_level || "—",
+                duration: mapping.streamBranch?.courseDuration?.courseduration || "—",
+                sessionid: "",
+                studentcount: "",
+                studentcountid: null,
+            }]);
+            setSelectedMappingId(""); // Reset after adding
+        }
+    };
+
+    const removeBulkRow = (index: number) => {
+        const newData = bulkData.filter((_, i) => i !== index);
+        setBulkData(newData);
+    };
+
+    const handleDeleteExisting = (id: number, idx: number) => {
+        dispatch(openConfirm({
+            message: "Are you sure you want to delete this session count? This cannot be undone.",
+            onConfirm: async () => {
+                try {
+                    await deleteMutation.mutateAsync(id);
+                    // Remove from local state immediately
+                    const newData = bulkData.filter((_, i) => i !== idx);
+                    setBulkData(newData);
+                    qc.invalidateQueries({ queryKey: ["existing-counts"] });
+                } catch (err: any) {
+                    alert("Error deleting: " + (err?.response?.data?.message || err?.message || "Unknown error"));
+                }
+            },
+        }));
+    };
+
     const onSave = () => {
-        const toSave = bulkData
-            .filter(row => row.sessionid && row.studentcount) // Only save rows where both are filled
-            .map(row => ({
+        const seen = new Set<string>();
+        const toSave: any[] = [];
+
+        for (const row of bulkData) {
+            // Skip rows where session is not selected or studentcount is blank/null
+            // Note: 0 is a valid studentcount, so only skip empty string and null
+            const hasSession = !!row.sessionid;
+            const hasCount = row.studentcount !== "" && row.studentcount !== null && row.studentcount !== undefined;
+            if (!hasSession || !hasCount) continue;
+
+            const key = `${row.institute_qualification_id}-${row.sessionid}`;
+            if (seen.has(key)) {
+                alert(`Duplicate entry detected for ${row.qualification} - ${row.course} in the same session. Please remove the duplicate row.`);
+                return;
+            }
+            seen.add(key);
+
+            toSave.push({
+                studentcountid: row.studentcountid || undefined,
                 institute_qualification_id: row.institute_qualification_id,
                 sessionid: parseInt(row.sessionid),
                 studentcount: parseInt(row.studentcount),
                 is_active: 'Y'
-            }));
+            });
+        }
 
         if (toSave.length === 0) {
             alert("Please fill at least one row with Session and Count");
@@ -314,7 +382,39 @@ export default function StudentCountsPage() {
                                 <div className="py-20 text-center text-base-content/40">No mappings found for this institute.</div>
                             ) : (
                                 <div className="space-y-4">
-                                    <h3 className="font-bold text-lg">Mapped Courses ({bulkData.length})</h3>
+                                    <div className="flex flex-col sm:flex-row items-end gap-3 p-4 bg-primary/5 border border-primary/10 rounded-2xl">
+                                        <div className="form-control w-full">
+                                            <label className="label py-1">
+                                                <span className="label-text font-bold text-primary flex items-center gap-2">
+                                                    <Plus size={14} /> Add New Course Entry
+                                                </span>
+                                            </label>
+                                            <select
+                                                className="select select-bordered select-sm w-full bg-base-100"
+                                                value={selectedMappingId}
+                                                onChange={(e) => setSelectedMappingId(e.target.value)}
+                                            >
+                                                <option value="">Select a Course to add...</option>
+                                                {(Array.isArray(mappings) ? mappings : mappings?.data || []).map((m: any) => (
+                                                    <option key={m.institute_qualification_id} value={m.institute_qualification_id}>
+                                                        {m.qualification?.qualification} - {m.streamBranch?.stream_branch_name} | {m.streamBranch?.affiliation?.affiliating_body || "NA"} | {m.streamBranch?.nsqf?.nsqf_level || "NA"} | {m.streamBranch?.courseDuration?.courseduration || "NA"}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <button
+                                            onClick={handleAddRow}
+                                            disabled={!selectedMappingId}
+                                            className="btn btn-primary btn-sm px-6 h-8 min-h-0"
+                                        >
+                                            Add Entry
+                                        </button>
+                                    </div>
+
+                                    <h3 className="font-bold text-lg flex items-center gap-2">
+                                        Mapped Courses
+                                        <span className="badge badge-primary badge-sm">{bulkData.length}</span>
+                                    </h3>
                                     <div className="bg-base-200/30 border border-base-200 rounded-xl overflow-hidden">
                                         <table className="table table-compact w-full text-xs">
                                             <thead>
@@ -325,11 +425,12 @@ export default function StudentCountsPage() {
                                                     <th>Duration</th>
                                                     <th className="w-48">Session</th>
                                                     <th className="w-32 text-center">Student Count</th>
+                                                    <th className="w-12"></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {bulkData.map((row, idx) => (
-                                                    <tr key={idx}>
+                                                    <tr key={idx} className="hover:bg-base-200/50">
                                                         <td>
                                                             <div className="font-bold">{row.qualification}</div>
                                                             <div className="text-xs text-base-content/60">{row.course}</div>
@@ -355,6 +456,32 @@ export default function StudentCountsPage() {
                                                                 onChange={(e) => handleBulkChange(idx, "studentcount", e.target.value)}
                                                                 placeholder="Count"
                                                             />
+                                                        </td>
+                                                        <td className="text-center">
+                                                            {!row.studentcountid ? (
+                                                                <button
+                                                                    onClick={() => removeBulkRow(idx)}
+                                                                    className="btn btn-ghost btn-xs text-error btn-circle"
+                                                                    title="Remove row"
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            ) : (
+                                                                user?.role !== 'institute' && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            e.stopPropagation();
+                                                                            handleDeleteExisting(row.studentcountid, idx);
+                                                                        }}
+                                                                        className="btn btn-ghost btn-xs text-error btn-circle"
+                                                                        title="Delete record from database"
+                                                                    >
+                                                                        <Trash2 size={14} />
+                                                                    </button>
+                                                                )
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 ))}

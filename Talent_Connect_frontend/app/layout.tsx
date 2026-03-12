@@ -5,6 +5,7 @@ import Providers from "./providers";
 import AppShell from "@/components/AppShell";
 import ReduxProvider from "./StoreProvider";
 import { AuthProvider } from "@/lib/AuthProvider";
+import GlobalConfirmModal from "@/components/common/ConfirmDialogHOC";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -35,6 +36,7 @@ export default function RootLayout({
             <Providers>
               <AppShell>{children}</AppShell>
             </Providers>
+            <GlobalConfirmModal />
           </ReduxProvider>
         </AuthProvider>
       </body>

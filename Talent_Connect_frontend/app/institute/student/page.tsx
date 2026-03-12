@@ -8,13 +8,18 @@ import { Pencil, Trash2, Check, X, Plus, RefreshCw, AlertCircle, Save, Users } f
 import clsx from "clsx";
 import { useOptions } from "@/hooks/useOptions";
 import CrudTable from "@/components/CrudTable";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
+import { openConfirm } from "@/store/common/confirmSlice";
 
 export default function StudentCountsPage() {
     const { user } = useAuth();
     const qc = useQueryClient();
+    const dispatch = useDispatch<AppDispatch>();
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedInstituteId, setSelectedInstituteId] = useState<string>("");
     const [bulkData, setBulkData] = useState<any[]>([]);
+    const [selectedMappingId, setSelectedMappingId] = useState<string>("");
 
     // State to hold data from CrudTable for summary stats
     const [fetchedData, setFetchedData] = useState<any>(null);
@@ -47,25 +52,48 @@ export default function StudentCountsPage() {
         enabled: !!selectedInstituteId && modalOpen,
     });
 
-    // Initialize bulk data when mappings are fetched
+    // Initialize bulk data when mappings and existing counts are fetched
     useEffect(() => {
-        const mappingList = Array.isArray(mappings) ? mappings : mappings?.data;
-        if (mappingList && Array.isArray(mappingList) && existingCounts) {
-            const initialBulk = mappingList.map((m: any) => {
-                // Find existing record if any in the fetched counts for this institute
-                const existing = existingCounts.data?.find((r: any) => r.institute_qualification_id === m.institute_qualification_id);
-                return {
-                    institute_qualification_id: m.institute_qualification_id,
-                    qualification: m.qualification?.qualification,
-                    course: m.streamBranch?.stream_branch_name,
-                    affiliation: m.streamBranch?.affiliation?.affiliating_body || "—",
-                    nsqf: m.streamBranch?.nsqf?.nsqf_level || "—",
-                    duration: m.streamBranch?.courseDuration?.courseduration || "—",
-                    sessionid: existing?.sessionid || "",
-                    studentcount: existing?.studentcount || "",
-                    studentcountid: existing?.studentcountid || null,
-                };
+        const mappingList = Array.isArray(mappings) ? mappings : mappings?.data || [];
+        const existingList = Array.isArray(existingCounts) ? existingCounts : existingCounts?.data || [];
+
+        if (mappingList.length > 0 && selectedInstituteId && modalOpen) {
+            const initialBulk: any[] = [];
+
+            // 1. Add all existing records
+            existingList.forEach((ext: any) => {
+                const mapping = mappingList.find((m: any) => m.institute_qualification_id === ext.institute_qualification_id);
+                initialBulk.push({
+                    institute_qualification_id: ext.institute_qualification_id,
+                    qualification: ext.instituteQualification?.qualification?.qualification || mapping?.qualification?.qualification || "—",
+                    course: ext.instituteQualification?.streamBranch?.stream_branch_name || mapping?.streamBranch?.stream_branch_name || "—",
+                    affiliation: ext.instituteQualification?.streamBranch?.affiliation?.affiliating_body || mapping?.streamBranch?.affiliation?.affiliating_body || "—",
+                    nsqf: ext.instituteQualification?.streamBranch?.nsqf?.nsqf_level || mapping?.streamBranch?.nsqf?.nsqf_level || "—",
+                    duration: ext.instituteQualification?.streamBranch?.courseDuration?.courseduration || mapping?.streamBranch?.courseDuration?.courseduration || "—",
+                    sessionid: ext.sessionid || "",
+                    studentcount: (ext.studentcount !== null && ext.studentcount !== undefined) ? ext.studentcount : "",
+                    studentcountid: ext.studentcountid || null,
+                });
             });
+
+            // 2. Add mappings that don't have ANY existing record yet
+            mappingList.forEach((m: any) => {
+                const hasExisting = existingList.some((ext: any) => ext.institute_qualification_id === m.institute_qualification_id);
+                if (!hasExisting) {
+                    initialBulk.push({
+                        institute_qualification_id: m.institute_qualification_id,
+                        qualification: m.qualification?.qualification,
+                        course: m.streamBranch?.stream_branch_name,
+                        affiliation: m.streamBranch?.affiliation?.affiliating_body || "—",
+                        nsqf: m.streamBranch?.nsqf?.nsqf_level || "—",
+                        duration: m.streamBranch?.courseDuration?.courseduration || "—",
+                        sessionid: "",
+                        studentcount: "",
+                        studentcountid: null,
+                    });
+                }
+            });
+
             setBulkData(initialBulk);
         } else if (!selectedInstituteId || !modalOpen) {
             setBulkData([]);
@@ -98,15 +126,72 @@ export default function StudentCountsPage() {
         setBulkData(newData);
     };
 
+    const handleAddRow = () => {
+        if (!selectedMappingId) return;
+        const mappingList = Array.isArray(mappings) ? mappings : mappings?.data || [];
+        const mapping = mappingList.find((m: any) => String(m.institute_qualification_id) === selectedMappingId);
+
+        if (mapping) {
+            setBulkData(prev => [...prev, {
+                institute_qualification_id: mapping.institute_qualification_id,
+                qualification: mapping.qualification?.qualification || "—",
+                course: mapping.streamBranch?.stream_branch_name || "—",
+                affiliation: mapping.streamBranch?.affiliation?.affiliating_body || "—",
+                nsqf: mapping.streamBranch?.nsqf?.nsqf_level || "—",
+                duration: mapping.streamBranch?.courseDuration?.courseduration || "—",
+                sessionid: "",
+                studentcount: "",
+                studentcountid: null,
+            }]);
+            setSelectedMappingId(""); // Reset after adding
+        }
+    };
+
+    const removeBulkRow = (index: number) => {
+        const newData = bulkData.filter((_, i) => i !== index);
+        setBulkData(newData);
+    };
+
+    const handleDeleteExisting = (id: number, idx: number) => {
+        dispatch(openConfirm({
+            message: "Are you sure you want to delete this session count? This cannot be undone.",
+            onConfirm: async () => {
+                try {
+                    await deleteMutation.mutateAsync(id);
+                    setBulkData(prev => prev.filter((_, i) => i !== idx));
+                    qc.invalidateQueries({ queryKey: ["existing-counts"] });
+                } catch (err: any) {
+                    alert("Error deleting: " + (err?.response?.data?.message || err?.message || "Unknown error"));
+                }
+            },
+        }));
+    };
+
     const onSave = () => {
-        const toSave = bulkData
-            .filter(row => row.sessionid && row.studentcount) // Only save rows where both are filled
-            .map(row => ({
+        const seen = new Set<string>();
+        const toSave: any[] = [];
+
+        for (const row of bulkData) {
+            // Skip rows where session is not selected or studentcount is blank/null
+            const hasSession = !!row.sessionid;
+            const hasCount = row.studentcount !== "" && row.studentcount !== null && row.studentcount !== undefined;
+            if (!hasSession || !hasCount) continue;
+
+            const key = `${row.institute_qualification_id}-${row.sessionid}`;
+            if (seen.has(key)) {
+                alert(`Duplicate entry detected for ${row.qualification} - ${row.course} in the same session. Please remove the duplicate row.`);
+                return;
+            }
+            seen.add(key);
+
+            toSave.push({
+                studentcountid: row.studentcountid || undefined,
                 institute_qualification_id: row.institute_qualification_id,
                 sessionid: parseInt(row.sessionid),
                 studentcount: parseInt(row.studentcount),
                 is_active: 'Y'
-            }));
+            });
+        }
 
         if (toSave.length === 0) {
             alert("Please fill at least one row with Session and Count");
@@ -130,7 +215,7 @@ export default function StudentCountsPage() {
             key: "institute",
             label: "Institute",
             render: (_: any, row: any) => (
-                <div className="max-w-[150px] truncate" title={row.instituteQualification?.institute?.institute_name}>
+                <div className="whitespace-normal break-words min-w-[150px]">
                     {row.instituteQualification?.institute?.institute_name || "—"}
                 </div>
             )
@@ -286,55 +371,115 @@ export default function StudentCountsPage() {
                             ) : mappings?.length === 0 ? (
                                 <div className="py-20 text-center text-base-content/40">No mappings found for this institute.</div>
                             ) : (
-                                <div className="space-y-4">
-                                    <h3 className="font-bold text-lg">Mapped Courses ({bulkData.length})</h3>
-                                    <div className="bg-base-200/30 border border-base-200 rounded-xl overflow-hidden">
-                                        <table className="table table-compact w-full text-xs">
-                                            <thead>
-                                                <tr>
-                                                    <th>Course / Qualification</th>
-                                                    <th>Affiliation</th>
-                                                    <th className="text-center">NSQF</th>
-                                                    <th>Duration</th>
-                                                    <th className="w-48">Session</th>
-                                                    <th className="w-32 text-center">Student Count</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {bulkData.map((row, idx) => (
-                                                    <tr key={idx}>
-                                                        <td>
-                                                            <div className="font-bold">{row.qualification}</div>
-                                                            <div className="text-xs text-base-content/60">{row.course}</div>
-                                                        </td>
-                                                        <td className="max-w-[120px] truncate" title={row.affiliation}>{row.affiliation}</td>
-                                                        <td className="text-center">{row.nsqf}</td>
-                                                        <td>{row.duration}</td>
-                                                        <td>
-                                                            <select
-                                                                className="select select-bordered select-sm w-full"
-                                                                value={row.sessionid}
-                                                                onChange={(e) => handleBulkChange(idx, "sessionid", e.target.value)}
-                                                            >
-                                                                <option value="">Select Session…</option>
-                                                                {sessions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                                                            </select>
-                                                        </td>
-                                                        <td className="text-center">
-                                                            <input
-                                                                type="number"
-                                                                className="input input-bordered input-sm w-full text-center font-bold text-primary"
-                                                                value={row.studentcount}
-                                                                onChange={(e) => handleBulkChange(idx, "studentcount", e.target.value)}
-                                                                placeholder="Count"
-                                                            />
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                <>
+                                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 space-y-4">
+                                        <h3 className="font-bold text-primary flex items-center gap-2">
+                                            <Plus size={20} />
+                                            Add New Course Entry
+                                        </h3>
+                                        <div className="flex flex-col md:flex-row gap-4 items-end">
+                                            <div className="form-control flex-1">
+                                                <label className="label text-xs font-bold opacity-60">Course Mapping</label>
+                                                <select
+                                                    className="select select-bordered select-sm w-full"
+                                                    value={selectedMappingId}
+                                                    onChange={(e) => setSelectedMappingId(e.target.value)}
+                                                >
+                                                    <option value="">Select Course Mapping…</option>
+                                                    {(Array.isArray(mappings) ? mappings : (mappings?.data || [])).map((m: any) => (
+                                                        <option key={m.institute_qualification_id} value={m.institute_qualification_id}>
+                                                            {m.qualification?.qualification} - {m.streamBranch?.stream_branch_name} | {m.streamBranch?.affiliation?.affiliating_body}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <button
+                                                onClick={handleAddRow}
+                                                disabled={!selectedMappingId}
+                                                className="btn btn-primary btn-sm px-6"
+                                            >
+                                                Add Entry
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
+
+                                    <div className="space-y-4">
+                                        <h3 className="font-bold text-lg">Mapped Courses ({bulkData.length})</h3>
+                                        <div className="bg-base-200/30 border border-base-200 rounded-xl overflow-hidden">
+                                            <table className="table table-compact w-full text-xs">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Course / Qualification</th>
+                                                        <th>Affiliation</th>
+                                                        <th className="text-center">NSQF</th>
+                                                        <th>Duration</th>
+                                                        <th className="w-48">Session</th>
+                                                        <th className="w-32 text-center">Student Count</th>
+                                                        <th className="w-16 text-center"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {bulkData.map((row, idx) => (
+                                                        <tr key={idx}>
+                                                            <td>
+                                                                <div className="font-bold">{row.qualification}</div>
+                                                                <div className="text-xs text-base-content/60">{row.course}</div>
+                                                            </td>
+                                                            <td className="max-w-[120px] truncate" title={row.affiliation}>{row.affiliation}</td>
+                                                            <td className="text-center">{row.nsqf}</td>
+                                                            <td>{row.duration}</td>
+                                                            <td>
+                                                                <select
+                                                                    className="select select-bordered select-sm w-full"
+                                                                    value={row.sessionid}
+                                                                    onChange={(e) => handleBulkChange(idx, "sessionid", e.target.value)}
+                                                                >
+                                                                    <option value="">Select Session…</option>
+                                                                    {sessions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                                                                </select>
+                                                            </td>
+                                                            <td className="text-center">
+                                                                <input
+                                                                    type="number"
+                                                                    className="input input-bordered input-sm w-full text-center font-bold text-primary"
+                                                                    value={row.studentcount}
+                                                                    onChange={(e) => handleBulkChange(idx, "studentcount", e.target.value)}
+                                                                    placeholder="Count"
+                                                                />
+                                                            </td>
+                                                            <td className="text-center">
+                                                                {!row.studentcountid ? (
+                                                                    <button
+                                                                        onClick={() => removeBulkRow(idx)}
+                                                                        className="btn btn-ghost btn-xs text-error btn-circle"
+                                                                        title="Remove row"
+                                                                    >
+                                                                        <Trash2 size={14} />
+                                                                    </button>
+                                                                ) : (
+                                                                    user?.role !== 'institute' && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                e.preventDefault();
+                                                                                e.stopPropagation();
+                                                                                handleDeleteExisting(row.studentcountid, idx);
+                                                                            }}
+                                                                            className="btn btn-ghost btn-xs text-error btn-circle"
+                                                                            title="Delete saved record"
+                                                                        >
+                                                                            <Trash2 size={14} />
+                                                                        </button>
+                                                                    )
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </>
                             )}
                         </div>
 

@@ -81,28 +81,43 @@ export class StudentCountService {
     }
 
     async remove(id: number) {
-        await this.repo.delete(id);
+        await this.findOne(id); // throws NotFoundException if record doesn't exist
+        await this.repo.delete({ studentcountid: id } as any);
         return { message: 'StudentCount #' + id + ' removed' };
     }
 
     async bulkSave(dtos: Partial<StudentCount>[]) {
         const results: StudentCount[] = [];
         for (const dto of dtos) {
-            // Check if record already exists for this mapping and session
-            let existing = await this.repo.findOne({
-                where: {
-                    institute_qualification_id: dto.institute_qualification_id,
-                    sessionid: dto.sessionid
-                } as any
-            });
+            let existing: StudentCount | null = null;
+
+            // Prefer finding by primary key if provided
+            if (dto.studentcountid) {
+                existing = await this.repo.findOne({
+                    where: { studentcountid: dto.studentcountid } as any
+                });
+            }
+
+            // Fall back to finding by unique composite key
+            if (!existing) {
+                existing = await this.repo.findOne({
+                    where: {
+                        institute_qualification_id: dto.institute_qualification_id,
+                        sessionid: dto.sessionid
+                    } as any
+                });
+            }
 
             if (existing) {
-                // Update existing
-                Object.assign(existing, dto);
+                // Update existing — strip studentcountid from dto to avoid PK conflict
+                const { studentcountid, ...updateData } = dto as any;
+                Object.assign(existing, updateData);
                 results.push(await this.repo.save(existing));
             } else {
-                // Create new
-                results.push(await this.repo.save(this.repo.create(dto)));
+                // Create new — strip studentcountid so DB auto-generates it
+                const { studentcountid, ...createData } = dto as any;
+                const newEntity = this.repo.create(createData as Partial<StudentCount>);
+                results.push(await this.repo.save(newEntity));
             }
         }
         return results;

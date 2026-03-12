@@ -3,25 +3,28 @@
 import React, { useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
-import { closeConfirm } from "@/store/common/confirmSlice";
+import { closeConfirm, getConfirmCallback, getCancelCallback } from "@/store/common/confirmSlice";
 import { AlertTriangle, X } from "lucide-react";
 
 export default function GlobalConfirmModal() {
   const dispatch = useDispatch<AppDispatch>();
 
-  const { isOpen, message, onConfirm, onCancel, title } = useSelector(
+  const { isOpen, message, title } = useSelector(
     (state: RootState) => state.confirm,
   );
 
   const handleConfirm = useCallback(() => {
-    onConfirm?.();
+    // Read callback from module-level ref (not Immer-frozen Redux state)
+    const cb = getConfirmCallback();
     dispatch(closeConfirm());
-  }, [dispatch, onConfirm]);
+    cb?.();
+  }, [dispatch]);
 
   const handleCancel = useCallback(() => {
-    onCancel?.();
+    const cb = getCancelCallback();
     dispatch(closeConfirm());
-  }, [dispatch, onCancel]);
+    cb?.();
+  }, [dispatch]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -32,7 +35,6 @@ export default function GlobalConfirmModal() {
 
     if (isOpen) {
       document.addEventListener("keydown", handleEscape);
-      // Optional: prevent background scroll
       document.body.style.overflow = "hidden";
     }
 
