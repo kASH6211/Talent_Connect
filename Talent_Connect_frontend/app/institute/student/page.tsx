@@ -171,12 +171,12 @@ export default function StudentCountsPage() {
         },
         {
             key: "studentcount",
-            label: "Qty",
+            label: "Stundents Onroll",
             render: (val: any) => <span className="text-sm font-bold text-primary">{val}</span>
         },
         {
             key: "is_active",
-            label: "Status.",
+            label: "Status",
             render: (val: any) => (
                 <div className={clsx(
                     "w-2 h-2 rounded-full mx-auto",
