@@ -84,7 +84,7 @@ const ContactPage = () => {
                       Official Email
                     </h3>
                     <p className="text-primary text-sm mt-1.5 font-bold underline underline-offset-4">
-                      info.dteit@punjab.gov.in
+                      dtepunjab@punjab.gov.in
                     </p>
                   </div>
                 </div>

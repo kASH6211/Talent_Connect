@@ -107,7 +107,7 @@ export default function InstituteCoursesModal({
                                         <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Qualification</th>
                                         <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Course</th>
                                         <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Total Students on Roll</th>
-                                        <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Final Year Student ready for placement</th>
+                                        <th className="px-4 py-3 font-bold text-base-content/60 uppercase tracking-wider text-xs">Student ready for placement</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-base-200 dark:divide-base-800">

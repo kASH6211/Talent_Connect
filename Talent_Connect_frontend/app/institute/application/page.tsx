@@ -283,7 +283,7 @@ export default function ReceivedOffersPage() {
     { tab: "All", label: "Received", count: baseOffers.length, icon: Users, activeColor: "indigo" },
     { tab: "PendingDiscuss", label: "Response Pending", count: pendingDisc, icon: Clock, activeColor: "amber" },
     { tab: "Discussed", label: " Under Process", count: discussed, icon: CheckCircle2, activeColor: "purple" },
-    { tab: "DesicionPending", label: "Desicion Pending", count: accepted, icon: CheckCircle2, activeColor: "yellow" },
+    { tab: "DecisionPending", label: "Decision Pending", count: accepted, icon: CheckCircle2, activeColor: "yellow" },
     { tab: "Accepted", label: "Accepted", count: accepted, icon: CheckCircle2, activeColor: "green" },
     { tab: "Rejected", label: "Rejected", count: accepted, icon: CheckCircle2, activeColor: "red" },
     { tab: " ProjectInitiated", label: " Project Initiated", count: baseOffers.length, icon: Users, activeColor: "indigo" },

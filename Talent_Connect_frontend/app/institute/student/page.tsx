@@ -166,7 +166,7 @@ export default function StudentCountsPage() {
         },
         {
             key: "session",
-            label: "Sess.",
+            label: "Session",
             render: (val: any) => <span className="text-[10px] font-medium opacity-70 px-1.5 border border-base-200 rounded">{val?.session || "—"}</span>
         },
         {
@@ -176,7 +176,7 @@ export default function StudentCountsPage() {
         },
         {
             key: "is_active",
-            label: "St.",
+            label: "Status.",
             render: (val: any) => (
                 <div className={clsx(
                     "w-2 h-2 rounded-full mx-auto",

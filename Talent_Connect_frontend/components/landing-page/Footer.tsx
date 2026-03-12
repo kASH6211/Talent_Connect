@@ -63,7 +63,7 @@ const Footer = () => {
               <div className="flex items-center gap-2 text-xs">
                 <Mail className="w-4 h-4 text-secondary shrink-0" />
                 <span className="text-primary-content/80">
-                  info.dteit@punjab.gov.in
+                  dtepunjab@punjab.gov.in
                 </span>
               </div>
 
