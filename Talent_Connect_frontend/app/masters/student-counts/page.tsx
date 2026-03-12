@@ -47,25 +47,52 @@ export default function StudentCountsPage() {
         enabled: !!selectedInstituteId && modalOpen,
     });
 
-    // Initialize bulk data when mappings are fetched
+    // Initialize bulk data when mappings and existing counts are fetched
     useEffect(() => {
-        const mappingList = Array.isArray(mappings) ? mappings : mappings?.data;
-        if (mappingList && Array.isArray(mappingList) && existingCounts) {
-            const initialBulk = mappingList.map((m: any) => {
-                // Find existing record if any in the fetched counts for this institute
-                const existing = existingCounts.data?.find((r: any) => r.institute_qualification_id === m.institute_qualification_id);
-                return {
-                    institute_qualification_id: m.institute_qualification_id,
-                    qualification: m.qualification?.qualification,
-                    course: m.streamBranch?.stream_branch_name,
-                    affiliation: m.streamBranch?.affiliation?.affiliating_body || "—",
-                    nsqf: m.streamBranch?.nsqf?.nsqf_level || "—",
-                    duration: m.streamBranch?.courseDuration?.courseduration || "—",
-                    sessionid: existing?.sessionid || "",
-                    studentcount: existing?.studentcount || "",
-                    studentcountid: existing?.studentcountid || null,
-                };
+        const mappingList = Array.isArray(mappings) ? mappings : mappings?.data || [];
+        const existingList = Array.isArray(existingCounts) ? existingCounts : existingCounts?.data || [];
+
+        if (mappingList.length > 0 && selectedInstituteId && modalOpen) {
+            // Build a set of all unique records we want to show
+            // This includes EVERY existing record in student_count for this institute
+            // Plus any mapped courses that don't have a record yet
+
+            const initialBulk: any[] = [];
+
+            // 1. Add all existing records
+            existingList.forEach((ext: any) => {
+                const mapping = mappingList.find((m: any) => m.institute_qualification_id === ext.institute_qualification_id);
+                initialBulk.push({
+                    institute_qualification_id: ext.institute_qualification_id,
+                    qualification: ext.instituteQualification?.qualification?.qualification || mapping?.qualification?.qualification || "—",
+                    course: ext.instituteQualification?.streamBranch?.stream_branch_name || mapping?.streamBranch?.stream_branch_name || "—",
+                    affiliation: ext.instituteQualification?.streamBranch?.affiliation?.affiliating_body || mapping?.streamBranch?.affiliation?.affiliating_body || "—",
+                    nsqf: ext.instituteQualification?.streamBranch?.nsqf?.nsqf_level || mapping?.streamBranch?.nsqf?.nsqf_level || "—",
+                    duration: ext.instituteQualification?.streamBranch?.courseDuration?.courseduration || mapping?.streamBranch?.courseDuration?.courseduration || "—",
+                    sessionid: ext.sessionid || "",
+                    studentcount: ext.studentcount || "",
+                    studentcountid: ext.studentcountid || null,
+                });
             });
+
+            // 2. Add mappings that don't have ANY existing record yet
+            mappingList.forEach((m: any) => {
+                const hasExisting = existingList.some((ext: any) => ext.institute_qualification_id === m.institute_qualification_id);
+                if (!hasExisting) {
+                    initialBulk.push({
+                        institute_qualification_id: m.institute_qualification_id,
+                        qualification: m.qualification?.qualification,
+                        course: m.streamBranch?.stream_branch_name,
+                        affiliation: m.streamBranch?.affiliation?.affiliating_body || "—",
+                        nsqf: m.streamBranch?.nsqf?.nsqf_level || "—",
+                        duration: m.streamBranch?.courseDuration?.courseduration || "—",
+                        sessionid: "",
+                        studentcount: "",
+                        studentcountid: null,
+                    });
+                }
+            });
+
             setBulkData(initialBulk);
         } else if (!selectedInstituteId || !modalOpen) {
             setBulkData([]);
@@ -130,7 +157,7 @@ export default function StudentCountsPage() {
             key: "institute",
             label: "Institute",
             render: (_: any, row: any) => (
-                <div className="max-w-[150px] truncate" title={row.instituteQualification?.institute?.institute_name}>
+                <div className="whitespace-normal break-words min-w-[150px]">
                     {row.instituteQualification?.institute?.institute_name || "—"}
                 </div>
             )
