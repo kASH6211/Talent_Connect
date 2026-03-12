@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource } from 'typeorm';
 import { JobOffer } from './job-offer.entity';
+import { JobOfferStatusHistory } from './job-offer-status-history.entity';
 import { InstituteService } from '../institute/institute.service';
 
 export interface BulkOfferDto {
@@ -44,6 +45,8 @@ export class JobOfferService {
     constructor(
         @InjectRepository(JobOffer)
         private readonly repo: Repository<JobOffer>,
+        @InjectRepository(JobOfferStatusHistory)
+        private readonly historyRepo: Repository<JobOfferStatusHistory>,
         private readonly dataSource: DataSource,
         private readonly instituteService: InstituteService,
     ) { }
@@ -108,7 +111,16 @@ export class JobOfferService {
             created_date: now,
             createdby: 'industry',
         }));
-        return this.repo.save(offers);
+        const savedOffers = await this.repo.save(offers);
+
+        // Record initial 'Sent' status in history
+        const historyRecords = savedOffers.map(o => this.historyRepo.create({
+            offer_id: o.offer_id,
+            status: 'Sent',
+        }));
+        await this.historyRepo.save(historyRecords);
+
+        return savedOffers;
     }
 
     /** Sent EOIs for a specific industry */
@@ -144,23 +156,47 @@ export class JobOfferService {
     }
 
     /** Update status */
-    async updateStatus(offer_id: number, status: string) {
+    async updateStatus(offer_id: number, status: string, response?: string) {
         const updateObj: any = { status };
         if (status === 'Discussed') {
             updateObj.discussed_date = new Date().toISOString().substring(0, 10);
         }
         await this.repo.update(offer_id, updateObj);
+
+        // Record status history
+        await this.historyRepo.save(this.historyRepo.create({
+            offer_id,
+            status,
+            response
+        }));
+
         return this.repo.findOne({ where: { offer_id }, relations: ['industry', 'institute', 'institute.district'] });
     }
 
     /** Bulk update status */
-    async bulkUpdateStatus(ids: number[], status: string) {
+    async bulkUpdateStatus(ids: number[], status: string, response?: string) {
         const updateObj: any = { status };
         if (status === 'Discussed') {
             updateObj.discussed_date = new Date().toISOString().substring(0, 10);
         }
         await this.repo.update({ offer_id: In(ids) }, updateObj);
+
+        // Record status history for each
+        const historyRecords = ids.map(id => this.historyRepo.create({
+            offer_id: id,
+            status,
+            response
+        }));
+        await this.historyRepo.save(historyRecords);
+
         return { success: true, count: ids.length };
+    }
+
+    async getStatusHistory(offer_id: number) {
+        return this.historyRepo.find({
+            where: { offer_id },
+            order: { created_at: 'ASC' }
+        });
     }
 
     async findAll(page?: number, limit?: number) {

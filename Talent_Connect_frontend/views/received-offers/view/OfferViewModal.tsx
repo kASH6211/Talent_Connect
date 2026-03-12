@@ -88,6 +88,9 @@ export default function OfferViewModal({
 }) {
   const [updating, setUpdating] = useState(false);
   const [pendingStatus, setPendingStatus] = useState("");
+  const [response, setResponse] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [targetStatus, setTargetStatus] = useState("");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
@@ -106,15 +109,25 @@ export default function OfferViewModal({
     return min ? `From ${fmt(min)}` : `Up to ${fmt(max!)}`;
   };
 
-  const updateStatus = async (newStatus: string) => {
-    if (newStatus === offer.status) return;
+  const handleStatusClick = (status: string) => {
+    setTargetStatus(status);
+    setShowConfirm(true);
+  };
+
+  const updateStatus = async () => {
+    if (!targetStatus || targetStatus === offer.status) return;
     setUpdating(true);
-    setPendingStatus(newStatus);
+    setPendingStatus(targetStatus);
     try {
-      await api.patch(`/job-offer/${offer.offer_id}/status`, { status: newStatus });
-      onStatusChange?.(offer.offer_id, newStatus);
-      globalNotify(`Status updated to ${newStatus}`, "success");
+      await api.patch(`/job-offer/${offer.offer_id}/status`, {
+        status: targetStatus,
+        response: response.trim()
+      });
+      onStatusChange?.(offer.offer_id, targetStatus);
+      globalNotify(`Status updated to ${targetStatus}`, "success");
       setOpen(false);
+      setShowConfirm(false);
+      setResponse("");
     } catch (e: any) {
       globalNotify(e?.response?.data?.message ?? "Failed to update status", "error");
     } finally {
@@ -264,15 +277,16 @@ export default function OfferViewModal({
             </div>
           </div>
 
+
           {/* Action Center */}
           <section className="pt-6 border-t border-base-200 dark:border-base-800">
             <h3 className={sectionTitleCls}><Send size={14} /> Action Center</h3>
             <div className="flex flex-wrap gap-3">
-              {ALL_STATUSES.filter(s => s !== offer.status).map(status => (
+              {ALL_STATUSES.filter((s) => s !== offer.status).map((status) => (
                 <button
                   key={status}
                   disabled={updating}
-                  onClick={() => updateStatus(status)}
+                  onClick={() => handleStatusClick(status)}
                   className={clsx(
                     "flex-1 min-w-[140px] px-5 py-3 rounded-2xl border text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm whitespace-nowrap",
                     updating && pendingStatus === status ? "bg-base-200 text-base-content opacity-50" :
@@ -288,6 +302,51 @@ export default function OfferViewModal({
             </div>
           </section>
         </div>
+
+        {/* Confirmation Dialog Overlay */}
+        {showConfirm && (
+          <div className="absolute inset-0 z-[110] bg-base-content/10 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
+            <div className="bg-base-100 border border-base-300 rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 text-center">
+              <div className="w-16 h-16 rounded-full bg-warning/10 text-warning flex items-center justify-center mx-auto mb-6">
+                <Info size={32} />
+              </div>
+              <h4 className="text-xl font-black text-base-content mb-3 leading-tight">Are you sure?</h4>
+              <p className="text-sm text-base-content/60 mb-8 leading-relaxed">
+                You are about to mark this as <span className="font-bold text-base-content">"{targetStatus}"</span>.
+                This action <span className="underline decoration-error/30 text-error">cannot be reversed</span>.
+              </p>
+              <div className="flex flex-col gap-4">
+                <div className="text-left">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-base-content/40 mb-2 block">
+                    Add Response / Comments
+                  </label>
+                  <textarea
+                    value={response}
+                    onChange={(e) => setResponse(e.target.value)}
+                    placeholder="Provide a reason or additional comments (optional)..."
+                    className="w-full h-24 p-4 rounded-xl border border-base-300 dark:border-base-700 bg-base-50 dark:bg-base-900/50 focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all text-sm outline-none resize-none"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <button
+                    disabled={updating}
+                    onClick={updateStatus}
+                    className="w-full py-4 rounded-2xl bg-primary text-primary-content font-black uppercase tracking-widest text-xs hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
+                  >
+                    {updating ? <Loader2 size={16} className="animate-spin" /> : "Confirm Change"}
+                  </button>
+                  <button
+                    disabled={updating}
+                    onClick={() => { setShowConfirm(false); setResponse(""); }}
+                    className="w-full py-4 rounded-2xl border border-base-300 text-base-content/40 font-black uppercase tracking-widest text-xs hover:bg-base-200 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>,
     document.body

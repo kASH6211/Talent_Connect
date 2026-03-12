@@ -31,16 +31,21 @@ export class JobOfferController {
         return this.svc.getReceivedOffers(req.user?.institute_id, page, limit);
     }
 
-    /** Update offer status (Accepted / Rejected / Withdrawn) */
     @Patch(':id/status')
-    updateStatus(@Param('id') id: number, @Body('status') status: string) {
-        return this.svc.updateStatus(+id, status);
+    updateStatus(@Param('id') id: number, @Body('status') status: string, @Body('response') response?: string) {
+        return this.svc.updateStatus(+id, status, response);
     }
 
-    /** Bulk update status for multiple offers */
-    @Patch('bulk-status')
-    bulkUpdateStatus(@Body() body: { ids: number[], status: string }) {
-        return this.svc.bulkUpdateStatus(body.ids, body.status);
+    @Patch('bulk/status')
+    bulkUpdateStatus(@Body() body: { ids: number[], status: string, response?: string }) {
+        return this.svc.bulkUpdateStatus(body.ids, body.status, body.response);
+    }
+
+    /** Get status history for an offer */
+    @Get(':id/history')
+    @ApiQuery({ name: 'id', required: true })
+    getHistory(@Param('id') id: number) {
+        return this.svc.getStatusHistory(+id);
     }
 
     @Get()
