@@ -546,11 +546,11 @@ export default function FindInstitutesPage() {
             placeholder="All qualifications"
           />
           <MultiSelectDropdown
-            label="Course/Trade"
+            label="Branch/Trade"
             options={streamOpts}
             selected={filters.stream_ids}
             onChange={setFilter("stream_ids") as any}
-            placeholder="All courses/trades"
+            placeholder="All branches/trades"
           />
         </div>
 

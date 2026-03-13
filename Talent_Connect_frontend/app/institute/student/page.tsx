@@ -256,7 +256,7 @@ export default function StudentCountsPage() {
         },
         {
             key: "studentcount",
-            label: "Stundents Onroll",
+            label: "Students Onroll",
             render: (val: any) => <span className="text-sm font-bold text-primary">{val}</span>
         },
         {

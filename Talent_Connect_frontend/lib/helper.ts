@@ -8,7 +8,7 @@ export const getDashboardRoute = (role: string) => {
     case "industry":
       return "/sent-offers";
     case "dept_admin":
-      return "/all-requests";
+      return "/dept-admin/state-overview";
     default:
       return "/";
   }

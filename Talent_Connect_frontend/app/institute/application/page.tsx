@@ -311,7 +311,7 @@ export default function ReceivedOffersPage() {
               Application Tracker
             </h1>
             <p className="text-sm text-base-content/50 mt-0.5">
-              Manage incoming Expressions of Interest from industry partners
+              Manage applications received  from industry partners
             </p>
           </div>
         </div>
@@ -378,7 +378,7 @@ export default function ReceivedOffersPage() {
                     </button>
                   </th>
                   <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-base-content/40">Industry Partner</th>
-                  <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-base-content/40">EOI Type</th>
+                  <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-base-content/40">Application Type</th>
                   <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-base-content/40">Title / Details</th>
                   <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-base-content/40">Received</th>
                   <th className="px-5 py-4 text-left text-[10px] font-black uppercase tracking-widest text-base-content/40">Status</th>
