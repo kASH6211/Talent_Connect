@@ -746,7 +746,13 @@ function groupOffers(offers: OfferRecord[]): OfferGroup[] {
     }
 
     if (s === "Sent" || s === "Pending") g.sent++;
-    else if (s === "Discussed") g.discussed++;
+    else if (s === "Discussed") {
+      if (isPendingToAccept) {
+        // Already handled g.pendingToAccept++
+      } else {
+        g.discussed++;
+      }
+    }
     else if (s === "Accepted") g.accepted++;
     else if (s === "Rejected") g.rejected++;
     else if (s === "Project initiated") g.projectInitiated++;
@@ -1241,27 +1247,27 @@ export default function SentOffersListView() {
   });
 
   const total = baseOffers.length;
-  const discussed = baseOffers.filter((o) => o.status === "Discussed").length;
-  const accepted = baseOffers.filter((o) => o.status === "Accepted").length;
   const pendingToDiscuss = baseOffers.filter(
     (o) => (o.status === "Sent" || o.status === "Pending") && (now - new Date(o.offer_date).getTime() > TWO_DAYS_MS),
   ).length;
   const pendingToAccept = baseOffers.filter(
     (o) => o.status === "Discussed" && o.discussed_date && (now - new Date(o.discussed_date).getTime() > SEVEN_DAYS_MS),
   ).length;
+  const discussed = baseOffers.filter((o) => o.status === "Discussed").length - pendingToAccept;
+  const accepted = baseOffers.filter((o) => o.status === "Accepted").length;
 
   const filteredOffers = baseOffers.filter((o) => {
     const s = o.status;
     const isPendingToDiscuss = (s === "Sent" || s === "Pending") && (now - new Date(o.offer_date).getTime() > TWO_DAYS_MS);
     const isPendingToAccept = s === "Discussed" && o.discussed_date && (now - new Date(o.discussed_date).getTime() > SEVEN_DAYS_MS);
 
-    const matchesFilter =
-      filter === "All" ||
-      (filter === "Discussed" && s === "Discussed") ||
-      (filter === "Accepted" && s === "Accepted") ||
-      (filter === "Pending to discuss" && isPendingToDiscuss) ||
-      (filter === "Pending to accept" && isPendingToAccept) ||
-      s === filter;
+    const matchesFilter = filter === "All" || (() => {
+      if (filter === "Discussed") return s === "Discussed" && !isPendingToAccept;
+      if (filter === "Pending to discuss") return isPendingToDiscuss;
+      if (filter === "Pending to accept") return isPendingToAccept;
+      return s === filter;
+    })();
+
     const instName = o.institute?.institute_name ?? "";
     const matchesSearch =
       (o.job_title ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1475,7 +1481,7 @@ export default function SentOffersListView() {
                   >
                     <Clock size={24} />
                   </div>
-                                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
 
                     Response awaited
                   </div>
@@ -1488,7 +1494,7 @@ export default function SentOffersListView() {
               {/* Discussed */}
               <button
                 type="button"
-             onClick={() => setFilter("Discussed")}
+                onClick={() => setFilter("Discussed")}
                 className={clsx(
                   "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
                   filter === "Discussed"
@@ -1507,8 +1513,8 @@ export default function SentOffersListView() {
                   >
                     <Users size={24} />
                   </div>
-               <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
-                     Under Process
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
+                    Under Process
                   </div>
                   <div className="text-2xl font-black text-gray-900">
                     {discussed.toLocaleString()}
@@ -1519,7 +1525,7 @@ export default function SentOffersListView() {
               {/* Pending to accept */}
               <button
                 type="button"
-                 onClick={() => setFilter("Pending to accept")}
+                onClick={() => setFilter("Pending to accept")}
                 className={clsx(
                   "group relative p-5 bg-white border rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 select-none",
                   filter === "Pending to accept"
@@ -1538,7 +1544,7 @@ export default function SentOffersListView() {
                   >
                     <AlertCircle size={24} />
                   </div>
-                     <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
                     Decision awaited
                   </div>
                   <div className="text-2xl font-black text-gray-900">

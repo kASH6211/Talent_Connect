@@ -49,6 +49,7 @@ interface Offer {
   additional_details?: string;
   status: string;
   industry?: { industry_name?: string; emailId?: string };
+  discussed_date?: string;
 }
 
 function fmt(n?: number) {
@@ -118,7 +119,7 @@ function StatCard({ label, count, active, onClick, icon: Icon, activeColor }: {
     green: "border-success bg-success/10 shadow-success/20",
     red: "border-error bg-error/10 shadow-error/20",
     purple: "border-purple-400 bg-purple-50 shadow-purple-100",
-    yellow  :"border-yellow-400 bg-yellow-50 shadow-yellow-100",
+    yellow: "border-yellow-400 bg-yellow-50 shadow-yellow-100",
   };
   const iconMap: Record<string, string> = {
     indigo: "bg-primary text-primary-content",
@@ -126,7 +127,7 @@ function StatCard({ label, count, active, onClick, icon: Icon, activeColor }: {
     green: "bg-success text-success-content",
     red: "bg-error text-error-content",
     purple: "bg-purple-600 text-white",
-    yellow :"bg-yellow-600 text-white",
+    yellow: "bg-yellow-600 text-white",
   };
   const countMap: Record<string, string> = {
     indigo: "text-primary", amber: "text-warning", green: "text-success", red: "text-error", purple: "text-purple-700",
@@ -265,6 +266,7 @@ export default function ReceivedOffersPage() {
   /* ── Counters & Filtering ── */
   const now = useMemo(() => Date.now(), []);
   const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
   const baseOffers = useMemo(() => {
     return offers.filter((o) => {
@@ -276,27 +278,43 @@ export default function ReceivedOffersPage() {
   }, [offers, eoiTypeFilter]);
 
   const pendingDisc = baseOffers.filter((o) => (o.status === "Sent" || o.status === "Pending") && now - new Date(o.offer_date ?? 0).getTime() > TWO_DAYS_MS).length;
-  const discussed = baseOffers.filter((o) => o.status === "Discussed").length;
-  const accepted = baseOffers.filter((o) => o.status === "Accepted").length;
+  const decisionPendingCount = baseOffers.filter((o) => o.status === "Discussed" && o.discussed_date && now - new Date(o.discussed_date).getTime() >= SEVEN_DAYS_MS).length;
+  const discussedCount = baseOffers.filter((o) => o.status === "Discussed").length - decisionPendingCount;
+  const acceptedCount = baseOffers.filter((o) => o.status === "Accepted").length;
+  const rejectedCount = baseOffers.filter((o) => o.status === "Rejected").length;
+  const initiatedCount = baseOffers.filter((o) => o.status === "Project initiated" || o.status === "Project Initiated").length;
+  const completedCount = baseOffers.filter((o) => o.status === "Project completed" || o.status === "Project Completed").length;
 
   const statConfig = [
     { tab: "All", label: "Received", count: baseOffers.length, icon: Users, activeColor: "indigo" },
     { tab: "PendingDiscuss", label: "Response Pending", count: pendingDisc, icon: Clock, activeColor: "amber" },
-    { tab: "Discussed", label: " Under Process", count: discussed, icon: CheckCircle2, activeColor: "purple" },
-    { tab: "DecisionPending", label: "Decision Pending", count: accepted, icon: CheckCircle2, activeColor: "yellow" },
-    { tab: "Accepted", label: "Accepted", count: accepted, icon: CheckCircle2, activeColor: "green" },
-    { tab: "Rejected", label: "Rejected", count: accepted, icon: CheckCircle2, activeColor: "red" },
-    { tab: " ProjectInitiated", label: " Project Initiated", count: baseOffers.length, icon: Users, activeColor: "indigo" },
-    { tab: " ProjectCompleted", label: " Project Completed", count: pendingDisc, icon: Clock, activeColor: "green" },
+    { tab: "Discussed", label: "Under Process", count: discussedCount, icon: CheckCircle2, activeColor: "purple" },
+    { tab: "DecisionPending", label: "Decision Pending", count: decisionPendingCount, icon: Clock, activeColor: "yellow" },
+    { tab: "Accepted", label: "Accepted", count: acceptedCount, icon: CheckCircle2, activeColor: "green" },
+    { tab: "Rejected", label: "Rejected", count: rejectedCount, icon: XCircle, activeColor: "red" },
+    { tab: "ProjectInitiated", label: "Project Initiated", count: initiatedCount, icon: TrendingUp, activeColor: "indigo" },
+    { tab: "ProjectCompleted", label: "Project Completed", count: completedCount, icon: CheckCircle2, activeColor: "green" },
   ];
 
   const filtered = useMemo(() => {
-    return filter === "All"
-      ? baseOffers
-      : filter === "PendingDiscuss"
-        ? baseOffers.filter((o) => (o.status === "Sent" || o.status === "Pending") && now - new Date(o.offer_date ?? 0).getTime() > TWO_DAYS_MS)
-        : baseOffers.filter((o) => o.status === filter);
-  }, [baseOffers, filter]);
+    if (filter === "All") return baseOffers;
+    if (filter === "PendingDiscuss") {
+      return baseOffers.filter((o) => (o.status === "Sent" || o.status === "Pending") && now - new Date(o.offer_date ?? 0).getTime() > TWO_DAYS_MS);
+    }
+    if (filter === "DecisionPending") {
+      return baseOffers.filter((o) => o.status === "Discussed" && o.discussed_date && now - new Date(o.discussed_date).getTime() >= SEVEN_DAYS_MS);
+    }
+    if (filter === "ProjectInitiated") {
+      return baseOffers.filter((o) => o.status === "Project initiated" || o.status === "Project Initiated");
+    }
+    if (filter === "ProjectCompleted") {
+      return baseOffers.filter((o) => o.status === "Project completed" || o.status === "Project Completed");
+    }
+    if (filter === "Discussed") {
+      return baseOffers.filter((o) => o.status === "Discussed" && (!o.discussed_date || now - new Date(o.discussed_date).getTime() < SEVEN_DAYS_MS));
+    }
+    return baseOffers.filter((o) => o.status === filter);
+  }, [baseOffers, filter, now, TWO_DAYS_MS, SEVEN_DAYS_MS]);
 
   return (
     <div className="w-full mx-auto pb-24" style={{ fontFamily: "'Outfit', sans-serif" }}>
