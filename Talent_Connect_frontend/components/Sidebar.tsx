@@ -321,7 +321,7 @@ export default function Sidebar({
       industry: "Industry Partner",
       dept_admin: "Department Admin",
     }[role || ""] || "User";
-
+  console.log("orgName >>", orgName)
   return (
     <>
       {/* Mobile Overlay */}
@@ -348,49 +348,6 @@ export default function Sidebar({
         )}
       >
 
-        {/* Search Section */}
-        <div className="p-4 border-b border-base-200 dark:border-base-800">
-          <div
-            className={clsx(
-              "relative flex items-center transition-all duration-300",
-              collapsed ? "w-10 h-10 mx-auto justify-center" : "w-full h-11",
-            )}
-          >
-            <div
-              className={clsx(
-                "transition-colors duration-300 z-10",
-                collapsed ? "" : "absolute left-3.5 top-1/2 -translate-y-1/2",
-                searchTerm ? "text-primary" : "text-base-content/40",
-              )}
-            >
-              <Search size={18} />
-
-            </div>
-            {!collapsed && (
-              <input
-                type="text"
-                placeholder="Search menu..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={clsx(
-                  "w-full h-full pl-11 pr-10 rounded-xl text-[13px] transition-all duration-300 font-medium",
-                  "bg-base-200/50 dark:bg-base-800/50 border-transparent",
-                  "focus:bg-white dark:focus:bg-base-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none",
-                  "placeholder:text-base-content/30",
-                )}
-              />
-            )}
-            {searchTerm && !collapsed && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-base-content/30 hover:text-base-content/60 transition-colors p-1"
-                aria-label="Clear search"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-        </div>
         {/* Mobile Close Button */}
         {isMobile && (
           <div className="flex items-center justify-end p-3 border-b border-base-200 dark:border-base-800 lg:hidden">
@@ -462,6 +419,49 @@ export default function Sidebar({
           </div>
         )}
 
+        {/* Search Section */}
+        <div className="p-4 border-b border-base-200 dark:border-base-800">
+          <div
+            className={clsx(
+              "relative flex items-center transition-all duration-300",
+              collapsed ? "w-10 h-10 mx-auto justify-center" : "w-full h-11",
+            )}
+          >
+            <div
+              className={clsx(
+                "transition-colors duration-300 z-10",
+                collapsed ? "" : "absolute left-3.5 top-1/2 -translate-y-1/2",
+                searchTerm ? "text-primary" : "text-base-content/40",
+              )}
+            >
+              <Search size={18} />
+
+            </div>
+            {!collapsed && (
+              <input
+                type="text"
+                placeholder="Search menu..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={clsx(
+                  "w-full h-full pl-11 pr-10 rounded-xl text-[13px] transition-all duration-300 font-medium",
+                  "bg-base-200/50 dark:bg-base-800/50 border-transparent",
+                  "focus:bg-white dark:focus:bg-base-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none",
+                  "placeholder:text-base-content/30",
+                )}
+              />
+            )}
+            {searchTerm && !collapsed && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-base-content/30 hover:text-base-content/60 transition-colors p-1"
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+        </div>
         {/* Navigation */}
         <nav className="flex-1 px-2 py-6 space-y-2.5 overflow-y-auto scrollbar-thin scrollbar-thumb-base-300 dark:scrollbar-thumb-base-700 scrollbar-track-transparent">
           {navItems.length > 0 ? (

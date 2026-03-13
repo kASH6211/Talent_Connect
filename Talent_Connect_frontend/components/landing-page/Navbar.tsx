@@ -50,6 +50,7 @@ const Navbar = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user, logout, role } = useAuth();
 
+
   const pathname = usePathname();
   const isActive = (to: string) => pathname === to;
 

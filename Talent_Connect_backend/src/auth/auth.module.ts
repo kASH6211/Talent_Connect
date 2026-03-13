@@ -11,10 +11,11 @@ import { Industry } from '../modules/industry/industry.entity';
 import { IndustryIdentifier } from '../modules/industry-identifier/industry-identifier.entity';
 import { IdentifierType } from '../modules/identifier-type/identifier-type.entity';
 import { LegalEntity } from '../modules/legal-entity/legal-entity.entity';
+import { Institute } from '../modules/institute/institute.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([User, Industry, IndustryIdentifier, IdentifierType, LegalEntity]),
+        TypeOrmModule.forFeature([User, Industry, IndustryIdentifier, IdentifierType, LegalEntity, Institute]),
         PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.registerAsync({
             imports: [ConfigModule],

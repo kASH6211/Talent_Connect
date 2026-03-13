@@ -2,8 +2,9 @@
 import { useState } from 'react';
 import CrudTable from '@/components/CrudTable';
 import CrudModal from '@/components/CrudModal';
+import AdminResetPasswordModal from '@/components/common/AdminResetPasswordModal';
 
-import { Upload } from 'lucide-react';
+import { Upload, Lock } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import api from '@/lib/api';
@@ -162,13 +163,58 @@ function ExcelUploadButton() {
 export default function Page() {
     const [modalOpen, setModalOpen] = useState(false);
     const [editData, setEditData] = useState<any>(null);
+
+    const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+    const [resetTarget, setResetTarget] = useState<any>(null);
+
     return (
         <>
-            <CrudTable title="Institutes" apiPath="institute" queryKey="institute" columns={COLUMNS} primaryKey="institute_id"
+            <CrudTable
+                title="Institutes"
+                apiPath="institute"
+                queryKey="institute"
+                columns={COLUMNS}
+                primaryKey="institute_id"
                 extraActions={<ExcelUploadButton />}
                 onAdd={() => { setEditData(null); setModalOpen(true); }}
-                onEdit={(r) => { setEditData(r); setModalOpen(true); }} />
-            {modalOpen && <CrudModal title="Institute" apiPath="institute" queryKey="institute" primaryKey="institute_id" fields={FIELDS} editData={editData} onClose={() => setModalOpen(false)} />}
+                onEdit={(r) => { setEditData(r); setModalOpen(true); }}
+                renderRowActions={(row) => (
+                    <button
+                        onClick={() => {
+                            setResetTarget(row);
+                            setResetPasswordOpen(true);
+                        }}
+                        className="relative inline-flex items-center justify-center w-8 h-8 rounded-lg text-base-content/70 hover:text-primary hover:bg-primary/8 transition-all duration-200 active:scale-95"
+                        title="Set Password"
+                    >
+                        <Lock size={16} strokeWidth={2.3} />
+                    </button>
+                )}
+            />
+
+            {modalOpen && (
+                <CrudModal
+                    title="Institute"
+                    apiPath="institute"
+                    queryKey="institute"
+                    primaryKey="institute_id"
+                    fields={FIELDS}
+                    editData={editData}
+                    onClose={() => setModalOpen(false)}
+                />
+            )}
+
+            {resetTarget && (
+                <AdminResetPasswordModal
+                    isOpen={resetPasswordOpen}
+                    onClose={() => {
+                        setResetPasswordOpen(false);
+                        setResetTarget(null);
+                    }}
+                    instituteId={resetTarget.institute_id}
+                    instituteName={resetTarget.institute_name}
+                />
+            )}
         </>
     );
 }

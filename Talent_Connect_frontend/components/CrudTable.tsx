@@ -56,6 +56,7 @@ interface CrudTableProps {
   onEdit: (row: any) => void;
   pagination?: boolean;
   extraActions?: React.ReactNode;
+  renderRowActions?: (row: any) => React.ReactNode;
   onDataFetched?: (data: any) => void;
   extraParams?: Record<string, any>;
 }
@@ -71,6 +72,7 @@ export default function CrudTable({
   onEdit,
   pagination = true,
   extraActions,
+  renderRowActions,
   onDataFetched,
   extraParams,
 }: CrudTableProps) {
@@ -177,6 +179,7 @@ export default function CrudTable({
             >
               <Trash2 size={15} />
             </button>
+            {renderRowActions && renderRowActions(row)}
             {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </div>
         </div>
@@ -411,6 +414,8 @@ export default function CrudTable({
                               >
                                 <Trash2 size={16} strokeWidth={2.3} />
                               </button>
+
+                              {renderRowActions && renderRowActions(row)}
                             </div>
                           </td>
                         </tr>
