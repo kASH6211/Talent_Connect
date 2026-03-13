@@ -48,14 +48,14 @@ const roles = [
   {
     name: "Student",
     icon: GraduationCap,
-    description: "Explore Opportunities",
+    description: "Coming Soon",
     color: "from-orange-500 to-amber-600",
     bg: "bg-orange-50",
   },
   {
     name: "Faculty",
     icon: BookOpen,
-    description: "Manage Academic Activities",
+    description: "Coming Soon",
     color: "from-purple-500 to-violet-600",
     bg: "bg-purple-50",
   },

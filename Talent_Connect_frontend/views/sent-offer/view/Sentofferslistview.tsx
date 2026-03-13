@@ -1301,7 +1301,7 @@ export default function SentOffersListView() {
               Application Tracker
             </h1>
             <p className="sol-page-sub text-gray-600 mt-1 text-sm">
-              Track every Expression of Interest you've sent to institutes.
+              Track every application  you've sent to institutes.
             </p>
           </div>
 
@@ -1668,7 +1668,7 @@ export default function SentOffersListView() {
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <h2 className="text-xl font-bold text-gray-900 leading-none">
-                    EOI Details
+                    Application Detials
                   </h2>
                   <span
                     style={{
@@ -1696,7 +1696,7 @@ export default function SentOffersListView() {
                     </span>
                     <span className="text-gray-300">|</span>
                     <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
-                      Discussed ({selectedOffer.discussed})
+                      Under Process ({selectedOffer.discussed})
                     </span>
                     <span className="text-gray-300">|</span>
                     <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase">

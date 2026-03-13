@@ -318,9 +318,9 @@ export default function Sidebar({
   const roleDisplay =
     {
       admin: "Administrator",
-      institute: "Institute Portal",
+      institute: "Institute ",
       industry: "Industry Partner",
-      dept_admin: "Department Admin",
+      dept_admin: "Department ",
     }[role || ""] || "User";
   console.log("orgName >>", orgName)
   return (

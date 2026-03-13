@@ -37,19 +37,19 @@ const institutes = [
   },
   {
     icon: GraduationCap,
-    name: "Engineering College",
+    name: "Engineering Colleges",
     gov: "Coming Soon",
     pvt: "Coming Soon",
   },
   {
     icon: HeartPulse,
-    name: "Medical College",
+    name: "Medical Colleges",
     gov: "Coming Soon",
     pvt: "Coming Soon",
   },
   {
     icon: Award,
-    name: "Professional Degree College",
+    name: "Professional Degree Colleges",
     gov: "Coming Soon",
     pvt: "Coming Soon",
   },

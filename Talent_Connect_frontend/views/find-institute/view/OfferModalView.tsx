@@ -450,7 +450,7 @@ export function OfferModalV2({
       if (!f.jobTitle.trim()) return "Job Role / Title is required";
       if (type === "Placement" && !f.natureOfEngagement) return "Nature of engagement is required";
       if (f.qualIds.length === 0) return "Qualification is required";
-      if (f.streamIds.length === 0) return "Course/Trade is required";
+      if (f.streamIds.length === 0) return "Branch/Trade is required";
       if (!f.numStudents.trim()) return "Number of students required is mandatory";
       if (!f.experience) return "Experience required is mandatory";
       if (!f.location.trim()) return "Location is required";
@@ -631,7 +631,7 @@ export function OfferModalV2({
                   {showConfirm ? "Confirm Submission" : "Connect with Institutes"}
                 </h2>
                 <p className="text-sm text-base-content/50 mt-0.5">
-                  {showConfirm ? "Please review the details before final submission" : "Submit an Expression of Interest to selected institutes"}
+                  {showConfirm ? "Please review the details before final submission" : "Submit your application to selected institutes"}
                 </p>
               </div>
             </div>
@@ -845,13 +845,13 @@ export function OfferModalV2({
               {/* Qualification */}
               <div>
                 <label className={fieldLabelCls}>Qualification <span className="text-error">*</span></label>
-                <MultiSelectDropdown label="Qualification" options={qualOptions} selected={forms[eoiType].qualIds}
+                <MultiSelectDropdown label="" options={qualOptions} selected={forms[eoiType].qualIds}
                   onChange={(vals) => handleFieldChange("qualIds", vals)} placeholder="Any qualification" disabledOptions={disabledQualIds} />
               </div>
 
               {/* Relevant Course */}
               <div>
-                <label className={fieldLabelCls}>Course / Trade <span className="text-error">*</span></label>
+                <label className={fieldLabelCls}>Branch / Trade <span className="text-error">*</span></label>
                 <div className="relative">
                   {loadingStreams && (
                     <div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
@@ -859,7 +859,7 @@ export function OfferModalV2({
                     </div>
                   )}
                   <MultiSelectDropdown
-                    label="Course / Trade"
+                    label=""
                     options={modalStreamOptions}
                     selected={modalStreamOptions
                       .filter((opt) => {
@@ -874,7 +874,7 @@ export function OfferModalV2({
                       );
                       handleFieldChange("streamIds", allIds);
                     }}
-                    placeholder={loadingStreams ? "Loading courses…" : "Any course"}
+                    placeholder={loadingStreams ? "Loading courses…" : "Any branch/trade"}
                   />
                 </div>
               </div>
@@ -957,8 +957,8 @@ export function OfferModalV2({
               {/* Duration */}
               <div>
                 <label className={fieldLabelCls}>
-                  Duration {(forms[eoiType].natureOfEngagement === "Contractual employment" || forms[eoiType].natureOfEngagement === "Apprenticeship") && <span className="text-error">*</span>}
-                  <span className="text-[10px] text-base-content/40 ml-1">(if applicable — for internships, OJT, dual system)</span>
+                  Duration in Months {(forms[eoiType].natureOfEngagement === "Contractual employment" || forms[eoiType].natureOfEngagement === "Apprenticeship") && <span className="text-error">*</span>}
+                  <span className="text-[10px] text-base-content/40 ml-1">(if applicable )</span>
                 </label>
                 <input type="text" value={forms[eoiType].duration} onChange={(e) => handleFieldChange("duration", e.target.value)}
                   placeholder="e.g. 6 months, 1 year" className={inputCls} />
@@ -984,11 +984,11 @@ export function OfferModalV2({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className={fieldLabelCls}>Preferred Qualification <span className="text-error">*</span></label>
-                  <MultiSelectDropdown label="Qualification" options={qualOptions} selected={forms[eoiType].prefQualIds}
+                  <MultiSelectDropdown label="" options={qualOptions} selected={forms[eoiType].prefQualIds}
                     onChange={(vals) => handleFieldChange("prefQualIds", vals)} placeholder="Select qualification" />
                 </div>
                 <div>
-                  <label className={fieldLabelCls}>Preferred Trade/Course <span className="text-error">*</span></label>
+                  <label className={fieldLabelCls}>Preferred Branch/Trade <span className="text-error">*</span></label>
                   <div className="relative">
                     {loadingStreams && (
                       <div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
@@ -996,7 +996,7 @@ export function OfferModalV2({
                       </div>
                     )}
                     <MultiSelectDropdown
-                      label="Trade/Course"
+                      label=""
                       options={modalStreamOptions}
                       selected={modalStreamOptions
                         .filter((opt) => {
@@ -1011,7 +1011,7 @@ export function OfferModalV2({
                         );
                         handleFieldChange("prefStreamIds", allIds);
                       }}
-                      placeholder={loadingStreams ? "Loading courses…" : "Select trade/course"}
+                      placeholder={loadingStreams ? "Loading courses…" : "Select Branch/Trade"}
                     />
                   </div>
                 </div>
@@ -1103,7 +1103,7 @@ export function OfferModalV2({
         {!showConfirm && (
           <div className="flex-shrink-0 flex items-center justify-between gap-4 px-6 py-4 border-t border-base-200 dark:border-base-800 bg-base-200/50 dark:bg-base-800/50">
             <p className="text-xs text-base-content/50 flex items-center gap-1.5 hidden sm:flex">
-              <Send size={12} /> EOI delivered instantly to selected institutes
+              <Send size={12} /> Application submitted instantly to selected institutes
             </p>
             <div className="flex items-center gap-2.5 ml-auto">
               <button
@@ -1121,7 +1121,7 @@ export function OfferModalV2({
                 {sending ? (
                   <><Loader2 size={15} className="animate-spin" /> Sending…</>
                 ) : (
-                  <><Send size={15} /> Send EOI to {isSelectAll ? "All" : selectedIds.length}</>
+                  <><Send size={15} /> Send  to {isSelectAll ? "All" : selectedIds.length}</>
                 )}
               </button>
             </div>

@@ -504,7 +504,7 @@ export default function FindInstitutesPage() {
 
               <div className="flex-1 w-full space-y-1.5 text-left">
                 <label className="text-xs font-bold text-primary ml-2 mb-1.5 tracking-wide block">
-                  Specialization
+                  Branch / Trade
                 </label>
                 <MultiSelectDropdown
                   label=""
@@ -523,7 +523,7 @@ export default function FindInstitutesPage() {
                     setFilter("stream_ids")(allIds);
                     setCurrentPage(1);
                   }}
-                  placeholder="All Specializations"
+                  placeholder="All Branches/Trades"
                   buttonClassName="bg-base-200 border-slate-200 text-slate-600 placeholder:text-slate-500 h-10 rounded-xl hover:bg-base-300 transition-all text-xs focus:ring-1 focus:ring-primary/30"
                 />
               </div>
