@@ -236,6 +236,14 @@ export function OfferModalV2({
   const [error, setError] = useState("");
   const [showAllInstitutes, setShowAllInstitutes] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const initialLoadRef = useState<Record<EoiType, boolean>>({
+    "Placement": true,
+    "Industrial Training": true,
+    "Collaboration": true,
+  })[0];
+
+  const [modalStreamOptions, setModalStreamOptions] = useState<Option[]>([]);
+  const [loadingStreams, setLoadingStreams] = useState(false);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -259,6 +267,8 @@ export function OfferModalV2({
               streamIds: prefilledStreamIds
             };
           }
+          // Mark as initial load so we don't clear these on first effect run
+          initialLoadRef[t] = true;
         });
 
         return next;
@@ -293,6 +303,99 @@ export function OfferModalV2({
     }
   }, [isOpen]);
 
+  // Cascading logic for streams inside the modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const loadModalStreams = async () => {
+      setLoadingStreams(true);
+      try {
+        // Let's just use the current tab's qualifications.
+        const currentTabQuals = eoiType ? (eoiType === "Collaboration" ? forms[eoiType].prefQualIds : forms[eoiType].qualIds) : [];
+
+        // 1. Get streams currently in use by institutes
+        const inUseRes = await api.get("/institute-qualification-mapping/streams-in-use");
+        const inUseData = Array.isArray(inUseRes.data) ? inUseRes.data : inUseRes.data?.data || [];
+        const inUseIds = new Set(inUseData.map((s: any) => s.stream_branch_Id));
+
+        let finalOptions: Option[] = [];
+
+        // 2. Filter if a qualification is selected
+        if (currentTabQuals.length > 0) {
+          const masterStreamsMap = new Map<string, number[]>();
+          const streamPromises = currentTabQuals.map((id: any) =>
+            api.get(`/stream-branch?qualification_id=${id}`),
+          );
+
+          try {
+            const streamResponses = await Promise.all(streamPromises);
+
+            streamResponses.forEach((res) => {
+              const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+              data.forEach((s: any) => {
+                const ids = masterStreamsMap.get(s.stream_branch_name) || [];
+                if (!ids.includes(s.stream_branch_Id)) {
+                  ids.push(s.stream_branch_Id);
+                }
+                masterStreamsMap.set(s.stream_branch_name, ids);
+              });
+            });
+
+            const sortedNames = Array.from(masterStreamsMap.keys()).sort();
+            sortedNames.forEach((name) => {
+              const ids = masterStreamsMap.get(name)!;
+              const validIdsInPortal = ids.filter((id) => inUseIds.has(id));
+              if (validIdsInPortal.length > 0) {
+                const groupedValue = validIdsInPortal.join(",");
+                finalOptions.push({ value: groupedValue, label: name });
+              }
+            });
+          } catch (err) {
+            console.error("Error fetching streams for qualifications:", err);
+          }
+        } else {
+          // 3. If no qualification selected, just show all streams in use
+          const masterStreamsMap = new Map<string, number[]>();
+          inUseData.forEach((s: any) => {
+            const ids = masterStreamsMap.get(s.stream_branch_name) || [];
+            if (!ids.includes(s.stream_branch_Id)) {
+              ids.push(s.stream_branch_Id);
+            }
+            masterStreamsMap.set(s.stream_branch_name, ids);
+          });
+
+          const sortedNames = Array.from(masterStreamsMap.keys()).sort();
+          sortedNames.forEach((name) => {
+            const ids = masterStreamsMap.get(name)!;
+            const groupedValue = ids.join(",");
+            finalOptions.push({ value: groupedValue, label: name });
+          });
+        }
+
+        setModalStreamOptions(finalOptions);
+      } catch (error) {
+        console.error("Failed to load modal streams:", error);
+      } finally {
+        setLoadingStreams(false);
+      }
+    };
+
+    loadModalStreams();
+  }, [isOpen, eoiType, eoiType ? (eoiType === "Collaboration" ? forms[eoiType].prefQualIds.join(",") : forms[eoiType].qualIds.join(",")) : ""]);
+
+  // Reset streams when qualifications change (to avoid stale/invalid selections)
+  useEffect(() => {
+    if (!isOpen || !eoiType) return;
+
+    if (initialLoadRef[eoiType]) {
+      initialLoadRef[eoiType] = false;
+      return;
+    }
+
+    // Reset streams when qualification changes inside the tab
+    handleFieldChange("streamIds", []);
+  }, [eoiType ? (eoiType === "Collaboration" ? forms[eoiType].prefQualIds.join(",") : forms[eoiType].qualIds.join(",")) : ""]);
+
   const handleClose = () => {
     setVisible(false);
     setTimeout(() => {
@@ -324,11 +427,13 @@ export function OfferModalV2({
     const f = forms[type];
 
     // Contact details are always required
-    if (!f.contactName.trim()) return "Contact person name is required";
-    if (!f.contactEmail.trim()) return "Contact person email is required";
-    // Email regex check
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(f.contactEmail.trim())) return "Please enter a valid email address";
+    // Contact details: Only phone is strictly required for now as requested
+    // if (!f.contactName.trim()) return "Contact person name is required";
+    if (f.contactEmail.trim()) {
+      // Email regex check if provided
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(f.contactEmail.trim())) return "Please enter a valid email address";
+    }
 
     if (!f.contactPhone.trim()) return "Contact person phone is required";
     // Phone regex check (10 digits)
@@ -747,24 +852,31 @@ export function OfferModalV2({
               {/* Relevant Course */}
               <div>
                 <label className={fieldLabelCls}>Course / Trade <span className="text-error">*</span></label>
-                <MultiSelectDropdown
-                  label="Course / Trade"
-                  options={streamOptions}
-                  selected={streamOptions
-                    .filter((opt) => {
-                      const val = String(opt.value || "");
-                      const ids = val.split(",").map(Number);
-                      return ids.every((id) => forms[eoiType].streamIds.includes(id as any));
-                    })
-                    .map((opt) => opt.value)}
-                  onChange={(vals) => {
-                    const allIds = (vals as string[]).flatMap((v) =>
-                      String(v || "").split(",").map(Number),
-                    );
-                    handleFieldChange("streamIds", allIds);
-                  }}
-                  placeholder="Any course"
-                />
+                <div className="relative">
+                  {loadingStreams && (
+                    <div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
+                      <Loader2 size={14} className="animate-spin text-primary" />
+                    </div>
+                  )}
+                  <MultiSelectDropdown
+                    label="Course / Trade"
+                    options={modalStreamOptions}
+                    selected={modalStreamOptions
+                      .filter((opt) => {
+                        const val = String(opt.value || "");
+                        const ids = val.split(",").map(Number);
+                        return ids.every((id) => forms[eoiType].streamIds.includes(id as any));
+                      })
+                      .map((opt) => opt.value)}
+                    onChange={(vals) => {
+                      const allIds = (vals as string[]).flatMap((v) =>
+                        String(v || "").split(",").map(Number),
+                      );
+                      handleFieldChange("streamIds", allIds);
+                    }}
+                    placeholder={loadingStreams ? "Loading courses…" : "Any course"}
+                  />
+                </div>
               </div>
 
               {/* Students required + Experience */}
@@ -877,24 +989,31 @@ export function OfferModalV2({
                 </div>
                 <div>
                   <label className={fieldLabelCls}>Preferred Trade/Course <span className="text-error">*</span></label>
-                  <MultiSelectDropdown
-                    label="Trade/Course"
-                    options={streamOptions}
-                    selected={streamOptions
-                      .filter((opt) => {
-                        const val = String(opt.value || "");
-                        const ids = val.split(",").map(Number);
-                        return ids.every((id) => forms[eoiType].prefStreamIds.includes(id as any));
-                      })
-                      .map((opt) => opt.value)}
-                    onChange={(vals) => {
-                      const allIds = (vals as string[]).flatMap((v) =>
-                        String(v || "").split(",").map(Number),
-                      );
-                      handleFieldChange("prefStreamIds", allIds);
-                    }}
-                    placeholder="Select trade/course"
-                  />
+                  <div className="relative">
+                    {loadingStreams && (
+                      <div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
+                        <Loader2 size={14} className="animate-spin text-primary" />
+                      </div>
+                    )}
+                    <MultiSelectDropdown
+                      label="Trade/Course"
+                      options={modalStreamOptions}
+                      selected={modalStreamOptions
+                        .filter((opt) => {
+                          const val = String(opt.value || "");
+                          const ids = val.split(",").map(Number);
+                          return ids.every((id) => forms[eoiType].prefStreamIds.includes(id as any));
+                        })
+                        .map((opt) => opt.value)}
+                      onChange={(vals) => {
+                        const allIds = (vals as string[]).flatMap((v) =>
+                          String(v || "").split(",").map(Number),
+                        );
+                        handleFieldChange("prefStreamIds", allIds);
+                      }}
+                      placeholder={loadingStreams ? "Loading courses…" : "Select trade/course"}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -927,12 +1046,12 @@ export function OfferModalV2({
               <p className={sectionLabelCls}>Contact Person Details</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className={fieldLabelCls}>Name <span className="text-error">*</span></label>
+                  <label className={fieldLabelCls}>Name</label>
                   <input type="text" value={forms[eoiType].contactName} onChange={(e) => handleFieldChange("contactName", e.target.value)}
                     placeholder="Full Name" className={inputCls} />
                 </div>
                 <div>
-                  <label className={fieldLabelCls}>Email <span className="text-error">*</span></label>
+                  <label className={fieldLabelCls}>Email</label>
                   <input type="email" value={forms[eoiType].contactEmail} onChange={(e) => handleFieldChange("contactEmail", e.target.value)}
                     placeholder="email@example.com" className={inputCls} />
                 </div>

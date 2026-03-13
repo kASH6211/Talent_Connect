@@ -137,49 +137,84 @@ export default function MultiSelectDropdown({
                 No results
               </div>
             ) : (
-              filtered.map((opt) => {
-                const checked = selected.includes(opt.value);
-                const disabled = disabledOptions.includes(opt.value);
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => !disabled && toggle(opt.value)}
-                    disabled={disabled}
+              <>
+                {/* Select All Toggle */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const allSelected = filtered.every((o) => selected.includes(o.value));
+                    if (allSelected) {
+                      const filteredValues = new Set(filtered.map((o) => o.value));
+                      onChange(selected.filter((v) => !filteredValues.has(v)));
+                    } else {
+                      const newSelected = [...selected];
+                      filtered.forEach((o) => {
+                        if (!newSelected.includes(o.value)) newSelected.push(o.value);
+                      });
+                      onChange(newSelected);
+                    }
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors border-b border-base-300 bg-base-300/30 hover:bg-base-300"
+                >
+                  <span
                     className={clsx(
-                      "w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors",
-                      disabled
-                        ? "opacity-50 cursor-not-allowed"
-                        : checked
-                          ? "bg-primary/10 text-slate-900 font-semibold"
-                          : "text-slate-700 hover:bg-base-300",
+                      "w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all",
+                      filtered.every((o) => selected.includes(o.value))
+                        ? "bg-primary border-primary"
+                        : "border-base-content/30",
                     )}
                   >
-                    <span
+                    {filtered.every((o) => selected.includes(o.value)) && (
+                      <Check size={10} className="text-primary-content" />
+                    )}
+                  </span>
+                  <span className="font-bold text-primary">Select All</span>
+                </button>
+
+                {filtered.map((opt) => {
+                  const checked = selected.includes(opt.value);
+                  const disabled = disabledOptions.includes(opt.value);
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => !disabled && toggle(opt.value)}
+                      disabled={disabled}
                       className={clsx(
-                        "w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all",
+                        "w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors",
                         disabled
-                          ? "border-base-content/20"
+                          ? "opacity-50 cursor-not-allowed"
                           : checked
-                            ? "bg-primary border-primary"
-                            : "border-base-content/30",
+                            ? "bg-primary/10 text-slate-900 font-semibold"
+                            : "text-slate-700 hover:bg-base-300",
                       )}
                     >
-                      {checked && (
-                        <Check
-                          size={10}
-                          className={clsx(
-                            disabled
-                              ? "text-base-content/40"
-                              : "text-primary-content",
-                          )}
-                        />
-                      )}
-                    </span>
-                    {opt.label}
-                  </button>
-                );
-              })
+                      <span
+                        className={clsx(
+                          "w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all",
+                          disabled
+                            ? "border-base-content/20"
+                            : checked
+                              ? "bg-primary border-primary"
+                              : "border-base-content/30",
+                        )}
+                      >
+                        {checked && (
+                          <Check
+                            size={10}
+                            className={clsx(
+                              disabled
+                                ? "text-base-content/40"
+                                : "text-primary-content",
+                            )}
+                          />
+                        )}
+                      </span>
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </>
             )}
           </div>
           {count > 0 && (
