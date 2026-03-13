@@ -403,12 +403,23 @@ export default function Sidebar({
 
                 {/* Username */}
                 {user.username && (
-                  <p
-                    className="text-xs text-base-content/60 font-medium truncate leading-tight"
-                    title={user.username}
-                  >
-                    @{user.username}
-                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p
+                      className="text-xs text-base-content/60 font-medium truncate leading-tight"
+                      title={user.username}
+                    >
+                      @{user.username}
+                    </p>
+                    {isMobile && (
+
+                      <button
+                        onClick={() => setMobileSidebarOpen(false)}
+                        className="w-9 h-9 flex items-center justify-center rounded-lg bg-base-200 dark:bg-base-800 hover:bg-base-300 dark:hover:bg-base-700 transition"
+                      >
+                        <X size={18} />
+                      </button>
+                    )}
+                  </div>
                 )}
 
                 {/* Role in subtle grey pill/box */}
