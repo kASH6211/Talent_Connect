@@ -351,7 +351,7 @@ export default function Sidebar({
 
         {/* Mobile Close Button */}
         {isMobile && (
-          <div className="flex items-center justify-end p-3 border-b border-base-200 dark:border-base-800 lg:hidden">
+          <div className="d-hidden flex items-center justify-end p-3 border-b border-base-200 dark:border-base-800 lg:hidden">
             <button
               onClick={() => setMobileSidebarOpen(false)}
               className="w-9 h-9 flex items-center justify-center rounded-lg bg-base-200 dark:bg-base-800 hover:bg-base-300 dark:hover:bg-base-700 transition"
