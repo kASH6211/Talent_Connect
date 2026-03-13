@@ -1035,7 +1035,7 @@ export default function FindInstitutesPage() {
                         </div>
                       </div> */}
 
-                      <div className="w-full h-[350px] rounded-lg overflow-hidden border border-slate-200 shadow-inner bg-slate-100">
+                      <div className="relative z-0 w-full h-[350px] rounded-lg overflow-hidden border border-slate-200 shadow-inner bg-slate-100">
                         <MapContainer
                           center={userLocation || [31.1471, 75.3412]}
                           zoom={userLocation ? 14 : 7}
