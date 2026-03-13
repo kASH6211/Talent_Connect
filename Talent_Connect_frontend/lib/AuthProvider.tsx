@@ -6,6 +6,7 @@ interface User {
   id: number;
   username: string;
   role: string;
+  is_passwordchanged: string;
   [key: string]: any;
 }
 
@@ -49,6 +50,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           role: decoded.role,
           industry_id: decoded.industry_id,
           institute_id: decoded.institute_id,
+          is_passwordchanged: decoded.is_passwordchanged || 'Y',
         };
 
         login(ssoUser, urlToken);
@@ -70,6 +72,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     setLoading(false);
   }, []);
+
+  /* 
+  useEffect(() => {
+    if (!loading && user && user.is_passwordchanged === 'N') {
+      const path = window.location.pathname;
+      if (path !== '/change-password' && path !== '/login' && path !== '/') {
+        router.replace('/change-password');
+      }
+    }
+  }, [user, loading, router]);
+  */
 
   const login = (user: User, token: string) => {
     localStorage.setItem("tc_token", token);

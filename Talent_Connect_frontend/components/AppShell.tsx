@@ -9,6 +9,7 @@ import RoleSelectModal from "./landing-page/RoleSelectModal";
 import Navbar from "./landing-page/Navbar";
 import LoginModal from "./LoginModal";
 import LoginPromptModal from "./common/LoginPromptModal";
+import ChangePasswordModal from "./common/ChangePasswordModal";
 import GlobalConfirmModal from "./common/ConfirmDialogHOC";
 import FastTrackOverlay from "./common/FastTrackOverlay";
 import { useDispatch, useSelector } from "react-redux";
@@ -48,12 +49,12 @@ export default function AppShell({
   }, []);
 
   useEffect(() => {
-    if (user?.institute_id && role === "institute") {
+    if (user?.institute_id && role === "institute" && user.is_passwordchanged === 'Y') {
       api
         .get(`/institute/${user.institute_id}`)
         .then((res) => setOrgName(res.data?.institute_name))
         .catch(console.error);
-    } else if (user?.industry_id && role === "industry") {
+    } else if (user?.industry_id && role === "industry" && user.is_passwordchanged === 'Y') {
       api
         .get(`/industry/${user.industry_id}`)
         .then((res) => setOrgName(res.data?.industry_name))
@@ -151,6 +152,11 @@ export default function AppShell({
                     onClose={() => dispatch(updateLoginUi({ authPrompt: { open: false } }))}
                   />
                 )}
+                <ChangePasswordModal
+                  isOpen={user?.is_passwordchanged === 'N' && role !== 'industry'}
+                  onClose={() => { }}
+                  forced={true}
+                />
               </main>
             </>
           ) : (
@@ -169,6 +175,11 @@ export default function AppShell({
                   onClose={() => dispatch(updateLoginUi({ authPrompt: { open: false } }))}
                 />
               )}
+              <ChangePasswordModal
+                isOpen={user?.is_passwordchanged === 'N' && role !== 'industry'}
+                onClose={() => { }}
+                forced={true}
+              />
             </div>
           )}
         </div>

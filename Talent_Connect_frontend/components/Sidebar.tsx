@@ -264,12 +264,12 @@ export default function Sidebar({
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    if (user?.institute_id && role === "institute") {
+    if (user?.institute_id && role === "institute" && user.is_passwordchanged === 'Y') {
       api
         .get(`/institute/${user.institute_id}`)
         .then((res) => setOrgName(res.data?.institute_name))
         .catch(console.error);
-    } else if (user?.industry_id && role === "industry") {
+    } else if (user?.industry_id && role === "industry" && user.is_passwordchanged === 'Y') {
       api
         .get(`/industry/${user.industry_id}`)
         .then((res) => setOrgName(res.data?.industry_name))

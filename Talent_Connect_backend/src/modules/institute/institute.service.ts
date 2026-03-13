@@ -479,9 +479,9 @@ export class InstituteService {
         } else {
           await this.dataSource.query(
             `INSERT INTO "users" (
-              username, email, password_hash, role, institute_id, is_active, created_date
+              username, email, password_hash, role, institute_id, is_active, is_passwordchanged, created_date
             ) VALUES (
-              $1, $2, $3, 'institute', $4, 'Y', $5
+              $1, $2, $3, 'institute', $4, 'Y', 'N', $5
             )`,
             [newUsername, contactEmail, passwordHash, insertedInstituteId, now]
           );

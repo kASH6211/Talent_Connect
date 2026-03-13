@@ -31,7 +31,11 @@ export default function LoginPage() {
 
       login(res.data.user, res.data.access_token);
 
-      router.replace(getDashboardRoute(res.data.user.role));
+      if (res.data.user.is_passwordchanged === 'N') {
+        router.replace('/change-password');
+      } else {
+        router.replace(getDashboardRoute(res.data.user.role));
+      }
     } catch (err: any) {
       setError(err?.response?.data?.message || "Invalid username or password");
     } finally {

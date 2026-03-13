@@ -42,6 +42,7 @@ export class AuthService {
             email: dto.email,
             password_hash,
             role: dto.role || 'admin',
+            is_passwordchanged: 'Y',
             created_date: new Date().toISOString(),
         });
         const saved = await this.userRepo.save(user);
@@ -192,6 +193,7 @@ export class AuthService {
                 password_hash: password_hash,
                 role: 'industry',
                 industry_id: targetIndustryId,
+                is_passwordchanged: 'Y',
                 created_date: new Date().toISOString(),
             });
             user = await this.userRepo.save(newUser);
@@ -213,7 +215,7 @@ export class AuthService {
         if (!valid) throw new UnauthorizedException('Invalid current password');
 
         const password_hash = await bcrypt.hash(newPass, 10);
-        await this.userRepo.update(userId, { password_hash });
+        await this.userRepo.update(userId, { password_hash, is_passwordchanged: 'Y' });
         return { message: 'Password changed successfully' };
     }
 
@@ -224,7 +226,7 @@ export class AuthService {
 
         if (user) {
             console.log(`[AuthService] Found existing user: ${user.username} (ID: ${user.id}). Updating password hash.`);
-            await this.userRepo.update(user.id, { password_hash });
+            await this.userRepo.update(user.id, { password_hash, is_passwordchanged: 'N' });
             return { message: `Password for user '${user.username}' updated successfully` };
         } else {
             // Create user if it doesn't exist
@@ -257,6 +259,7 @@ export class AuthService {
             role: user.role,
             industry_id: user.industry_id ?? null,
             institute_id: user.institute_id ?? null,
+            is_passwordchanged: user.is_passwordchanged,
         };
         return {
             access_token: this.jwtService.sign(payload),
@@ -267,6 +270,7 @@ export class AuthService {
                 role: user.role,
                 industry_id: user.industry_id ?? null,
                 institute_id: user.institute_id ?? null,
+                is_passwordchanged: user.is_passwordchanged,
             },
         };
     }

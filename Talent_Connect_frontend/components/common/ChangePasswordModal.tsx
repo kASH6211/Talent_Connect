@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Lock, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { X, Lock, Loader2, CheckCircle2, AlertCircle, LogOut } from "lucide-react";
 import api from "@/lib/api";
 import { globalNotify } from "@/lib/notification";
 import { useAuth } from "@/lib/AuthProvider";
@@ -9,9 +9,10 @@ import { useAuth } from "@/lib/AuthProvider";
 interface ChangePasswordModalProps {
     isOpen: boolean;
     onClose: () => void;
+    forced?: boolean;
 }
 
-export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProps) {
+export default function ChangePasswordModal({ isOpen, onClose, forced = false }: ChangePasswordModalProps) {
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -53,6 +54,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
     };
 
     const handleClose = () => {
+        if (forced) return;
         setOldPassword("");
         setNewPassword("");
         setConfirmPassword("");
@@ -82,16 +84,18 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                                 Change Password
                             </h3>
                             <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest opacity-80">
-                                Secure your account
+                                {forced ? "Action Required" : "Secure your account"}
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={handleClose}
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-slate-300 hover:bg-slate-50 hover:text-slate-900 transition-all duration-300 active:scale-75"
-                    >
-                        <X size={20} strokeWidth={3} />
-                    </button>
+                    {!forced && (
+                        <button
+                            onClick={handleClose}
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-slate-300 hover:bg-slate-50 hover:text-slate-900 transition-all duration-300 active:scale-75"
+                        >
+                            <X size={20} strokeWidth={3} />
+                        </button>
+                    )}
                 </div>
 
                 {/* Form Body */}
@@ -112,6 +116,13 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                                 <div className="p-4 rounded-2xl bg-red-50/50 border border-red-100 text-red-500 text-[11px] font-black flex items-center gap-3 animate-in slide-in-from-top-2 duration-300 uppercase tracking-wider">
                                     <AlertCircle size={16} className="shrink-0" />
                                     {error}
+                                </div>
+                            )}
+
+                            {forced && (
+                                <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-100 text-amber-600 text-[10px] font-black flex items-start gap-3 animate-in fade-in duration-500 uppercase tracking-wider leading-relaxed">
+                                    <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                                    <span>For security reasons, you must change your initial password before continuing.</span>
                                 </div>
                             )}
 
@@ -170,28 +181,43 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="pt-4 flex gap-4">
-                                <button
-                                    type="button"
-                                    onClick={handleClose}
-                                    className="flex-1 h-14 rounded-2xl bg-slate-50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all duration-300 active:scale-95"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="flex-[2] h-14 rounded-2xl bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:brightness-110 active:scale-95 transition-all duration-500 disabled:opacity-50 disabled:grayscale"
-                                >
-                                    {loading ? (
-                                        <div className="flex items-center justify-center gap-2">
-                                            <Loader2 size={16} className="animate-spin" />
-                                            Updating
-                                        </div>
-                                    ) : (
-                                        "Update Password"
+                            <div className="pt-4 flex flex-col gap-3">
+                                <div className="flex gap-4">
+                                    {!forced && (
+                                        <button
+                                            type="button"
+                                            onClick={handleClose}
+                                            className="flex-1 h-14 rounded-2xl bg-slate-50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all duration-300 active:scale-95"
+                                        >
+                                            Cancel
+                                        </button>
                                     )}
-                                </button>
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className={`h-14 rounded-2xl bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:brightness-110 active:scale-95 transition-all duration-500 disabled:opacity-50 disabled:grayscale ${forced ? 'w-full' : 'flex-[2]'}`}
+                                    >
+                                        {loading ? (
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Loader2 size={16} className="animate-spin" />
+                                                Updating
+                                            </div>
+                                        ) : (
+                                            "Update Password"
+                                        )}
+                                    </button>
+                                </div>
+
+                                {forced && (
+                                    <button
+                                        type="button"
+                                        onClick={() => logout()}
+                                        className="w-full h-12 rounded-2xl bg-red-50 text-[9px] font-black uppercase tracking-[0.2em] text-red-500 hover:bg-red-100 transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
+                                    >
+                                        <LogOut size={14} />
+                                        Logout from session
+                                    </button>
+                                )}
                             </div>
                         </form>
                     )}

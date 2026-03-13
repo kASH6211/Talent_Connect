@@ -34,6 +34,9 @@ export class User {
     @Column({ type: 'varchar', length: 1, default: 'Y' })
     is_active: string;
 
+    @Column({ type: 'char', length: 1, default: 'N' })
+    is_passwordchanged: string;
+
     @Column({ type: 'varchar', length: 50, nullable: true })
     created_date: string;
 }
