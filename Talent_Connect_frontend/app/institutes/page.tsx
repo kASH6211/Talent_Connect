@@ -11,8 +11,8 @@ import api from '@/lib/api';
 const COLUMNS = [
     { key: 'sn', label: 'S.No', render: (_: any, __: any, i: number) => i },
     { key: 'institute_id', label: 'ID' },
-    { key: 'institute_name', label: 'Name' },
-    { key: 'address', label: 'Address' },
+    { key: 'institute_name', label: 'Name', wrap: true },
+    { key: 'address', label: 'Address', wrap: true },
     { key: 'is_active', label: 'Status' },
 ];
 

@@ -42,6 +42,7 @@ export interface ColumnDef {
   key: string;
   label: string;
   render?: (val: any, row: any, index: number) => React.ReactNode;
+  wrap?: boolean;
 }
 
 interface CrudTableProps {
@@ -326,7 +327,10 @@ export default function CrudTable({
                       {columns.map((c) => (
                         <th
                           key={c.key}
-                          className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-base-content/70"
+                          className={clsx(
+                            "px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-base-content/70",
+                            c.wrap ? "min-w-[200px]" : "whitespace-nowrap"
+                          )}
                         >
                           {c.label}
                         </th>
@@ -355,7 +359,10 @@ export default function CrudTable({
                           {columns.map((c) => (
                             <td
                               key={c.key}
-                              className="px-3 py-2.5 whitespace-nowrap text-base-content/90"
+                              className={clsx(
+                                "px-3 py-2.5 text-base-content/90",
+                                !c.wrap && "whitespace-nowrap"
+                              )}
                             >
                               {c.render ? (
                                 c.render(row[c.key], row, (page - 1) * limit + i + 1)
@@ -371,7 +378,7 @@ export default function CrudTable({
                                   {row[c.key] === "Y" ? "Active" : "Inactive"}
                                 </span>
                               ) : (
-                                <span className="truncate max-w-[280px] inline-block align-middle">
+                                <span className={clsx("inline-block align-middle", !c.wrap && "truncate max-w-[280px]")}>
                                   {String(row[c.key] ?? "—")}
                                 </span>
                               )}

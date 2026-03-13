@@ -202,6 +202,18 @@ export class AuthService {
         return this.userRepo.findOne({ where: { id: payload.sub, is_active: 'Y' } });
     }
 
+    async changePassword(userId: number, oldPass: string, newPass: string) {
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+        if (!user) throw new UnauthorizedException('User not found');
+
+        const valid = await bcrypt.compare(oldPass, user.password_hash);
+        if (!valid) throw new UnauthorizedException('Invalid current password');
+
+        const password_hash = await bcrypt.hash(newPass, 10);
+        await this.userRepo.update(userId, { password_hash });
+        return { message: 'Password changed successfully' };
+    }
+
     private signToken(user: User) {
         const payload = {
             sub: user.id,

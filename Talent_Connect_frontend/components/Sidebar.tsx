@@ -24,11 +24,14 @@ import {
   AppWindow,
   Building,
   UserPen,
+  Lock,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { clsx } from "clsx";
 import api from "@/lib/api";
 import { useAuth } from "@/lib/AuthProvider";
+import ChangePasswordModal from "./common/ChangePasswordModal";
+import { globalNotify } from "@/lib/notification";
 
 
 
@@ -308,6 +311,8 @@ export default function Sidebar({
 
   const navItems = filterNavItems(rawNavItems, searchTerm);
 
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+
   // Simple role display (plain text)
   const roleDisplay =
     {
@@ -499,6 +504,50 @@ export default function Sidebar({
 
         {/* Bottom Controls */}
         <div className="p-2 border-t border-base-200 dark:border-base-800 bg-base-50 dark:bg-base-950/50 space-y-2">
+          {/* {!collapsed && (
+            <div className={clsx("grid gap-2", role !== "industry" ? "grid-cols-2" : "grid-cols-1")}>
+              {role !== "industry" && (
+                <button
+                  onClick={() => setIsChangePasswordOpen(true)}
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-white dark:bg-base-900 border border-base-200 dark:border-base-800 hover:bg-primary/5 hover:border-primary/30 transition-all text-[11px] font-bold uppercase tracking-wider text-base-content/70"
+                  title="Change Password"
+                >
+                  <Lock size={14} className="text-primary" />
+                  Password
+                </button>
+              )}
+              <button
+                onClick={logout}
+                className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/20 transition-all text-[11px] font-bold uppercase tracking-wider text-red-600"
+                title="Log out"
+              >
+                <LogOut size={14} />
+                Logout
+              </button>
+            </div>
+          )} */}
+
+          {/* {collapsed && (
+            <>
+              {role !== "industry" && (
+                <button
+                  onClick={() => setIsChangePasswordOpen(true)}
+                  className="w-full h-10 flex items-center justify-center rounded-lg bg-white dark:bg-base-900 border border-base-200 dark:border-base-800 hover:bg-primary/5 hover:border-primary/30 transition-all"
+                  title="Change Password"
+                >
+                  <Lock size={18} className="text-primary" />
+                </button>
+              )}
+              <button
+                onClick={logout}
+                className="w-full h-10 flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/20 transition-all"
+                title="Log out"
+              >
+                <LogOut size={18} className="text-red-500" />
+              </button>
+            </>
+          )} */}
+
           <button
             onClick={() => setCollapsed(!collapsed)}
             title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
@@ -529,6 +578,10 @@ export default function Sidebar({
             </div>
           </button>
         </div>
+        <ChangePasswordModal
+          isOpen={isChangePasswordOpen}
+          onClose={() => setIsChangePasswordOpen(false)}
+        />
       </aside>
     </>
   );
