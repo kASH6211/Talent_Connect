@@ -691,11 +691,14 @@ export default function FindInstitutesPage() {
                           <thead>
                             <tr className="bg-slate-100 border-b-2 border-slate-200">
                               {user?.role !== "dept_admin" && (
-                                <th className="px-4 py-3 w-10">
+                                <th className="sticky left-0 z-10 bg-slate-100 px-4 py-3 w-10">
                                   {/* Redundant select all removed, exists in summary bar */}
                                 </th>
                               )}
-                              <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                              <th className={clsx(
+                                "sticky z-10 bg-slate-100 px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider",
+                                user?.role !== "dept_admin" ? "left-10" : "left-0"
+                              )}>
                                 Institute Name
                               </th>
                               <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -725,41 +728,38 @@ export default function FindInstitutesPage() {
                                   key={inst.institute_id}
                                   className={clsx(
                                     "transition-colors cursor-pointer",
-                                    isSelected
-                                      ? "bg-blue-50"
-                                      : "hover:bg-slate-50",
+                                    isSelected ? "bg-blue-50" : "hover:bg-slate-50",
                                   )}
                                 >
                                   {user?.role !== "dept_admin" && (
-                                    <td className="px-4 py-3 text-center">
+                                    <td className={clsx(
+                                      "sticky left-0 z-10 px-4 py-3 text-center",
+                                      isSelected ? "bg-blue-50" : "bg-white"
+                                    )}>
                                       <button
-                                        onClick={() =>
-                                          toggleSelect(inst.institute_id)
-                                        }
+                                        onClick={() => toggleSelect(inst.institute_id)}
                                         className="w-5 h-5 rounded-md border border-slate-300 flex items-center justify-center mx-auto transition-all"
                                       >
                                         {isSelected ? (
-                                          <CheckSquare
-                                            size={14}
-                                            className="text-blue-600"
-                                          />
+                                          <CheckSquare size={14} className="text-blue-600" />
                                         ) : (
                                           <Square size={14} />
                                         )}
                                       </button>
                                     </td>
                                   )}
-                                  <td className="px-4 py-3">
+                                  <td className={clsx(
+                                    "sticky z-10 px-4 py-3",
+                                    user?.role !== "dept_admin" ? "left-10" : "left-0",
+                                    isSelected ? "bg-blue-50" : "bg-white"
+                                  )}>
                                     <span className="text-sm font-semibold text-slate-900">
                                       {inst.institute_name}
                                     </span>
                                   </td>
                                   <td className="px-4 py-3">
                                     <span className="flex items-center gap-1.5 text-sm text-slate-700">
-                                      <MapPin
-                                        size={12}
-                                        className="text-slate-500"
-                                      />
+                                      <MapPin size={12} className="text-slate-500" />
                                       {inst.district || "—"}
                                     </span>
                                   </td>
@@ -784,8 +784,7 @@ export default function FindInstitutesPage() {
                                   <td className="px-4 py-3 text-center">
                                     <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 text-primary text-xs font-bold">
                                       <Users size={12} />
-                                      {inst.final_year_student_count?.toLocaleString() ||
-                                        "0"}
+                                      {inst.final_year_student_count?.toLocaleString() || "0"}
                                     </span>
                                   </td>
                                   <td className="px-4 py-3 text-center">
@@ -808,11 +807,7 @@ export default function FindInstitutesPage() {
                                             if (!selected.has(inst.institute_id)) {
                                               toggleSelect(inst.institute_id);
                                             }
-                                            dispatch(
-                                              updateUiInstitute({
-                                                bulkOffer: { open: true },
-                                              }),
-                                            );
+                                            dispatch(updateUiInstitute({ bulkOffer: { open: true } }));
                                           }}
                                           className="px-3 py-2 rounded-md bg-primary text-white text-xs font-bold flex items-center gap-1.5 transition-all"
                                         >
