@@ -48,6 +48,7 @@ interface OfferRow {
   collaboration_types?: string;
   additional_details?: string;
   updated_date?: string;
+  discussed_date?: string;
   status: string;
   eoi_type: string;
   number_of_posts?: number;
@@ -298,21 +299,16 @@ export default function AllRequestsPage() {
       if (target === "project completed") target = "completed";
       if (target === "project initiated") target = "initiated";
 
-      if (target === "pending") {
-        if (s !== "pending") return false;
-        if (!o.offer_date) return false;
-        const offerDate = new Date(o.offer_date).getTime();
-        const twoDaysAgo = Date.now() - 2 * 24 * 60 * 60 * 1000;
-        return offerDate < twoDaysAgo;
-      }
+      const now = Date.now();
+      const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
-      if (target === "pending_acceptance") {
-        if (s !== "discussed") return false;
-        if (!o.offer_date) return false;
-        const offerDate = new Date(o.offer_date).getTime();
-        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        return offerDate < sevenDaysAgo;
-      }
+      const isResponsePending = (s === "sent" || s === "pending") && o.offer_date && (now - new Date(o.offer_date).getTime() > TWO_DAYS_MS);
+      const isDecisionPending = s === "discussed" && (o.discussed_date || o.offer_date) && (now - new Date(o.discussed_date || o.offer_date || "").getTime() > SEVEN_DAYS_MS);
+
+      if (target === "pending") return !!isResponsePending;
+      if (target === "pending_acceptance") return !!isDecisionPending;
+      if (target === "discussed") return s === "discussed" && !isDecisionPending;
 
       return s === target;
     })();
@@ -400,21 +396,16 @@ export default function AllRequestsPage() {
       if (t === "project completed") t = "completed";
       if (t === "project initiated") t = "initiated";
 
-      if (t === "pending") {
-        if (s !== "pending") return false;
-        if (!o.offer_date) return false;
-        const offerDate = new Date(o.offer_date).getTime();
-        const twoDaysAgo = Date.now() - 2 * 24 * 60 * 60 * 1000;
-        return offerDate < twoDaysAgo;
-      }
+      const now = Date.now();
+      const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
-      if (t === "pending_acceptance") {
-        if (s !== "discussed") return false;
-        if (!o.offer_date) return false;
-        const offerDate = new Date(o.offer_date).getTime();
-        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        return offerDate < sevenDaysAgo;
-      }
+      const isResponsePending = (s === "sent" || s === "pending") && o.offer_date && (now - new Date(o.offer_date).getTime() > TWO_DAYS_MS);
+      const isDecisionPending = s === "discussed" && (o.discussed_date || o.offer_date) && (now - new Date(o.discussed_date || o.offer_date || "").getTime() > SEVEN_DAYS_MS);
+
+      if (t === "pending") return !!isResponsePending;
+      if (t === "pending_acceptance") return !!isDecisionPending;
+      if (t === "discussed") return s === "discussed" && !isDecisionPending;
 
       return s === t;
     }).length;
@@ -423,14 +414,14 @@ export default function AllRequestsPage() {
   const statusTiles = [
     // avoid secondary/yellow colours; keep everything primary/info/success/error
     // ...(role === "dept_admin" ? [{ type: "All", label: "All Applications", icon: Send, color: "primary" }] : []),
-    { type: "Sent", label: "Received", icon: Send, color: "primary" },
+    { type: "All", label: "Received", icon: Send, color: "primary" },
     { type: "Pending", label: "Response Pending", icon: Clock, color: "primary" },
     { type: "Discussed", label: " Under Process", icon: Users, color: "info" },
     { type: "Pending_Acceptance", label: "Decision Pending", icon: Clock, color: "primary" },
     { type: "Accepted", label: "Accepted", icon: CheckCircle2, color: "success" },
     { type: "Rejected", label: "Rejected", icon: XCircle, color: "error" },
-    // { type: "Initiated", label: "Initiated", icon: TrendingUp, color: "primary" },
-    // { type: "Completed", label: "Completed", icon: CheckCircle2, color: "success" },
+    { type: "Initiated", label: "Project Initiated", icon: TrendingUp, color: "primary" },
+    { type: "Completed", label: "Project Completed", icon: CheckCircle2, color: "success" },
   ];
 
 
