@@ -93,6 +93,7 @@ const adminNav = [
   },
   { icon: Briefcase, label: "Industry Requests", href: "/industry-requests" },
   { icon: Mail, label: "All Requests", href: "/all-requests" },
+  { icon: Users, label: "User Management", href: "/admin/users" },
 ];
 
 const instituteNav = [
