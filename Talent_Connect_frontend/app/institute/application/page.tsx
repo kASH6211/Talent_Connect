@@ -286,8 +286,8 @@ export default function ReceivedOffersPage() {
     { tab: "DecisionPending", label: "Decision Pending", count: accepted, icon: CheckCircle2, activeColor: "yellow" },
     { tab: "Accepted", label: "Accepted", count: accepted, icon: CheckCircle2, activeColor: "green" },
     { tab: "Rejected", label: "Rejected", count: accepted, icon: CheckCircle2, activeColor: "red" },
-    { tab: " ProjectInitiated", label: " Project Initiated", count: 0, icon: Users, activeColor: "indigo" },
-    { tab: " ProjectCompleted", label: " Project Completed", count: 0, icon: Clock, activeColor: "green" },
+    { tab: " ProjectInitiated", label: " Project Initiated", count: baseOffers.length, icon: Users, activeColor: "indigo" },
+    { tab: " ProjectCompleted", label: " Project Completed", count: pendingDisc, icon: Clock, activeColor: "green" },
   ];
 
   const filtered = useMemo(() => {
