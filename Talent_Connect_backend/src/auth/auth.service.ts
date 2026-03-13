@@ -10,6 +10,7 @@ import { Industry } from '../modules/industry/industry.entity';
 import { IndustryIdentifier } from '../modules/industry-identifier/industry-identifier.entity';
 import { IdentifierType } from '../modules/identifier-type/identifier-type.entity';
 import { LegalEntity } from '../modules/legal-entity/legal-entity.entity';
+import { Institute } from '../modules/institute/institute.entity';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +25,8 @@ export class AuthService {
         private readonly identifierTypeRepo: Repository<IdentifierType>,
         @InjectRepository(LegalEntity)
         private readonly legalEntityRepo: Repository<LegalEntity>,
+        @InjectRepository(Institute)
+        private readonly instituteRepo: Repository<Institute>,
         private readonly jwtService: JwtService,
     ) { }
 
@@ -212,6 +215,32 @@ export class AuthService {
         const password_hash = await bcrypt.hash(newPass, 10);
         await this.userRepo.update(userId, { password_hash });
         return { message: 'Password changed successfully' };
+    }
+
+    async resetInstitutePassword(instituteId: number, newPass: string) {
+        let user = await this.userRepo.findOne({ where: { institute_id: instituteId } });
+        const password_hash = await bcrypt.hash(newPass, 10);
+
+        if (user) {
+            await this.userRepo.update(user.id, { password_hash });
+            return { message: `Password for user '${user.username}' updated successfully` };
+        } else {
+            // Create user if it doesn't exist
+            const institute = await this.instituteRepo.findOne({ where: { institute_id: instituteId } });
+            if (!institute) throw new UnauthorizedException('Institute not found');
+
+            const paddedId = instituteId.toString().padStart(5, '0');
+            const newUser = this.userRepo.create({
+                username: `inst_${paddedId}`,
+                email: institute.emailId || `inst_${paddedId}@talentconnect.com`,
+                password_hash,
+                role: 'institute',
+                institute_id: instituteId,
+                created_date: new Date().toISOString(),
+            });
+            await this.userRepo.save(newUser);
+            return { message: `User account '${newUser.username}' created and password set successfully` };
+        }
     }
 
     private signToken(user: User) {

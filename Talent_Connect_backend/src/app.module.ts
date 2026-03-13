@@ -40,6 +40,7 @@ import { MasterNsqfModule } from './modules/master-nsqf/master-nsqf.module';
 import { MasterCourseDurationModule } from './modules/master-course-duration/master-course-duration.module';
 import { StudentCountModule } from './modules/student-count/student-count.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -96,6 +97,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     MasterCourseDurationModule,
     StudentCountModule,
     DashboardModule,
+    UsersModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

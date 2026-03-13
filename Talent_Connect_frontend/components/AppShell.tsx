@@ -14,6 +14,9 @@ import FastTrackOverlay from "./common/FastTrackOverlay";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store/store";
 import { updateLoginUi } from "@/store/login";
+import { useAuth } from "@/lib/AuthProvider";
+import { User, ShieldCheck } from "lucide-react";
+import api from "@/lib/api";
 
 export default function AppShell({
   children,
@@ -27,10 +30,12 @@ export default function AppShell({
   const pathname = usePathname();
   const dispatch = useDispatch<AppDispatch>();
   const ui = useSelector((state: RootState) => state.login.ui);
+  const { user, role } = useAuth();
 
   const allowedRoutes = ["/login", "/", "/contact"];
 
   const [isMobile, setIsMobile] = useState(false);
+  const [orgName, setOrgName] = useState<string | null>(null);
 
   useEffect(() => {
     function checkMobile() {
@@ -42,6 +47,20 @@ export default function AppShell({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  useEffect(() => {
+    if (user?.institute_id && role === "institute") {
+      api
+        .get(`/institute/${user.institute_id}`)
+        .then((res) => setOrgName(res.data?.institute_name))
+        .catch(console.error);
+    } else if (user?.industry_id && role === "industry") {
+      api
+        .get(`/industry/${user.industry_id}`)
+        .then((res) => setOrgName(res.data?.industry_name))
+        .catch(console.error);
+    }
+  }, [user, role]);
+
   const isLoginPage = pathname === "/login";
   const home = pathname === "/";
   const searchInstitutes = pathname === "/search-institutes";
@@ -50,8 +69,35 @@ export default function AppShell({
 
   return (
     <AuthWrapper>
-      <div className="flex flex-col h-screen w-screen overflow-hidden bg-background">
+      <div className="flex flex-col h-screen w-screen overflow-hidden bg-background font-inter">
         <Navbar />
+
+        {user && (
+          <div className="flex flex-col shrink-0 overflow-hidden h-5">
+            {/* Primary Greeting Banner */}
+            <div className="w-full bg-primary border-b border-white/10 h-5 lg:h-12 flex items-center relative overflow-hidden">
+              {/* Decorative skew elements for high-fidelity look */}
+              <div className="absolute top-0 right-0 w-1/2 h-full bg-white/[0.03] -skew-x-[30deg] translate-x-32" />
+              <div className="absolute top-0 left-0  h-full bg-white/[0.02] skew-x-[15deg] -translate-x-16" />
+
+              <div className="max-w-[1600px] mx-auto w-full  sm:px-6 lg:px-2 flex items-center justify-between relative z-10 gap-4 ml-[39px]">
+                <div className="flex items-center gap-3">
+
+                  <div className="flex flex-col">
+
+                    <span className="text-xs  ml-0 lg:text-sm font-medium text-white tracking-tight truncate">
+                      Welcome : <span className="text-secondary-foreground font-medium">{orgName ?? 'User'}</span>
+                    </span>
+                  </div>
+                </div>
+
+
+              </div>
+            </div>
+
+
+          </div>
+        )}
 
         <div className="flex-1 flex overflow-hidden relative">
           {isDashboardLayout ? (

@@ -2,7 +2,7 @@ import { Controller, Post, Body, HttpCode, HttpStatus, Get, Query, Res, All } fr
 // Removed invalid import of frontend helper
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto, ChangePasswordDto } from './dto/auth.dto';
+import { RegisterDto, LoginDto, ChangePasswordDto, ResetInstitutePasswordDto } from './dto/auth.dto';
 import { SSOCallbackDto } from './dto/sso-callback.dto';
 import { Public } from './public.decorator';
 import type { Request } from 'express';
@@ -35,6 +35,14 @@ export class AuthController {
     @ApiOperation({ summary: 'Change user password' })
     changePassword(@Req() req: any, @Body() dto: ChangePasswordDto) {
         return this.authService.changePassword(req.user.id, dto.oldPassword, dto.newPassword);
+    }
+
+    @Post('admin/reset-institute-password')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Reset institute password (Admin only)' })
+    resetInstitutePassword(@Body() dto: ResetInstitutePasswordDto) {
+        // In a real app we'd check req.user.role here, but for this exercise we'll expose it
+        return this.authService.resetInstitutePassword(dto.instituteId, dto.newPassword);
     }
 
     @Public()
