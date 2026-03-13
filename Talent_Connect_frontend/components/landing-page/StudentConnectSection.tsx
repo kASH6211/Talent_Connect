@@ -88,8 +88,8 @@ const StudentConnectSection = () => {
                       </p>
                     </div>
 
-                    <div className="mt-auto pt-4">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 px-4 py-2 rounded-full group-hover:bg-secondary group-hover:text-white transition-colors duration-500">
+                    <div className="mt-auto pt-5 flex justify-center w-full">
+                      <span className="inline-flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-slate-500 bg-slate-100 px-4 py-2 rounded-full whitespace-nowrap leading-none group-hover:bg-secondary group-hover:text-white transition-colors duration-500">
                         Coming Soon
                       </span>
                     </div>
@@ -134,8 +134,8 @@ const StudentConnectSection = () => {
                       </p>
                     </div>
 
-                    <div className="mt-auto pt-4">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-100 px-4 py-2 rounded-full group-hover:bg-secondary group-hover:text-white transition-colors duration-500">
+                    <div className="mt-auto pt-5 flex justify-center w-full">
+                      <span className="inline-flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-slate-500 bg-slate-100 px-4 py-2 rounded-full whitespace-nowrap leading-none group-hover:bg-secondary group-hover:text-white transition-colors duration-500">
                         Coming Soon
                       </span>
                     </div>
