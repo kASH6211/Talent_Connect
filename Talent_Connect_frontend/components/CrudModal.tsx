@@ -23,6 +23,7 @@ export interface FieldDef {
   dependsOn?: string;
   dependsOnQueryKey?: string;
   step?: string | number;
+  readOnlyOnEdit?: boolean;
 }
 
 interface CrudModalProps {
@@ -70,7 +71,7 @@ function ApiSelect({ field, control, watch, defaultValues }: {
           {...rhfField}
           value={rhfField.value ?? ""}
           onChange={(e) => rhfField.onChange(e.target.value || null)}
-          disabled={!!field.dependsOn && !dependentValue}
+          disabled={(!!field.dependsOn && !dependentValue) || (!!defaultValues[field.key] && field.readOnlyOnEdit)}
           className="w-full h-14 px-4 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
         >
           <option value="">
@@ -89,15 +90,20 @@ function ApiSelect({ field, control, watch, defaultValues }: {
 
 const FormField = ({
   label,
+  required,
   error,
   children,
 }: {
   label: string;
+  required?: boolean;
   error?: string;
   children: React.ReactNode;
 }) => (
   <div className="space-y-1">
-    <label className="text-sm font-semibold text-gray-700">{label}</label>
+    <label className="text-sm font-semibold text-gray-700">
+      {label}
+      {required && <span className="text-red-500 ml-1">*</span>}
+    </label>
     {children}
     {error && (
       <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-2 rounded-lg">
@@ -172,7 +178,8 @@ export default function CrudModal({
           {...register(f.key, { required: f.required })}
           placeholder={f.placeholder}
           rows={3}
-          className="w-full h-28 px-4 py-2 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none"
+          disabled={isEdit && f.readOnlyOnEdit}
+          className="w-full h-28 px-4 py-2 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
         />
       );
     if (f.type === "select")
@@ -186,7 +193,8 @@ export default function CrudModal({
             <select
               {...rhfField}
               value={rhfField.value ?? ""}
-              className="w-full h-14 px-4 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+              disabled={isEdit && f.readOnlyOnEdit}
+              className="w-full h-14 px-4 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               <option value="">Select {f.label}…</option>
               {f.options?.map((o) => (
@@ -215,7 +223,8 @@ export default function CrudModal({
                 type="radio"
                 value={o.value}
                 {...register(f.key)}
-                className="radio radio-primary radio-sm"
+                disabled={isEdit && f.readOnlyOnEdit}
+                className="radio radio-primary radio-sm disabled:opacity-50"
               />
               <span className="text-sm">{o.label}</span>
             </label>
@@ -228,7 +237,8 @@ export default function CrudModal({
         {...register(f.key, { required: f.required })}
         placeholder={f.placeholder}
         step={f.step}
-        className="w-full h-14 px-4 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+        disabled={isEdit && f.readOnlyOnEdit}
+        className="w-full h-14 px-4 border border-base-200/20 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
       />
     );
   };
@@ -259,6 +269,7 @@ export default function CrudModal({
               <FormField
                 key={f.key}
                 label={f.label}
+                required={f.required}
               >
                 {renderField(f)}
               </FormField>

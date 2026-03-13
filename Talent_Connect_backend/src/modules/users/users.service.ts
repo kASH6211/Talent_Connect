@@ -18,4 +18,16 @@ export class UsersService {
         });
         return users;
     }
+
+    async update(id: number, dto: Partial<User>): Promise<User | null> {
+        await this.userRepo.update(id, dto);
+        return this.userRepo.findOne({
+            where: { id },
+            select: ['id', 'username', 'email', 'role', 'is_active', 'created_date', 'institute_id', 'industry_id']
+        });
+    }
+
+    async remove(id: number): Promise<void> {
+        await this.userRepo.update(id, { is_active: 'N' });
+    }
 }

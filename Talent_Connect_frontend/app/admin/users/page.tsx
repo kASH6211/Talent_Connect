@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import CrudTable from '@/components/CrudTable';
-import { Users, Shield, CheckCircle, XCircle } from 'lucide-react';
+import CrudModal from '@/components/CrudModal';
+import { Users, Shield, CheckCircle, XCircle, UserMinus } from 'lucide-react';
 
 const COLUMNS = [
     { key: 'sn', label: 'S.No', render: (_: any, __: any, i: number) => i },
@@ -36,7 +38,36 @@ const COLUMNS = [
     },
 ];
 
+const FIELDS = [
+    { key: 'username', label: 'Username', required: true, readOnlyOnEdit: true },
+    { key: 'email', label: 'Email', type: 'email', required: true },
+    {
+        key: 'role',
+        label: 'Role',
+        required: true,
+        readOnlyOnEdit: true,
+        options: [
+            { label: 'Admin', value: 'admin' },
+            { label: 'Super Admin', value: 'superadmin' },
+            { label: 'Institute', value: 'institute' },
+            { label: 'Industry', value: 'industry' },
+        ]
+    },
+    {
+        key: 'is_active',
+        label: 'Is Active?',
+        type: 'radio',
+        options: [
+            { label: 'Active', value: 'Y' },
+            { label: 'Inactive', value: 'N' },
+        ]
+    }
+];
+
 export default function UsersPage() {
+    const [modalOpen, setModalOpen] = useState(false);
+    const [editData, setEditData] = useState<any>(null);
+
     return (
         <div className="p-4 sm:p-6 lg:p-8">
             <CrudTable
@@ -47,9 +78,29 @@ export default function UsersPage() {
                 columns={COLUMNS}
                 primaryKey="id"
                 pagination={false} // Local array response
-                onAdd={() => alert('User registration is handled via Auth/SSO or Institute Import.')}
-                onEdit={() => alert('User editing feature is coming soon.')}
+                deleteIcon={<UserMinus size={16} strokeWidth={2.3} />}
+                deleteTooltip="Deactivate"
+                onAdd={() => {
+                    setEditData(null);
+                    setModalOpen(true);
+                }}
+                onEdit={(row) => {
+                    setEditData(row);
+                    setModalOpen(true);
+                }}
             />
+
+            {modalOpen && (
+                <CrudModal
+                    title="User"
+                    apiPath="users"
+                    queryKey="users"
+                    primaryKey="id"
+                    fields={FIELDS}
+                    editData={editData}
+                    onClose={() => setModalOpen(false)}
+                />
+            )}
         </div>
     );
 }

@@ -4,7 +4,7 @@ import CrudTable from '@/components/CrudTable';
 import CrudModal from '@/components/CrudModal';
 import AdminResetPasswordModal from '@/components/common/AdminResetPasswordModal';
 
-import { Upload, Lock } from 'lucide-react';
+import { Upload, Lock, Ban } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import api from '@/lib/api';
@@ -53,7 +53,7 @@ const FIELDS = [
     },
     { key: 'pincode', label: 'Pincode', type: 'number' },
     { key: 'address', label: 'Address', type: 'textarea' },
-    { key: 'emailId', label: 'Email', type: 'email' },
+    { key: 'emailId', label: 'Email', type: 'email', required: true },
     { key: 'mobileno', label: 'Mobile No.' },
     { key: 'url', label: 'Website URL' },
     {
@@ -176,6 +176,8 @@ export default function Page() {
                 columns={COLUMNS}
                 primaryKey="institute_id"
                 extraActions={<ExcelUploadButton />}
+                deleteIcon={<Ban size={16} strokeWidth={2.3} />}
+                deleteTooltip="Deactivate"
                 onAdd={() => { setEditData(null); setModalOpen(true); }}
                 onEdit={(r) => { setEditData(r); setModalOpen(true); }}
                 renderRowActions={(row) => (

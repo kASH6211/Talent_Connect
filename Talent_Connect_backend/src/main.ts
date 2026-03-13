@@ -17,7 +17,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
   app.useGlobalFilters(new AllExceptionsFilter());
-  app.useGlobalPipes(new ValidationPipe({ whitelist: false, transform: false }));
+  app.useGlobalPipes(new ValidationPipe({ whitelist: false, transform: true }));
 
   // Swagger API Docs
   const config = new DocumentBuilder()

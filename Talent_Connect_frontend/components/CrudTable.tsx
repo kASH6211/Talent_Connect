@@ -59,6 +59,8 @@ interface CrudTableProps {
   renderRowActions?: (row: any) => React.ReactNode;
   onDataFetched?: (data: any) => void;
   extraParams?: Record<string, any>;
+  deleteIcon?: React.ReactNode;
+  deleteTooltip?: string;
 }
 
 export default function CrudTable({
@@ -75,6 +77,8 @@ export default function CrudTable({
   renderRowActions,
   onDataFetched,
   extraParams,
+  deleteIcon,
+  deleteTooltip = "Delete",
 }: CrudTableProps) {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
@@ -172,12 +176,12 @@ export default function CrudTable({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                if (confirm("Deactivate this record?"))
-                  deleteMutation.mutate(row[primaryKey]);
+                handleDelete(row);
               }}
               className="btn btn-ghost btn-sm btn-circle hover:bg-error/10 hover:text-error"
+              title={deleteTooltip}
             >
-              <Trash2 size={15} />
+              {deleteIcon || <Trash2 size={15} />}
             </button>
             {renderRowActions && renderRowActions(row)}
             {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -410,9 +414,9 @@ export default function CrudTable({
                                   "text-base-content/70 hover:text-error hover:bg-error/8",
                                   "transition-all duration-200 active:scale-95",
                                 )}
-                                title="Deactivate"
+                                title={deleteTooltip}
                               >
-                                <Trash2 size={16} strokeWidth={2.3} />
+                                {deleteIcon || <Trash2 size={16} strokeWidth={2.3} />}
                               </button>
 
                               {renderRowActions && renderRowActions(row)}

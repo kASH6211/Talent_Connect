@@ -218,26 +218,33 @@ export class AuthService {
     }
 
     async resetInstitutePassword(instituteId: number, newPass: string) {
+        console.log(`[AuthService] Resetting password for instituteId: ${instituteId}`);
         let user = await this.userRepo.findOne({ where: { institute_id: instituteId } });
         const password_hash = await bcrypt.hash(newPass, 10);
 
         if (user) {
+            console.log(`[AuthService] Found existing user: ${user.username} (ID: ${user.id}). Updating password hash.`);
             await this.userRepo.update(user.id, { password_hash });
             return { message: `Password for user '${user.username}' updated successfully` };
         } else {
             // Create user if it doesn't exist
+            console.log(`[AuthService] No user found for instituteId: ${instituteId}. Searching for institute details.`);
             const institute = await this.instituteRepo.findOne({ where: { institute_id: instituteId } });
-            if (!institute) throw new UnauthorizedException('Institute not found');
+            if (!institute) {
+                console.error(`[AuthService] Institute with ID ${instituteId} NOT FOUND.`);
+                throw new UnauthorizedException('Institute not found');
+            }
 
             const paddedId = instituteId.toString().padStart(5, '0');
             const newUser = this.userRepo.create({
                 username: `inst_${paddedId}`,
-                email: institute.emailId || `inst_${paddedId}@talentconnect.com`,
+                email: institute.emailId || "",
                 password_hash,
                 role: 'institute',
                 institute_id: instituteId,
                 created_date: new Date().toISOString(),
             });
+            console.log(`[AuthService] Creating new user for institute: ${newUser.username}`);
             await this.userRepo.save(newUser);
             return { message: `User account '${newUser.username}' created and password set successfully` };
         }

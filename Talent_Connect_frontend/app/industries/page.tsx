@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import CrudTable from '@/components/CrudTable';
 import CrudModal from '@/components/CrudModal';
+import { Ban } from 'lucide-react';
 
 const COLUMNS = [
     { key: 'industry_id', label: 'ID' },
@@ -47,6 +48,8 @@ export default function Page() {
     return (
         <>
             <CrudTable title="Industries" apiPath="industry" queryKey="industry" columns={COLUMNS} primaryKey="industry_id"
+                deleteIcon={<Ban size={16} strokeWidth={2.3} />}
+                deleteTooltip="Deactivate"
                 onAdd={() => { setEditData(null); setModalOpen(true); }}
                 onEdit={(r) => { setEditData(r); setModalOpen(true); }} />
             {modalOpen && <CrudModal title="Industry" apiPath="industry" queryKey="industry" primaryKey="industry_id" fields={FIELDS} editData={editData} onClose={() => setModalOpen(false)} />}

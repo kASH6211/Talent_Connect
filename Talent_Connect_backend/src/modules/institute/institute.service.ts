@@ -465,7 +465,7 @@ export class InstituteService {
         const newUsername = `inst_${paddedId}`;
         const defaultPassword = `inst_${paddedId}`; // Using username as default password
         const passwordHash = await bcrypt.hash(defaultPassword, 10);
-        const contactEmail = row['emailId'] ? String(row['emailId']).substring(0, 200).trim() : `${newUsername}@example.com`;
+        const contactEmail = row['emailId'] ? String(row['emailId']).substring(0, 200).trim() : "";
 
         // Safety Check: Avoid duplicate user insertion (email or username)
         const existingUser = await this.dataSource.query(
