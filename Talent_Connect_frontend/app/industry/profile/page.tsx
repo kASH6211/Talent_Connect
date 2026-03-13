@@ -5,7 +5,7 @@ export default function IndustryProfilePage() {
   return (
     <>
       {/* <IndustryProfile /> */}
-      <ComingSoon title="Profile" description="Manage your profile" />;
+      <ComingSoon title="Profile" description="Manage your profile" />
     </>
   );
 }
