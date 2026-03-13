@@ -342,6 +342,7 @@ export default function Sidebar({
               : "w-72 lg:w-64",
         )}
       >
+
         {/* Search Section */}
         <div className="p-4 border-b border-base-200 dark:border-base-800">
           <div
@@ -358,6 +359,7 @@ export default function Sidebar({
               )}
             >
               <Search size={18} />
+
             </div>
             {!collapsed && (
               <input
@@ -384,7 +386,17 @@ export default function Sidebar({
             )}
           </div>
         </div>
-
+        {/* Mobile Close Button */}
+        {isMobile && (
+          <div className="flex items-center justify-end p-3 border-b border-base-200 dark:border-base-800 lg:hidden">
+            <button
+              onClick={() => setMobileSidebarOpen(false)}
+              className="w-9 h-9 flex items-center justify-center rounded-lg bg-base-200 dark:bg-base-800 hover:bg-base-300 dark:hover:bg-base-700 transition"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        )}
         {/* User Info Section */}
         {!loading && user && (
           <div
