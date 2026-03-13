@@ -78,7 +78,7 @@ const InstitutesSection = () => {
                     ? () => router.push(`/search-institutes?type=${inst.name}`)
                     : undefined
                 }
-                className={`group border bg-white border-gray-200 rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md hover:border-primary/70 transition-all duration-300 ${isActive ? "cursor-pointer" : ""
+                className={`group border bg-white border-gray-200 rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md hover:border-primary/70 active:scale-[0.98] transition-all duration-300 ${isActive ? "cursor-pointer" : ""
                   }`}
               >
                 {/* Top Section */}
@@ -88,10 +88,7 @@ const InstitutesSection = () => {
                       }`}
                   >
                     <Icon
-                      className={`w-6 h-6 md:w-7 md:h-7 transition-colors duration-300 ${isActive
-                        ? "text-primary group-hover:text-white"
-                        : "text-primary"
-                        }`}
+                      className={`w-6 h-6 md:w-7 md:h-7 transition-colors duration-300 ${isActive ? "text-primary group-hover:text-white" : "text-primary"}`}
                     />
                   </div>
 
