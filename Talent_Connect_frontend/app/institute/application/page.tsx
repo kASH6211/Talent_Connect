@@ -118,7 +118,7 @@ function StatCard({ label, count, active, onClick, icon: Icon, activeColor }: {
     green: "border-success bg-success/10 shadow-success/20",
     red: "border-error bg-error/10 shadow-error/20",
     purple: "border-purple-400 bg-purple-50 shadow-purple-100",
-    yellow  :"border-yellow-400 bg-yellow-50 shadow-yellow-100",
+    yellow: "border-yellow-400 bg-yellow-50 shadow-yellow-100",
   };
   const iconMap: Record<string, string> = {
     indigo: "bg-primary text-primary-content",
@@ -126,7 +126,7 @@ function StatCard({ label, count, active, onClick, icon: Icon, activeColor }: {
     green: "bg-success text-success-content",
     red: "bg-error text-error-content",
     purple: "bg-purple-600 text-white",
-    yellow :"bg-yellow-600 text-white",
+    yellow: "bg-yellow-600 text-white",
   };
   const countMap: Record<string, string> = {
     indigo: "text-primary", amber: "text-warning", green: "text-success", red: "text-error", purple: "text-purple-700",
@@ -286,8 +286,8 @@ export default function ReceivedOffersPage() {
     { tab: "DecisionPending", label: "Decision Pending", count: accepted, icon: CheckCircle2, activeColor: "yellow" },
     { tab: "Accepted", label: "Accepted", count: accepted, icon: CheckCircle2, activeColor: "green" },
     { tab: "Rejected", label: "Rejected", count: accepted, icon: CheckCircle2, activeColor: "red" },
-    { tab: " ProjectInitiated", label: " Project Initiated", count: baseOffers.length, icon: Users, activeColor: "indigo" },
-    { tab: " ProjectCompleted", label: " Project Completed", count: pendingDisc, icon: Clock, activeColor: "green" },
+    { tab: " ProjectInitiated", label: " Project Initiated", count: 0, icon: Users, activeColor: "indigo" },
+    { tab: " ProjectCompleted", label: " Project Completed", count: 0, icon: Clock, activeColor: "green" },
   ];
 
   const filtered = useMemo(() => {
