@@ -47,14 +47,16 @@ export default function AppShell({
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+  
+  console.log({user , role})
 
   useEffect(() => {
-    if (user?.institute_id && role === "institute" && user.is_passwordchanged === 'Y') {
+    if (user?.institute_id && role === "institute" ) {
       api
         .get(`/institute/${user.institute_id}`)
         .then((res) => setOrgName(res.data?.institute_name))
         .catch(console.error);
-    } else if (user?.industry_id && role === "industry" && user.is_passwordchanged === 'Y') {
+    } else if (user?.industry_id && role === "industry" ) {
       api
         .get(`/industry/${user.industry_id}`)
         .then((res) => setOrgName(res.data?.industry_name))
@@ -86,7 +88,7 @@ export default function AppShell({
 
                   <div className="flex flex-col">
 
-                    <span className="text-xs  ml-0 lg:text-sm font-medium text-white tracking-tight truncate">
+                    <span className="text-xs  ml-4 lg:text-sm font-medium text-white tracking-tight truncate">
                       Welcome : <span className="text-secondary-foreground font-medium">{orgName ?? 'User'}</span>
                     </span>
                   </div>
@@ -109,9 +111,9 @@ export default function AppShell({
                     <button
                       onClick={() => setMobileSidebarOpen(true)}
                       aria-label="Open sidebar"
-                      className="fixed top-20 left-4 z-[60] p-2.5 rounded-xl bg-primary text-white shadow-2xl lg:hidden active:scale-95 transition-all"
+                      className="fixed top-24  z-[60] flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-white shadow-lg lg:hidden transition active:scale-95"
                     >
-                      <Menu size={20} />
+                      <Menu size={18} />
                     </button>
                   )}
 

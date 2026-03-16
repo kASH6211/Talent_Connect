@@ -341,25 +341,14 @@ export default function Sidebar({
           "shadow-lg z-50 transition-all duration-300",
           isMobile
             ? mobileSidebarOpen
-              ? "fixed top-0 left-0 translate-x-0 w-72"
-              : "fixed top-0 left-0 -translate-x-full w-72"
+              ? "fixed top-22 left-0 translate-x-0 w-72 h-[calc(100vh-4rem)]"
+              : "fixed top-22 left-0 -translate-x-full w-72 h-[calc(100vh-4rem)]"
             : collapsed
               ? "w-20"
               : "w-72 lg:w-64",
         )}
       >
 
-        {/* Mobile Close Button */}
-        {isMobile && (
-          <div className="d-hidden flex items-center justify-end p-3 border-b border-base-200 dark:border-base-800 lg:hidden">
-            <button
-              onClick={() => setMobileSidebarOpen(false)}
-              className="w-9 h-9 flex items-center justify-center rounded-lg bg-base-200 dark:bg-base-800 hover:bg-base-300 dark:hover:bg-base-700 transition"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        )}
         {/* User Info Section */}
         {!loading && user && (
           <div
@@ -405,7 +394,7 @@ export default function Sidebar({
                 {user.username && (
                   <div className="flex items-center justify-between gap-2">
                     <p
-                      className="text-xs text-base-content/60 font-medium truncate leading-tight"
+                      className="text-xs text-base-content/60 font-medium  leading-tight"
                       title={user.username}
                     >
                       @{user.username}
