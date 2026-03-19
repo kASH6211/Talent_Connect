@@ -101,6 +101,145 @@ const COLLABORATION_OPTIONS = [
   "Any other CSR Support",
 ];
 
+/* ─── Salary Range Slider CSS & Component ─── */
+const sliderStyles = `
+  .salary-slider-container {
+    padding: 10px 0 30px;
+    position: relative;
+    width: 100%;
+  }
+  .salary-slider-track-wrap {
+     position: relative;
+     width: 100%;
+     height: 30px;
+     display: flex;
+     align-items: center;
+  }
+  .salary-slider-track {
+    position: absolute;
+    height: 6px;
+    width: 100%;
+    background-color: rgba(0,0,0,0.06);
+    border-radius: 10px;
+  }
+  .dark .salary-slider-track {
+    background-color: rgba(255,255,255,0.1);
+  }
+  .salary-slider-range {
+    position: absolute;
+    height: 6px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(99,102,241,0.2);
+  }
+  .salary-slider-input {
+    position: absolute;
+    width: 100%;
+    height: 6px;
+    background: none;
+    pointer-events: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    z-index: 2;
+  }
+  .salary-slider-input::-webkit-slider-thumb {
+    height: 22px;
+    width: 22px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    background-color: #6366f1;
+    cursor: pointer;
+    pointer-events: auto;
+    -webkit-appearance: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .salary-slider-input::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background-color: #4f46e5;
+  }
+  .salary-slider-input::-moz-range-thumb {
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    background-color: #6366f1;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
+`;
+
+const SalaryRangeSlider = ({
+  min,
+  max,
+  step,
+  minValue,
+  maxValue,
+  onChange,
+  unit,
+}: {
+  min: number;
+  max: number;
+  step: number;
+  minValue: number;
+  maxValue: number;
+  onChange: (mn: number, mx: number) => void;
+  unit: string;
+}) => {
+  const minPercent = ((minValue - min) / (max - min)) * 100;
+  const maxPercent = ((maxValue - min) / (max - min)) * 100;
+
+  return (
+    <div className="salary-slider-container">
+      <style>{sliderStyles}</style>
+      <div className="salary-slider-track-wrap">
+        <div className="salary-slider-track"></div>
+        <div
+          className="salary-slider-range"
+          style={{ left: `${minPercent}%`, width: `${maxPercent - minPercent}%` }}
+        ></div>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={minValue}
+          onChange={(e) => {
+            const val = Number(e.target.value);
+            if (val <= maxValue - step) {
+              onChange(val, maxValue);
+            }
+          }}
+          className="salary-slider-input"
+        />
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={maxValue}
+          onChange={(e) => {
+            const val = Number(e.target.value);
+            if (val >= minValue + step) {
+              onChange(minValue, val);
+            }
+          }}
+          className="salary-slider-input"
+        />
+      </div>
+      <div className="flex justify-between items-center mt-1 px-1">
+        <span className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">
+          ₹ {unit === "K" ? "0K" : "0 LPA"}
+        </span>
+        <span className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">
+          ₹ {unit === "K" ? max / 1000 + "K" : max + " LPA"}
+        </span>
+      </div>
+    </div>
+  );
+};
+
 /* ─── Field styles ─────────────────────────────────────────────────────────── */
 const inputCls =
   "w-full bg-base-200 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-xl px-4 py-3 text-sm text-base-content placeholder:text-base-content/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all";
@@ -227,8 +366,8 @@ export function OfferModalV2({
   const [eoiType, setEoiType] = useState<EoiType | "">("");
 
   const [forms, setForms] = useState<Record<EoiType, EoiFormState>>({
-    "Placement": { ...DEFAULT_FORM_STATE },
-    "Industrial Training": { ...DEFAULT_FORM_STATE },
+    "Placement": { ...DEFAULT_FORM_STATE, salaryMin: "3", salaryMax: "10" },
+    "Industrial Training": { ...DEFAULT_FORM_STATE, salaryMin: "5000", salaryMax: "15000" },
     "Collaboration": { ...DEFAULT_FORM_STATE },
   });
 
@@ -286,8 +425,8 @@ export function OfferModalV2({
   const clear = () => {
     setEoiType("");
     setForms({
-      "Placement": { ...DEFAULT_FORM_STATE, qualIds: prefilledQualIds, streamIds: prefilledStreamIds },
-      "Industrial Training": { ...DEFAULT_FORM_STATE, qualIds: prefilledQualIds, streamIds: prefilledStreamIds },
+      "Placement": { ...DEFAULT_FORM_STATE, qualIds: prefilledQualIds, streamIds: prefilledStreamIds, salaryMin: "3", salaryMax: "10" },
+      "Industrial Training": { ...DEFAULT_FORM_STATE, qualIds: prefilledQualIds, streamIds: prefilledStreamIds, salaryMin: "5000", salaryMax: "15000" },
       "Collaboration": { ...DEFAULT_FORM_STATE, qualIds: prefilledQualIds, streamIds: prefilledStreamIds },
     });
     setSending(false);
@@ -307,6 +446,7 @@ export function OfferModalV2({
   useEffect(() => {
     if (!isOpen) return;
 
+    const controller = new AbortController();
     const loadModalStreams = async () => {
       setLoadingStreams(true);
       try {
@@ -314,7 +454,9 @@ export function OfferModalV2({
         const currentTabQuals = eoiType ? (eoiType === "Collaboration" ? forms[eoiType].prefQualIds : forms[eoiType].qualIds) : [];
 
         // 1. Get streams currently in use by institutes
-        const inUseRes = await api.get("/institute-qualification-mapping/streams-in-use");
+        const inUseRes = await api.get("/institute-qualification-mapping/streams-in-use", {
+          signal: controller.signal
+        });
         const inUseData = Array.isArray(inUseRes.data) ? inUseRes.data : inUseRes.data?.data || [];
         const inUseIds = new Set(inUseData.map((s: any) => s.stream_branch_Id));
 
@@ -323,36 +465,31 @@ export function OfferModalV2({
         // 2. Filter if a qualification is selected
         if (currentTabQuals.length > 0) {
           const masterStreamsMap = new Map<string, number[]>();
-          const streamPromises = currentTabQuals.map((id: any) =>
-            api.get(`/stream-branch?qualification_id=${id}`),
-          );
+          
+          // Batched request
+          const qualIdParam = currentTabQuals.join(",");
+          const res = await api.get(`/stream-branch?qualification_id=${qualIdParam}`, {
+            signal: controller.signal
+          });
 
-          try {
-            const streamResponses = await Promise.all(streamPromises);
+          const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+          data.forEach((s: any) => {
+            const ids = masterStreamsMap.get(s.stream_branch_name) || [];
+            if (!ids.includes(s.stream_branch_Id)) {
+              ids.push(s.stream_branch_Id);
+            }
+            masterStreamsMap.set(s.stream_branch_name, ids);
+          });
 
-            streamResponses.forEach((res) => {
-              const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
-              data.forEach((s: any) => {
-                const ids = masterStreamsMap.get(s.stream_branch_name) || [];
-                if (!ids.includes(s.stream_branch_Id)) {
-                  ids.push(s.stream_branch_Id);
-                }
-                masterStreamsMap.set(s.stream_branch_name, ids);
-              });
-            });
-
-            const sortedNames = Array.from(masterStreamsMap.keys()).sort();
-            sortedNames.forEach((name) => {
-              const ids = masterStreamsMap.get(name)!;
-              const validIdsInPortal = ids.filter((id) => inUseIds.has(id));
-              if (validIdsInPortal.length > 0) {
-                const groupedValue = validIdsInPortal.join(",");
-                finalOptions.push({ value: groupedValue, label: name });
-              }
-            });
-          } catch (err) {
-            console.error("Error fetching streams for qualifications:", err);
-          }
+          const sortedNames = Array.from(masterStreamsMap.keys()).sort();
+          sortedNames.forEach((name) => {
+            const ids = masterStreamsMap.get(name)!;
+            const validIdsInPortal = ids.filter((id) => inUseIds.has(id));
+            if (validIdsInPortal.length > 0) {
+              const groupedValue = validIdsInPortal.join(",");
+              finalOptions.push({ value: groupedValue, label: name });
+            }
+          });
         } else {
           // 3. If no qualification selected, just show all streams in use
           const masterStreamsMap = new Map<string, number[]>();
@@ -373,7 +510,8 @@ export function OfferModalV2({
         }
 
         setModalStreamOptions(finalOptions);
-      } catch (error) {
+      } catch (error: any) {
+        if (error.name === "AbortError") return;
         console.error("Failed to load modal streams:", error);
       } finally {
         setLoadingStreams(false);
@@ -381,6 +519,7 @@ export function OfferModalV2({
     };
 
     loadModalStreams();
+    return () => controller.abort();
   }, [isOpen, eoiType, eoiType ? (eoiType === "Collaboration" ? forms[eoiType].prefQualIds.join(",") : forms[eoiType].qualIds.join(",")) : ""]);
 
   // Reset streams when qualifications change (to avoid stale/invalid selections)
@@ -454,7 +593,9 @@ export function OfferModalV2({
       if (!f.numStudents.trim()) return "Number of students required is mandatory";
       if (!f.experience) return "Experience required is mandatory";
       if (!f.location.trim()) return "Location is required";
-      if (!f.salaryMin.trim()) return "Minimum salary/stipend is required";
+      if (!f.salaryMin) return "Minimum Salary/Stipend is required";
+      if (!f.salaryMax) return "Maximum Salary/Stipend is required";
+      if (Number(f.salaryMin) > Number(f.salaryMax)) return "Minimum Salary cannot be greater than Maximum Salary";
       if (!f.startDate) return "Expected start date is required";
 
       // Conditional Duration
@@ -558,8 +699,8 @@ export function OfferModalV2({
           experience_required: f.experience || undefined,
           location: f.location || undefined,
           is_remote: f.isRemote,
-          salary_min: f.salaryMin ? parseFloat(f.salaryMin) : undefined,
-          salary_max: f.salaryMax ? parseFloat(f.salaryMax) : undefined,
+          salary_min: f.salaryMin ? Number(f.salaryMin) : undefined,
+          salary_max: f.salaryMax ? Number(f.salaryMax) : undefined,
           start_date: f.startDate || undefined,
           duration: f.duration || undefined,
           collaboration_types: f.collabTypes.join("|") || undefined,
@@ -915,35 +1056,50 @@ export function OfferModalV2({
               </div>
 
               {/* Salary / Stipend */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={fieldLabelCls}>
                     {eoiType === "Placement" ? "Min Salary" : "Min Stipend"} <span className="text-error">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-base-content/50 pointer-events-none">₹</span>
-                    <input type="text" value={forms[eoiType].salaryMin}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "");
-                        handleFieldChange("salaryMin", val);
-                      }}
-                      placeholder="eg. 200000" className={`${inputCls} pl-8`} />
+                    <input type="text" value={forms[eoiType].salaryMin ? (eoiType === "Placement" ? `${forms[eoiType].salaryMin} LPA` : `${parseInt(forms[eoiType].salaryMin) / 1000}K`) : ""}
+                      readOnly
+                      placeholder={eoiType === "Placement" ? "eg. 5.5 LPA" : "eg. 15K"} 
+                      className={`${inputCls} pl-8 bg-base-200/50 cursor-default font-mono font-bold text-primary`} />
                   </div>
                 </div>
                 <div>
                   <label className={fieldLabelCls}>
-                    {eoiType === "Placement" ? "Max Salary" : "Max Stipend"}
+                    {eoiType === "Placement" ? "Max Salary" : "Max Stipend"} <span className="text-error">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-base-content/50 pointer-events-none">₹</span>
-                    <input type="text" value={forms[eoiType].salaryMax}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, "");
-                        handleFieldChange("salaryMax", val);
-                      }}
-                      placeholder="eg. 500000" className={`${inputCls} pl-8`} />
+                    <input type="text" value={forms[eoiType].salaryMax ? (eoiType === "Placement" ? `${forms[eoiType].salaryMax} LPA` : `${parseInt(forms[eoiType].salaryMax) / 1000}K`) : ""}
+                      readOnly
+                      placeholder={eoiType === "Placement" ? "eg. 12 LPA" : "eg. 30K"} 
+                      className={`${inputCls} pl-8 bg-base-200/50 cursor-default font-mono font-bold text-primary`} />
                   </div>
                 </div>
+              </div>
+
+              {/* Slider Component */}
+              <div className="px-1 -mt-2">
+                <SalaryRangeSlider
+                  min={0}
+                  max={eoiType === "Placement" ? 50 : 100000}
+                  step={eoiType === "Placement" ? 0.5 : 1000}
+                  minValue={Number(forms[eoiType].salaryMin) || 0}
+                  maxValue={Number(forms[eoiType].salaryMax) || (eoiType === "Placement" ? 10 : 20000)}
+                  unit={eoiType === "Placement" ? "LPA" : "K"}
+                  onChange={(mn, mx) => {
+                    handleFieldChange("salaryMin", mn.toString());
+                    handleFieldChange("salaryMax", mx.toString());
+                  }}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={fieldLabelCls}>Expected Start Date <span className="text-error">*</span></label>
                   <div className="relative">
@@ -952,16 +1108,24 @@ export function OfferModalV2({
                     <CalendarClock size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-base-content/40 pointer-events-none" />
                   </div>
                 </div>
-              </div>
-
-              {/* Duration */}
-              <div>
-                <label className={fieldLabelCls}>
-                  Duration in Months {(forms[eoiType].natureOfEngagement === "Contractual employment" || forms[eoiType].natureOfEngagement === "Apprenticeship") && <span className="text-error">*</span>}
-                  <span className="text-[10px] text-base-content/40 ml-1">(if applicable )</span>
-                </label>
-                <input type="text" value={forms[eoiType].duration} onChange={(e) => handleFieldChange("duration", e.target.value)}
-                  placeholder="e.g. 6 months, 1 year" className={inputCls} />
+                <div>
+                  <label className={fieldLabelCls}>
+                    Duration {(forms[eoiType].natureOfEngagement === "Contractual employment" || forms[eoiType].natureOfEngagement === "Apprenticeship") && <span className="text-error">*</span>}
+                    <span className="text-[10px] text-base-content/40 ml-1">(if applicable )</span>
+                  </label>
+                  <select
+                    value={forms[eoiType].duration}
+                    onChange={(e) => handleFieldChange("duration", e.target.value)}
+                    className={inputCls}
+                  >
+                    <option value="">Select duration…</option>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                      <option key={m} value={`${m} Month${m > 1 ? "s" : ""}`}>
+                        {m} Month{m > 1 ? "s" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </section>
           )}

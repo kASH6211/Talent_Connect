@@ -146,8 +146,8 @@ function StatCard({ label, count, active, onClick, icon: Icon, activeColor }: {
       )}>
         <Icon size={18} />
       </div>
-      <div className={clsx("text-3xl font-black leading-none mb-1 tracking-tight", active ? countMap[activeColor] : "text-base-content")}>{count}</div>
       <div className="text-[10px] font-bold tracking-widest uppercase text-base-content/50">{label}</div>
+      <div className={clsx("text-3xl font-black leading-none mb-1 tracking-tight", active ? countMap[activeColor] : "text-base-content")}>{count}</div>
     </button>
   );
 }

@@ -32,7 +32,7 @@ export class StreamBranchService {
     return result;
   }
 
-  async findAll(qualificationId?: number, page?: number, limit?: number | string, search?: string) {
+  async findAll(qualificationId?: number | number[], page?: number, limit?: number | string, search?: string) {
     const isFetchingAll = limit === 'all' || limit === 0 || limit === '0';
 
     const qb = this.repo.createQueryBuilder('sb')
@@ -43,7 +43,11 @@ export class StreamBranchService {
       .where('sb.is_active != :inactive', { inactive: 'N' });
 
     if (qualificationId) {
-      qb.andWhere('sb.qualificationid = :qualificationId', { qualificationId });
+      if (Array.isArray(qualificationId)) {
+        qb.andWhere('sb.qualificationid IN (:...qualificationIds)', { qualificationIds: qualificationId });
+      } else {
+        qb.andWhere('sb.qualificationid = :qualificationId', { qualificationId });
+      }
     }
 
     if (search) {

@@ -341,8 +341,8 @@ export default function Sidebar({
           "shadow-lg z-50 transition-all duration-300",
           isMobile
             ? mobileSidebarOpen
-              ? "fixed top-22 left-0 translate-x-0 w-72 h-[calc(100vh-4rem)]"
-              : "fixed top-22 left-0 -translate-x-full w-72 h-[calc(100vh-4rem)]"
+              ? "fixed top-20 left-0 translate-x-0 w-72 h-[calc(100vh-4rem)]"
+              : "fixed top-20 left-0 -translate-x-full w-72 h-[calc(100vh-4rem)]"
             : collapsed
               ? "w-20"
               : "w-72 lg:w-64",

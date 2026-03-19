@@ -33,7 +33,7 @@ export default function AppShell({
   const ui = useSelector((state: RootState) => state.login.ui);
   const { user, role } = useAuth();
 
-  const allowedRoutes = ["/login", "/", "/contact"];
+  const allowedRoutes = ["/login", "/", "/contact", "/about"];
 
   const [isMobile, setIsMobile] = useState(false);
   const [orgName, setOrgName] = useState<string | null>(null);
@@ -47,16 +47,15 @@ export default function AppShell({
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-  
-  console.log({user , role})
+
 
   useEffect(() => {
-    if (user?.institute_id && role === "institute" ) {
+    if (user?.institute_id && role === "institute") {
       api
         .get(`/institute/${user.institute_id}`)
         .then((res) => setOrgName(res.data?.institute_name))
         .catch(console.error);
-    } else if (user?.industry_id && role === "industry" ) {
+    } else if (user?.industry_id && role === "industry") {
       api
         .get(`/industry/${user.industry_id}`)
         .then((res) => setOrgName(res.data?.industry_name))

@@ -16,8 +16,19 @@ export class StreamBranchController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
   ) {
+    let qIds: number | number[] | undefined;
+    if (qualificationId) {
+      const parts = qualificationId.split(',').map(s => s.trim()).filter(Boolean);
+      if (parts.length > 1) {
+        qIds = parts.map(p => +p).filter(n => !isNaN(n));
+      } else if (parts.length === 1) {
+        qIds = +parts[0];
+        if (isNaN(qIds)) qIds = undefined;
+      }
+    }
+
     return this.service.findAll(
-      qualificationId ? +qualificationId : undefined,
+      qIds,
       page ? +page : undefined,
       limit,
       search,

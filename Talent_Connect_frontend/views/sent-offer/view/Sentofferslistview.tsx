@@ -1481,7 +1481,7 @@ export default function SentOffersListView() {
                   >
                     <Clock size={24} />
                   </div>
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
 
                     Response awaited
                   </div>
@@ -1513,7 +1513,7 @@ export default function SentOffersListView() {
                   >
                     <Users size={24} />
                   </div>
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Under Process
                   </div>
                   <div className="text-2xl font-black text-gray-900">
@@ -1544,7 +1544,7 @@ export default function SentOffersListView() {
                   >
                     <AlertCircle size={24} />
                   </div>
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Decision awaited
                   </div>
                   <div className="text-2xl font-black text-gray-900">
@@ -1575,7 +1575,7 @@ export default function SentOffersListView() {
                   >
                     <MailCheck size={24} />
                   </div>
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tight leading-tight">
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Accepted
                   </div>
                   <div className="text-2xl font-black text-gray-900">

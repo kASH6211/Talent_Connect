@@ -225,14 +225,16 @@ export default function FindInstitutesPage() {
     fetchSentCount();
   }, [sentSuccess]);
 
-  useEffect(() => {
+    useEffect(() => {
+    const controller = new AbortController();
     const loadStreams = async () => {
       try {
         setStreamOpts([]); // Clear previous options during load
 
-        // 1. Get streams currently in use by institutes
+        // 1. Get streams currently in use by institutes (separate cached/small call usually)
         const inUseRes = await api.get(
           "/institute-qualification-mapping/streams-in-use",
+          { signal: controller.signal }
         );
         const inUseData = Array.isArray(inUseRes.data)
           ? inUseRes.data
@@ -241,26 +243,23 @@ export default function FindInstitutesPage() {
 
         let finalOptions: Option[] = [];
 
-        // 2. Filter if a qualification is selected
+        // 2. Filter if qualifications are selected
         if (filters.qualification_ids.length > 0) {
           const masterStreamsMap = new Map<string, number[]>();
-          const streamPromises = filters.qualification_ids.map((id: any) =>
-            api.get(`/stream-branch?qualification_id=${id}`),
-          );
+          
+          // Batched request
+          const qualIdParam = filters.qualification_ids.join(",");
+          const res = await api.get(`/stream-branch?qualification_id=${qualIdParam}`, {
+            signal: controller.signal
+          });
 
-          const streamResponses = await Promise.all(streamPromises);
-
-          streamResponses.forEach((res) => {
-            const data = Array.isArray(res.data)
-              ? res.data
-              : res.data?.data || [];
-            data.forEach((s: any) => {
-              const ids = masterStreamsMap.get(s.stream_branch_name) || [];
-              if (!ids.includes(s.stream_branch_Id)) {
-                ids.push(s.stream_branch_Id);
-              }
-              masterStreamsMap.set(s.stream_branch_name, ids);
-            });
+          const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+          data.forEach((s: any) => {
+            const ids = masterStreamsMap.get(s.stream_branch_name) || [];
+            if (!ids.includes(s.stream_branch_Id)) {
+              ids.push(s.stream_branch_Id);
+            }
+            masterStreamsMap.set(s.stream_branch_name, ids);
           });
 
           const sortedNames = Array.from(masterStreamsMap.keys()).sort();
@@ -286,7 +285,6 @@ export default function FindInstitutesPage() {
           const sortedNames = Array.from(masterStreamsMap.keys()).sort();
           sortedNames.forEach((name) => {
             const ids = masterStreamsMap.get(name)!;
-            // All in map are already "in use"
             const groupedValue = ids.join(",");
             finalOptions.push({ value: groupedValue, label: name });
           });
@@ -304,12 +302,14 @@ export default function FindInstitutesPage() {
             ? { ...prev, stream_ids: nextStreams }
             : prev;
         });
-      } catch (error) {
+      } catch (error: any) {
+        if (error.name === "AbortError") return;
         console.error("Failed to load generic streams:", error);
         setStreamOpts([]);
       }
     };
     loadStreams();
+    return () => controller.abort();
   }, [filters.qualification_ids]);
 
   const setFilter = (key: keyof Filters) => (vals: number[]) =>
