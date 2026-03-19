@@ -39,6 +39,7 @@ const getProfileUrl = (role: string) => {
 
 const pageLinks = [
   { label: "Home", to: "/" },
+  { label: "About", to: "/about" },
   { label: "Contact", to: "/contact" },
 ];
 

@@ -27,6 +27,7 @@ export default function AuthWrapper({
       "/forgot-password",
       "/contact",
       "/search-institutes",
+      "/about"
     ];
 
     const isPublic = publicRoutes.includes(pathname);
