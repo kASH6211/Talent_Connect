@@ -230,10 +230,10 @@ const SalaryRangeSlider = ({
       </div>
       <div className="flex justify-between items-center mt-1 px-1">
         <span className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">
-          ₹ {unit === "K" ? "0K" : "0 LPA"}
+          ₹ {unit === "thousand per month" ? "0 thousand per month" : "0 Lakh per anam"}
         </span>
         <span className="text-[10px] font-bold text-primary/60 uppercase tracking-wider">
-          ₹ {unit === "K" ? max / 1000 + "K" : max + " LPA"}
+          ₹ {unit === "thousand per month" ? max / 1000 + " thousand per month" : max + " Lakh per anam"}
         </span>
       </div>
     </div>
@@ -1063,9 +1063,9 @@ export function OfferModalV2({
                   </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-base-content/50 pointer-events-none">₹</span>
-                    <input type="text" value={forms[eoiType].salaryMin ? (eoiType === "Placement" ? `${forms[eoiType].salaryMin} LPA` : `${parseInt(forms[eoiType].salaryMin) / 1000}K`) : ""}
+                    <input type="text" value={forms[eoiType].salaryMin ? (eoiType === "Placement" ? `${forms[eoiType].salaryMin} Lakh per anam` : `${parseFloat(forms[eoiType].salaryMin) / 1000} thousand per month`) : ""}
                       readOnly
-                      placeholder={eoiType === "Placement" ? "eg. 5.5 LPA" : "eg. 15K"} 
+                      placeholder={eoiType === "Placement" ? "eg. 5.5 Lakh per anam" : "eg. 15 thousand per month"} 
                       className={`${inputCls} pl-8 bg-base-200/50 cursor-default font-mono font-bold text-primary`} />
                   </div>
                 </div>
@@ -1075,9 +1075,9 @@ export function OfferModalV2({
                   </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-base-content/50 pointer-events-none">₹</span>
-                    <input type="text" value={forms[eoiType].salaryMax ? (eoiType === "Placement" ? `${forms[eoiType].salaryMax} LPA` : `${parseInt(forms[eoiType].salaryMax) / 1000}K`) : ""}
+                    <input type="text" value={forms[eoiType].salaryMax ? (eoiType === "Placement" ? `${forms[eoiType].salaryMax} Lakh per anam` : `${parseFloat(forms[eoiType].salaryMax) / 1000} thousand per month`) : ""}
                       readOnly
-                      placeholder={eoiType === "Placement" ? "eg. 12 LPA" : "eg. 30K"} 
+                      placeholder={eoiType === "Placement" ? "eg. 12 Lakh per anam" : "eg. 30 thousand per month"} 
                       className={`${inputCls} pl-8 bg-base-200/50 cursor-default font-mono font-bold text-primary`} />
                   </div>
                 </div>
@@ -1088,10 +1088,10 @@ export function OfferModalV2({
                 <SalaryRangeSlider
                   min={0}
                   max={eoiType === "Placement" ? 50 : 100000}
-                  step={eoiType === "Placement" ? 0.5 : 1000}
+                  step={eoiType === "Placement" ? 0.1 : 1000}
                   minValue={Number(forms[eoiType].salaryMin) || 0}
                   maxValue={Number(forms[eoiType].salaryMax) || (eoiType === "Placement" ? 10 : 20000)}
-                  unit={eoiType === "Placement" ? "LPA" : "K"}
+                  unit={eoiType === "Placement" ? "Lakh per anam" : "thousand per month"}
                   onChange={(mn, mx) => {
                     handleFieldChange("salaryMin", mn.toString());
                     handleFieldChange("salaryMax", mx.toString());
